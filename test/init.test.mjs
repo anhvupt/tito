@@ -21,8 +21,13 @@ test("init previews specialist agents and writes only after confirmation", () =>
   assert.match(preview.stdout, /\.cursor\/agents\/tito-frontend\.md: create/);
   assert.equal(readdirSync(root).length, 0);
 
-  const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+  writeFileSync(join(root, "AGENTS.md"), "# Tourdef\n\nExisting guidance.\n");
+  const confirmed = run(root, ["init", "--profile", "client-careful", "--root", root, "--confirm"]);
   assert.equal(confirmed.status, 0);
+  const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+  assert.match(agents, /# Tourdef/);
+  assert.match(agents, /Hola, Tito here!/);
+  assert.match(readFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "utf8"), /name: tito/);
   const agent = readFileSync(join(root, ".cursor/agents/tito-frontend.md"), "utf8");
   assert.match(agent, /name: tito-frontend/);
   assert.match(agent, /readonly: false/);
