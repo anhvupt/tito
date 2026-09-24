@@ -31,6 +31,16 @@ node dist/cli.js --version
 Tito is under initial development. Configuration, inspection, and planning
 commands will be introduced in reviewable increments.
 
+## Workflow contract
+
+Tito recommends one mode from explicit task facts:
+
+1. An approved implementation slice routes to Agent.
+2. Ambiguity, multiple modules, architecture, migrations, security, accounting, required slicing, or a mandatory escalation topic routes to Plan.
+3. Otherwise Tito uses Ask for read-only discovery or to frame a small change before approval.
+
+Lifecycle order is DISCOVERY, PLANNED, APPROVED, IMPLEMENTING, READY_FOR_REVIEW, APPROVED_FOR_COMMIT, DONE. An explicitly approved small slice may move from DISCOVERY to APPROVED. An in-scope review revision may return from READY_FOR_REVIEW to IMPLEMENTING. Other skips are rejected.
+
 ## License
 
 Apache-2.0
