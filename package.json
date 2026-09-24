@@ -1,0 +1,29 @@
+{
+  "name": "@anhvupt/tito",
+  "version": "0.1.0",
+  "description": "Local-first AI development harness for solo builders.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "tito": "dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "typescript": "^5.7.0"
+  }
+}
