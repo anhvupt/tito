@@ -33,5 +33,15 @@ test("init previews specialist agents and writes only after confirmation", () =>
   assert.equal(kept.status, 1);
   assert.match(kept.stderr, /conflict:/);
   assert.equal(readFileSync(join(root, "AGENTS.md"), "utf8"), "project bootstrap\n");
+
+  const missingProfile = run(root, ["init", "--root", root]);
+  assert.equal(missingProfile.status, 1);
+  assert.match(missingProfile.stderr, /Missing required option --profile/);
   rmSync(root, { recursive: true, force: true });
+});
+
+test("profile prompt accepts a menu number or a profile id", async () => {
+  const { promptForProfile } = await import("../dist/core/init.js");
+  assert.equal(await promptForProfile(async () => "1"), "client-careful");
+  assert.equal(await promptForProfile(async () => "solo-fast"), "solo-fast");
 });

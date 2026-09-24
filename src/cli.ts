@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import {
@@ -13,6 +15,7 @@ import {
   applyInitialization,
   formatInitialization,
   planInitialization,
+  promptForProfile,
 } from "./core/init.js";
 
 const packageJson = JSON.parse(
@@ -25,7 +28,7 @@ Usage:
   tito [options]
   tito inspect [--root <path>]
   tito apply --dry-run --profile <id> [--root <path>]
-  tito init --profile <id> [--root <path>] [--confirm]
+  tito init [--profile <id>] [--root <path>] [--confirm]
 
 Options:
   -h, --help     Show help
@@ -122,7 +125,7 @@ function runApply(args: string[]): void {
   }
 }
 
-function runInit(args: string[]): void {
+async function runInit(args: string[]): Promise<void> {
   if (args.includes("-h") || args.includes("--help")) {
     process.stdout.write(help);
     return;
@@ -150,8 +153,16 @@ function runInit(args: string[]): void {
     return;
   }
   if (profile === undefined) {
-    fail("Missing required option --profile.");
-    return;
+    if (!input.isTTY) {
+      fail("Missing required option --profile.");
+      return;
+    }
+    const prompts = createInterface({ input, output });
+    try {
+      profile = await promptForProfile((prompt) => prompts.question(prompt));
+    } finally {
+      prompts.close();
+    }
   }
 
   try {
@@ -180,7 +191,7 @@ function runInit(args: string[]): void {
   }
 }
 
-function run(args: string[]): void {
+async function run(args: string[]): Promise<void> {
   if (args[0] === "inspect") {
     runInspect(args.slice(1));
     return;
@@ -190,8 +201,7 @@ function run(args: string[]): void {
     return;
   }
   if (args[0] === "init") {
-    runInit(args.slice(1));
-    return;
+    return runInit(args.slice(1));
   }
 
   let helpRequested = false;

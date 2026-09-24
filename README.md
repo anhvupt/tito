@@ -84,10 +84,17 @@ npx tito init --profile client-careful
 npx tito init --profile client-careful --confirm
 ```
 
-The first `init` prints the plan and writes nothing. `--confirm` creates the
-missing Tito files and specialist agents. It keeps an existing `AGENTS.md` and
-refuses to overwrite a file that is already there. Open a new Cursor chat, then
-start with `/tito`.
+The first `init` prints the plan and writes nothing. In a terminal, omitting
+`--profile` asks you to choose `client-careful`, `solo-balanced`, or
+`solo-fast`. A script or piped command must still pass `--profile`.
+`--confirm` creates the missing Tito files and specialist agents. It keeps an
+existing `AGENTS.md` and refuses to overwrite a file that is already there.
+Open a new Cursor chat, then start with `/tito`.
+
+Tito is installed in each project. It is not a required global command, and
+there is no global configuration yet. A future personal default would be
+overridden by that project's `tito.yaml`. The safety floor still cannot be
+weakened.
 
 ## What works today
 

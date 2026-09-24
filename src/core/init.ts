@@ -2,6 +2,7 @@ import { mkdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { compiledCursorAgents } from "./agents.js";
 import type { InspectionReport } from "./inspect.js";
+import { ACTIVE_RISK_PROFILE_IDS } from "./profiles.js";
 import {
   PlanError,
   planAdoption,
@@ -25,6 +26,24 @@ export class InitError extends Error {
     this.name = "InitError";
     this.code = "conflict";
   }
+}
+
+export async function promptForProfile(
+  ask: (prompt: string) => Promise<string>,
+): Promise<string> {
+  const choices = ACTIVE_RISK_PROFILE_IDS.map(
+    (id, index) => `  ${index + 1}. ${id}`,
+  ).join("\n");
+  const answer = (await ask(`Profiles:\n${choices}\nProfile: `)).trim();
+  const index = Number(answer);
+  if (
+    Number.isInteger(index) &&
+    index >= 1 &&
+    index <= ACTIVE_RISK_PROFILE_IDS.length
+  ) {
+    return ACTIVE_RISK_PROFILE_IDS[index - 1] ?? answer;
+  }
+  return answer;
 }
 
 function exists(root: string, path: string): boolean {
