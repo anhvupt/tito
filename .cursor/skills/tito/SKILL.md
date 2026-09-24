@@ -29,11 +29,20 @@ Recommend one mode before acting:
 Small, obvious work may follow Ask → Agent → Review. Uncertain or critical work
 must follow Ask → Plan → Human Approval → Agent → Independent Review.
 
+For Plan work, prefer a Reasoning-tier model unless the plan is obvious and
+bounded or the user chose another model. The planner—not the implementation
+agent—must decide the technical approach. Include concise guidance code,
+signatures, schemas, or pseudocode where it removes ambiguity. Resolve technical
+trade-offs in the plan; ask the user only for genuine product, business,
+destructive, or materially outcome-changing choices.
+
 ## Execute
 
-1. Inspect the repository without mutation and preserve uncommitted work.
+1. Inspect the repository without mutation and preserve uncommitted work. When a Tito command exists, use that same core behavior in chat instead of sending the person to the terminal.
 2. State facts, affected files, uncertainties, risks, and recommended mode.
-3. For Plan work, produce independent slices and stop for approval.
+3. For Plan work, produce independent slices with decided technical choices,
+   acceptance criteria, tests, risks, forbidden changes, and stop conditions,
+   then stop for approval.
 4. Before Agent work, provide the implementation handoff required by the brief.
 5. Use one code writer. Delegate only with a named purpose and bounded scope.
 6. Implement and verify only the approved slice.

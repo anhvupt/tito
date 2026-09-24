@@ -195,6 +195,10 @@ Tito recommends a capability tier before choosing a specific model:
 - Reasoning: architecture, ambiguity, accounting, security, concurrency
 - Specialist: visual work, large context, research, or model-specific strengths
 
+Plan mode should use the Reasoning tier by default when technical decisions,
+architecture, ambiguity, migrations, security, or multiple slices are involved.
+An obvious bounded plan may use Standard. Respect an explicit user model choice.
+
 Tito should:
 
 - Start with the least expensive tier likely to succeed.
@@ -357,6 +361,17 @@ Both surfaces keep Tito in the active conversation as the root coordinator. Neit
 
 The CLI is Tito's local control adapter for setup, configuration, inspection, deterministic planning, validation, and reporting. Normal task coordination should not require the user to leave chat.
 
+Chat and the CLI are interchangeable adapters over one core operation. Chat is the primary mental model.
+
+- Implement each operation once in the tool-independent core.
+- `tito <command>` and `/tito-<command>` must call that same behavior and return the same result for the same inputs.
+- A person may start in chat or the CLI and continue in the other.
+- Chat must run the operation without sending the person to a terminal.
+- The CLI must run the operation without an open chat.
+- Neither adapter may add a private policy, an extra mutation, or a different result.
+- A CLI command is incomplete until its `/tito-<command>` chat entry exists. A chat operation that inspects or changes the project is incomplete until the CLI exposes it.
+- `/tito` remains the open-ended coordinator. A command skill only runs that one operation.
+
 Optional `.cursor/agents/*.md` specialists may handle bounded delegated work. They do not become the root Tito coordinator and must follow the delegation and lifecycle policies in this brief.
 
 ### Cursor mode routing
@@ -392,6 +407,25 @@ For every task, Tito should recommend one of:
    - work that must be divided into reviewable slices.
 
    Tito should convert the result into independently reviewable slices and require explicit human approval before implementation.
+
+   The planner owns the technical approach. A final plan must:
+   - make the architecture, data-flow, interface, dependency, and file-boundary
+     decisions needed for implementation;
+   - explain important trade-offs and record rejected alternatives when they
+     materially affect cost, risk, or maintainability;
+   - include concise guidance code, signatures, schemas, or pseudocode when it
+     removes implementation ambiguity;
+   - define acceptance criteria, tests, migration or rollback needs, risks,
+     forbidden changes, and stop conditions for every slice;
+   - distinguish product decisions that require the user from technical
+     decisions the planner is responsible for making.
+
+   Do not hand unresolved technical choices to the implementation agent. Ask the
+   user before finalizing only when a missing product preference, business rule,
+   destructive choice, or materially different outcome genuinely requires human
+   judgment. The implementation agent follows the approved decisions and stops
+   for re-planning if repository evidence invalidates them; it does not silently
+   redesign the slice.
 
 3. **Agent mode**
 

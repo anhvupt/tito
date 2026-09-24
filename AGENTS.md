@@ -11,6 +11,9 @@ This project uses Tito as its root engineering coordinator.
 - Never commit, push, publish, deploy, or perform irreversible external actions
   without explicit approval.
 - Use the `/tito` skill when the user invokes it explicitly.
+- Chat is the primary interface. Implement each operation once, then expose the same behavior as `tito <command>` and `/tito-<command>`.
+- Plans own technical decisions and include guidance code when it removes
+  implementation ambiguity; coding agents follow the approved approach.
 
 Keep this bootstrap compact. Load detailed workflow policy from the brief and
 scoped project surfaces only when relevant.

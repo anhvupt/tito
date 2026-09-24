@@ -26,7 +26,14 @@ Run the compiled CLI:
 ```sh
 node dist/cli.js --help
 node dist/cli.js --version
+node dist/cli.js inspect
+node dist/cli.js inspect --root .
+node dist/cli.js apply --dry-run --profile solo-balanced
 ```
+
+`inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is present. It does not write to the directory. In chat, `/tito-inspect` runs this same command and shows the same report.
+
+`apply --dry-run` prints the adoption plan for `tito.yaml` and `AGENTS.md`. It does not write. In chat, `/tito-apply` runs this same command and shows the same plan. `apply` without `--dry-run` is refused.
 
 Tito is under initial development. Configuration, inspection, and planning
 commands will be introduced in reviewable increments.
