@@ -108,6 +108,7 @@ node dist/cli.js --version
 node dist/cli.js inspect
 node dist/cli.js inspect --root .
 node dist/cli.js apply --dry-run --profile solo-balanced
+node dist/cli.js init --profile solo-balanced
 ```
 
 `inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is
@@ -115,6 +116,11 @@ present. It does not write to the directory.
 
 `apply --dry-run` prints the proposed `tito.yaml` and `AGENTS.md` actions. It
 does not write. `apply` without `--dry-run` is refused.
+
+`init` prints the same kind of plan for `tito.yaml`, `AGENTS.md`, and the
+specialist agent files. It writes those files only with `--confirm`, and it
+refuses when an existing file would be overwritten. In chat, `/tito-init` runs
+this same command.
 
 ## How work moves
 

@@ -8,6 +8,12 @@ import {
   inspectRepository,
 } from "./core/inspect.js";
 import { PlanError, formatAdoptionPlan, planAdoption } from "./core/plan.js";
+import {
+  InitError,
+  applyInitialization,
+  formatInitialization,
+  planInitialization,
+} from "./core/init.js";
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -19,6 +25,7 @@ Usage:
   tito [options]
   tito inspect [--root <path>]
   tito apply --dry-run --profile <id> [--root <path>]
+  tito init --profile <id> [--root <path>] [--confirm]
 
 Options:
   -h, --help     Show help
@@ -27,6 +34,7 @@ Options:
 Commands:
   inspect        Report tito.yaml and AGENTS.md. Reads only.
   apply          Dry-run an adoption plan. Writes are not available.
+  init           Install Tito files and specialist agents. Confirm before writing.
 `;
 
 function fail(message: string): void {
@@ -114,6 +122,64 @@ function runApply(args: string[]): void {
   }
 }
 
+function runInit(args: string[]): void {
+  if (args.includes("-h") || args.includes("--help")) {
+    process.stdout.write(help);
+    return;
+  }
+
+  let root = process.cwd();
+  let profile: string | undefined;
+  let confirm = false;
+  try {
+    const { values } = parseArgs({
+      args,
+      options: {
+        confirm: { type: "boolean" },
+        profile: { type: "string" },
+        root: { type: "string" },
+      },
+      strict: true,
+      allowPositionals: false,
+    });
+    confirm = values.confirm === true;
+    if (values.profile !== undefined) profile = values.profile;
+    if (values.root !== undefined) root = values.root;
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Invalid init arguments.");
+    return;
+  }
+  if (profile === undefined) {
+    fail("Missing required option --profile.");
+    return;
+  }
+
+  try {
+    const plan = planInitialization(inspectRepository(root), profile);
+    if (!confirm) {
+      process.stdout.write(formatInitialization(plan));
+      return;
+    }
+    applyInitialization(plan);
+    process.stdout.write(formatInitialization(plan));
+  } catch (error) {
+    if (error instanceof InspectionError || error instanceof PlanError || error instanceof InitError) {
+      fail(`${error.code}: ${error.message}`);
+      return;
+    }
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "EPERM"
+    ) {
+      fail("filesystem: Tito could not create .cursor/agents.");
+      return;
+    }
+    throw error;
+  }
+}
+
 function run(args: string[]): void {
   if (args[0] === "inspect") {
     runInspect(args.slice(1));
@@ -121,6 +187,10 @@ function run(args: string[]): void {
   }
   if (args[0] === "apply") {
     runApply(args.slice(1));
+    return;
+  }
+  if (args[0] === "init") {
+    runInit(args.slice(1));
     return;
   }
 
