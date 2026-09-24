@@ -361,6 +361,16 @@ Both surfaces keep Tito in the active conversation as the root coordinator. Neit
 
 The CLI is Tito's local control adapter for setup, configuration, inspection, deterministic planning, validation, and reporting. Normal task coordination should not require the user to leave chat.
 
+Every Tito-coordinated chat response must start exactly with:
+`Hola, Tito here!`
+
+Use the marker once per response, including ordinary chat governed by the Tito
+bootstrap and explicit `/tito` or `/tito-<command>` invocations. The marker is a
+chat-presence signal, not part of a core operation's result. Do not add it to
+CLI stdout/stderr, persisted artifacts, generated files, or machine-readable
+output. A chat command adapter prints the marker first, then presents the shared
+core result unchanged.
+
 Chat and the CLI are interchangeable adapters over one core operation. Chat is the primary mental model.
 
 - Implement each operation once in the tool-independent core.

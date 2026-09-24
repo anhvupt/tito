@@ -7,6 +7,7 @@ disable-model-invocation: true
 # Tito apply
 
 Chat adapter for `tito apply --dry-run`. Show the existing planner's stdout. Do not write a plan by hand and do not create or edit project files.
+Start the chat response exactly with `Hola, Tito here!`, then show the command's stdout unchanged. The greeting is not part of the command output.
 
 ## Run
 

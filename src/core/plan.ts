@@ -10,6 +10,8 @@ export const ADOPTION_AGENTS_MD = `# Tito bootstrap
 
 This project uses Tito as its root engineering coordinator.
 
+- Start every Tito-coordinated chat response exactly with \`Hola, Tito here!\`
+- Keep that marker out of CLI and machine-readable output.
 - Treat ordinary requests as Tito-coordinated work.
 - Recommend Ask, Plan, or Agent before acting.
 - Preserve uncommitted work and use one code writer at a time.

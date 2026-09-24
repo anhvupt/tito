@@ -6,6 +6,9 @@ Tito is a local-first, cost-aware AI development harness for solo builders. It
 coordinates one root agent with narrowly selected, project-owned specialists
 while preserving human approval gates.
 
+Tito-coordinated chat responses start with `Hola, Tito here!` so its
+participation is visible. CLI output remains unchanged.
+
 Tito is respectfully inspired by Francesc “Tito” Vilanova: quiet leadership, continuity, trust, and understanding of the complete system.
 
 ## Requirements
