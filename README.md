@@ -76,6 +76,19 @@ Tito-coordinated chat responses begin with `Hola, Tito here!` so you can see
 that the coordinator is active. The greeting is not added to CLI or
 machine-readable output.
 
+## Install in a project
+
+```sh
+npm install -D @anhvupt/tito
+npx tito init --profile client-careful
+npx tito init --profile client-careful --confirm
+```
+
+The first `init` prints the plan and writes nothing. `--confirm` creates the
+missing Tito files and specialist agents. It keeps an existing `AGENTS.md` and
+refuses to overwrite a file that is already there. Open a new Cursor chat, then
+start with `/tito`.
+
 ## What works today
 
 Tito 0.1 is under active development. The current implementation includes:
@@ -96,9 +109,10 @@ Tito 0.1 is under active development. The current implementation includes:
   decisions without writing files;
 - matching Cursor chat skills for the implemented CLI operations.
 
-Writing project files is deliberately not available yet. Safe initialization,
-deterministic apply with `tito.lock`, validation commands, BMad adoption,
-project-agent discovery, and model/cost reporting remain on the roadmap.
+`tito init --confirm` can write a new `tito.yaml`, a missing `AGENTS.md`, and
+the specialist agent files. It does not overwrite existing files. A lock file,
+upgrade command, BMad adoption, project-agent discovery, and model/cost
+reporting remain on the roadmap.
 
 ## Current commands
 
