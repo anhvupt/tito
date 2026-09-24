@@ -68,11 +68,17 @@ Tito may delegate to:
 - QA reviewer
 - Security reviewer
 - DevOps specialist
+- Tech docs writer
+- User docs writer
 - Project-owned agents
 
 Only specialists relevant to the task should be loaded. Tito remains the root coordinator and is never delegated to as a specialist.
 
-Backend, frontend, and DevOps engineers may write, but only one of them may be the active writer. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers are read-only. A change that needs both backend and frontend work is split into sequential writer slices. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
+Backend, frontend, and DevOps engineers may write, but only one mutating mode may be active. A mode owns that authority: frontend design is read-only, while frontend implementation writes files; DevOps planning is read-only, while DevOps implementation changes infrastructure only with human approval. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers stay read-only. A change that needs both backend and frontend work is split into sequential writer slices. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
+
+Each specialist manifest indexes its role, model gate, triggers, knowledge references, handoffs, and modes. Role prompts stay lean and load knowledge progressively. If a requested model is unavailable, Tito asks which model to use instead of substituting one silently.
+
+After a module is finished, Tito must schedule the technical documentation writer and then the user documentation writer, one at a time, before calling that module done. The only exception is an explicit user waiver for that module. Technical docs and user docs stay separate slices.
 
 ## Configuration layers
 
@@ -438,6 +444,22 @@ For every task, Tito should recommend one of:
    judgment. The implementation agent follows the approved decisions and stops
    for re-planning if repository evidence invalidates them; it does not silently
    redesign the slice.
+
+For multi-slice work, Tito represents the approved work as a dependency-aware
+work plan. Read-only, implementation, and review slices name their explicit
+prerequisites. The graph determines readiness; the lifecycle remains the
+authority for human approval and implementation state.
+
+- Independent read-only slices may be ready together.
+- Multiple implementation slices may be ready candidates, but Tito does not
+  select one silently and only one writer may be active.
+- A review slice may start when its implementation reaches
+  `READY_FOR_REVIEW`.
+- In `client-careful`, implementation dependents wait for
+  `APPROVED_FOR_COMMIT`. In `solo-balanced` and `solo-fast`, ordinary
+  dependents may proceed at `READY_FOR_REVIEW`.
+- Independent-review requirements always raise the prerequisite threshold to
+  `APPROVED_FOR_COMMIT`.
 
 3. **Agent mode**
 

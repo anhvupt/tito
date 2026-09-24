@@ -30,7 +30,38 @@ replacing your project documentation, rules, or specialists.
   replacing them.
 - **Controlled model use:** Tito recommends the least expensive capable tier,
   using stronger reasoning models for architecture, ambiguity, migrations,
-  security, and other high-consequence planning.
+  security, and other high-consequence planning. If a requested model is
+  unavailable, Tito asks instead of substituting one silently.
+
+## Specialists
+
+You call Tito. Tito selects only the specialists the task needs. A specialist's
+mode decides whether it may change anything:
+
+| Specialist | Read-only mode | Mutating mode |
+| --- | --- | --- |
+| Explorer | Scout the repository | — |
+| Product analyst | Clarify requirements | — |
+| Architect | Decide the technical approach | — |
+| ERP specialist | Advise or review domain rules | — |
+| QA reviewer | Review correctness | — |
+| Security reviewer | Review security-sensitive changes | — |
+| Frontend engineer | Design | Implement files |
+| Backend engineer | — | Implement files |
+| DevOps engineer | Plan | Change infrastructure, with approval |
+| Tech docs writer | — | Update technical documentation |
+| User docs writer | — | Update user documentation |
+
+Several read-only specialists may work together. Only one mutating mode may be
+active. Backend and frontend work is split into sequential slices. After a
+module is finished, Tito schedules the tech docs writer and then the user docs
+writer, one at a time, before calling that module done. Skip that handoff only
+when you explicitly waive it for that module. Each specialist carries triggers,
+knowledge references, handoffs, and a stop condition. The detailed prompt stays
+lean and loads knowledge only when that mode needs it.
+
+Cursor agent files such as `.cursor/agents/tito-frontend.md` are not generated
+yet. The roster above is the contract those files will follow.
 
 ## Chat first, CLI when useful
 
@@ -56,6 +87,10 @@ Tito 0.1 is under active development. The current implementation includes:
   actions, and financial invariants;
 - deterministic Ask, Plan, and Agent routing from explicit task facts;
 - an enforced lifecycle from discovery through review and completion;
+- validated dependency-aware work plans with concurrent read-only readiness and
+  one active implementation writer;
+- specialist manifests whose selected mode, not the role name, owns mutation
+  authority;
 - read-only repository inspection for `tito.yaml` and `AGENTS.md`;
 - deterministic dry-run adoption planning that shows create, keep, and conflict
   decisions without writing files;

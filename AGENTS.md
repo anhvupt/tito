@@ -10,6 +10,7 @@ This project uses Tito as its root engineering coordinator.
   and Agent only for one approved implementation slice.
 - Preserve uncommitted work and use one code writer at a time.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
+- After a finished module, schedule the tech docs writer and then the user docs writer before calling the module done.
 - Stop for human approval between reviewable slices.
 - Never commit, push, publish, deploy, or perform irreversible external actions
   without explicit approval.
