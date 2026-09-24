@@ -1,30 +1,71 @@
 # Tito
 
-Quiet orchestration. Trusted continuity.
+**Quiet orchestration. Trusted continuity.**
 
-Tito is a local-first, cost-aware AI development harness for solo builders. It
-coordinates one root agent with narrowly selected, project-owned specialists
-while preserving human approval gates.
+Tito is a chat-first engineering coordinator for solo builders. You talk to one
+coordinator; Tito explores the repository, chooses the right working mode,
+turns larger work into reviewable slices, and keeps implementation inside the
+scope you approved.
 
-Tito-coordinated chat responses start with `Hola, Tito here!` so its
-participation is visible. CLI output remains unchanged.
+It is local-first, Git-friendly, and designed to add coordination without
+replacing your project documentation, rules, or specialists.
 
-Tito is respectfully inspired by Francesc “Tito” Vilanova: quiet leadership, continuity, trust, and understanding of the complete system.
+## What Tito helps with
 
-## Requirements
+- **One place to ask:** use ordinary Cursor chat or `/tito` instead of manually
+  coordinating several agents.
+- **The right amount of process:** Tito recommends Ask for discovery, Plan for
+  uncertain or critical work, and Agent only for an approved implementation
+  slice.
+- **Plans that make decisions:** the planner owns technical choices, records
+  important trade-offs, and includes signatures, schemas, pseudocode, or
+  guidance code when that makes implementation clearer.
+- **Smaller reviews:** work is split into bounded slices with acceptance
+  criteria, tests, forbidden changes, risks, and a stop condition.
+- **Safer changes:** Tito preserves uncommitted work, refuses silent overwrites,
+  and requires approval before commits, pushes, deployments, publication, or
+  irreversible external actions.
+- **Project-aware adoption:** Tito is intended to discover and preserve existing
+  rules, skills, BMad workflows, and project-owned specialists rather than
+  replacing them.
+- **Controlled model use:** Tito recommends the least expensive capable tier,
+  using stronger reasoning models for architecture, ambiguity, migrations,
+  security, and other high-consequence planning.
 
-- Node.js 20 or newer
-- npm
+## Chat first, CLI when useful
 
-## Development
+Chat is the primary mental model. Every operation is implemented once in the
+core and exposed through both chat and the CLI:
 
-```sh
-npm install
-npm run build
-npm test
-```
+- `/tito` is the open-ended coordinator.
+- `/tito-inspect` and `tito inspect` produce the same repository report.
+- `/tito-apply` and `tito apply --dry-run` produce the same adoption plan.
 
-Run the compiled CLI:
+Tito-coordinated chat responses begin with `Hola, Tito here!` so you can see
+that the coordinator is active. The greeting is not added to CLI or
+machine-readable output.
+
+## What works today
+
+Tito 0.1 is under active development. The current implementation includes:
+
+- strict `tito.yaml` parsing with `client-careful`, `solo-balanced`, and
+  `solo-fast` risk profiles;
+- mandatory escalation for authentication, payments, secrets, production data,
+  destructive database work, privacy, public infrastructure, irreversible
+  actions, and financial invariants;
+- deterministic Ask, Plan, and Agent routing from explicit task facts;
+- an enforced lifecycle from discovery through review and completion;
+- read-only repository inspection for `tito.yaml` and `AGENTS.md`;
+- deterministic dry-run adoption planning that shows create, keep, and conflict
+  decisions without writing files;
+- matching Cursor chat skills for the implemented CLI operations.
+
+Writing project files is deliberately not available yet. Safe initialization,
+deterministic apply with `tito.lock`, validation commands, BMad adoption,
+project-agent discovery, and model/cost reporting remain on the roadmap.
+
+## Current commands
 
 ```sh
 node dist/cli.js --help
@@ -34,22 +75,38 @@ node dist/cli.js inspect --root .
 node dist/cli.js apply --dry-run --profile solo-balanced
 ```
 
-`inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is present. It does not write to the directory. In chat, `/tito-inspect` runs this same command and shows the same report.
+`inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is
+present. It does not write to the directory.
 
-`apply --dry-run` prints the adoption plan for `tito.yaml` and `AGENTS.md`. It does not write. In chat, `/tito-apply` runs this same command and shows the same plan. `apply` without `--dry-run` is refused.
+`apply --dry-run` prints the proposed `tito.yaml` and `AGENTS.md` actions. It
+does not write. `apply` without `--dry-run` is refused.
 
-Tito is under initial development. Configuration, inspection, and planning
-commands will be introduced in reviewable increments.
+## How work moves
 
-## Workflow contract
+The normal careful path is:
 
-Tito recommends one mode from explicit task facts:
+`DISCOVERY → PLANNED → APPROVED → IMPLEMENTING → READY_FOR_REVIEW → APPROVED_FOR_COMMIT → DONE`
 
-1. An approved implementation slice routes to Agent.
-2. Ambiguity, multiple modules, architecture, migrations, security, accounting, required slicing, or a mandatory escalation topic routes to Plan.
-3. Otherwise Tito uses Ask for read-only discovery or to frame a small change before approval.
+A small, obvious change can move from discovery directly to an explicitly
+approved slice. Review feedback can return an in-scope slice to implementation.
+Other lifecycle skips are rejected.
 
-Lifecycle order is DISCOVERY, PLANNED, APPROVED, IMPLEMENTING, READY_FOR_REVIEW, APPROVED_FOR_COMMIT, DONE. An explicitly approved small slice may move from DISCOVERY to APPROVED. An in-scope review revision may return from READY_FOR_REVIEW to IMPLEMENTING. Other skips are rejected.
+## Development
+
+Requirements:
+
+- Node.js 20 or newer
+- npm
+
+```sh
+npm install
+npm run build
+npm test
+```
+
+Tito is respectfully inspired by Francesc “Tito” Vilanova: quiet leadership,
+continuity, trust, and understanding of the complete system. Tito is not
+affiliated with FC Barcelona.
 
 ## License
 
