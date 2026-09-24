@@ -51,8 +51,8 @@ test("risk profiles preserve the brief and shared safety floor", () => {
     "publication",
     "external-write",
   ]);
-  assert.equal(balanced.maxWriters, 2);
-  assert.equal(balanced.writerConstraint, "explicitly-separate-areas");
+  assert.equal(balanced.maxWriters, 1);
+  assert.equal(balanced.writerConstraint, "one-at-a-time");
   assert.equal(balanced.humanReview, "feature-boundaries");
   assert.deepEqual(balanced.independentReviewFor, [
     "security",
@@ -62,8 +62,8 @@ test("risk profiles preserve the brief and shared safety floor", () => {
   ]);
   assert.equal(balanced.diffLimits, "moderate");
   assert.equal(balanced.automation, "deterministic-and-reversible");
-  assert.equal(fast.maxWriters, 3);
-  assert.equal(fast.writerConstraint, "non-overlapping");
+  assert.equal(fast.maxWriters, 1);
+  assert.equal(fast.writerConstraint, "one-at-a-time");
   assert.equal(fast.agentSelfReview, "allowed");
   assert.equal(fast.humanReview, "milestones");
   assert.equal(fast.safetyFloor, MANDATORY_ESCALATION_TOPICS);

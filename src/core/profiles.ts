@@ -58,8 +58,8 @@ export const RISK_PROFILES = deepFreeze({
   "solo-balanced": {
     id: "solo-balanced",
     status: "active",
-    maxWriters: 2,
-    writerConstraint: "explicitly-separate-areas",
+    maxWriters: 1,
+    writerConstraint: "one-at-a-time",
     humanReview: "feature-boundaries",
     independentReviewFor: ["security", "data", "migrations", "architecture"],
     diffLimits: "moderate",
@@ -69,8 +69,8 @@ export const RISK_PROFILES = deepFreeze({
   "solo-fast": {
     id: "solo-fast",
     status: "active",
-    maxWriters: 3,
-    writerConstraint: "non-overlapping",
+    maxWriters: 1,
+    writerConstraint: "one-at-a-time",
     agentSelfReview: "allowed",
     humanReview: "milestones",
     safetyFloor: MANDATORY_ESCALATION_TOPICS,

@@ -70,7 +70,9 @@ Tito may delegate to:
 - DevOps specialist
 - Project-owned agents
 
-Only specialists relevant to the task should be loaded.
+Only specialists relevant to the task should be loaded. Tito remains the root coordinator and is never delegated to as a specialist.
+
+Backend, frontend, and DevOps engineers may write, but only one of them may be the active writer. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers are read-only. A change that needs both backend and frontend work is split into sequential writer slices. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
 
 ## Configuration layers
 
@@ -121,7 +123,7 @@ For client, offshore, financial, sensitive, or high-consequence projects.
 
 For normal personal product development.
 
-- One or two writers on explicitly separate areas.
+- One code-writing agent at a time.
 - Human review at feature boundaries.
 - Independent review for security, data, migrations, and architecture.
 - Moderate diff limits.
@@ -131,7 +133,7 @@ For normal personal product development.
 
 For experiments and low-consequence personal products.
 
-- Up to three non-overlapping writers.
+- One code-writing agent at a time.
 - Agent self-review allowed.
 - Human review at milestones.
 - Faster implementation and refactoring.
@@ -538,8 +540,8 @@ Default solo behavior:
 
 - one root Tito coordinator;
 - one active code writer;
-- optional read-only specialist or reviewer;
-- no additional agent without a named purpose.
+- relevant read-only specialists or reviewers, each with a named purpose;
+- no additional writer.
 
 Good subagent uses:
 
