@@ -104,6 +104,8 @@ npm run build
 npm test
 ```
 
+## Acknowledgement
+
 Tito is respectfully inspired by Francesc “Tito” Vilanova: quiet leadership,
 continuity, trust, and understanding of the complete system. Tito is not
 affiliated with FC Barcelona.
