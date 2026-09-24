@@ -27,7 +27,7 @@ test("compiled CLI exposes help and version", async () => {
 
   const version = runCli(["--version"]);
   assert.equal(version.status, 0);
-  assert.equal(version.stdout, "0.1.0\n");
+  assert.equal(version.stdout, "0.1.1\n");
   assert.equal(version.stderr, "");
 
   const compiled = await readFile(cliUrl, "utf8");

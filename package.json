@@ -1,6 +1,6 @@
 {
   "name": "@anhvupt/tito",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local-first AI development harness for solo builders.",
   "license": "Apache-2.0",
   "type": "module",
