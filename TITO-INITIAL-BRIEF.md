@@ -477,13 +477,17 @@ authority for human approval and implementation state.
 
    The agent must implement only that slice, verify it, prepare the review packet, and stop.
 
-Small and obvious work may use:
-
-**Ask → Agent → Review**
-
-Uncertain or critical work should use:
+A new command, a new write behavior, or any technical choice uses:
 
 **Ask → Plan → Human Approval → Agent → Independent Review**
+
+The plan response contains the plan only. No source edits. "No need to plan"
+applies only to the slice named in that message. Implementation starts only
+after that plan is approved. Cursor's current mode does not approve a slice.
+
+A named slice that the user explicitly marks as not needing a plan may use:
+
+**Ask → Agent → Review**
 
 ### Cursor lifecycle
 

@@ -27,8 +27,10 @@ Recommend one mode before acting:
   requiring multiple reviewable slices.
 - **Agent** only for one explicitly approved implementation slice.
 
-Small, obvious work may follow Ask → Agent → Review. Uncertain or critical work
-must follow Ask → Plan → Human Approval → Agent → Independent Review.
+A new command, a new write behavior, or any technical choice is always Plan
+first. That response contains the plan only. No source edits. "No need to plan"
+applies only to the slice named in that message. Implementation starts only
+after that plan is approved. Cursor being in Agent mode does not approve a slice.
 
 For Plan work, prefer a Reasoning-tier model unless the plan is obvious and
 bounded or the user chose another model. The planner—not the implementation

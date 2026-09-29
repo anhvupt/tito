@@ -19,6 +19,11 @@ Recommend one mode before acting:
 - **Plan** for ambiguity, architecture, sensitive work, migrations, or work requiring multiple reviewable slices.
 - **Agent** only for one explicitly approved implementation slice.
 
+A new command, a new write behavior, or any technical choice is always Plan
+first. That response contains the plan only. No source edits. "No need to plan"
+applies only to the slice named in that message. Implementation starts only
+after that plan is approved.
+
 For Plan work, the planner decides the technical approach and includes guidance code when it removes ambiguity. Ask the user only for a genuine product or business choice.
 
 ## Execute

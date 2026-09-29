@@ -8,6 +8,10 @@ This project uses Tito as its root engineering coordinator.
 - Read `TITO-INITIAL-BRIEF.md` when planning, editing, or resolving policy.
 - Recommend Ask for read-only discovery, Plan for ambiguous or critical work,
   and Agent only for one approved implementation slice.
+- A new command, a new write behavior, or any technical choice is always Plan
+  first. That response is the plan only. No source edits.
+- "No need to plan" applies only to the slice named in that message.
+- Implementation starts only after that plan is approved.
 - Preserve uncommitted work and use one code writer at a time.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
 - After a finished module, schedule the tech docs writer and then the user docs writer before calling the module done.

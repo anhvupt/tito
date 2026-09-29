@@ -6,6 +6,9 @@ import {
 } from "./profiles.js";
 import type { InspectionReport } from "./inspect.js";
 
+export const TITO_BOOTSTRAP_START = "<!-- tito:bootstrap start -->";
+export const TITO_BOOTSTRAP_END = "<!-- tito:bootstrap end -->";
+
 export const ADOPTION_AGENTS_MD = `# Tito bootstrap
 
 This project uses Tito as its root engineering coordinator.
@@ -22,6 +25,10 @@ This project uses Tito as its root engineering coordinator.
 
 Keep this bootstrap compact. Load project documentation only when the task needs it.
 `;
+
+export function titoBootstrapBlock(): string {
+  return `${TITO_BOOTSTRAP_START}\n${ADOPTION_AGENTS_MD.trim()}\n${TITO_BOOTSTRAP_END}\n`;
+}
 
 export type PlanErrorCode = "missing-profile" | "unknown-profile" | "unsupported-profile";
 

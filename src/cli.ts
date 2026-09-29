@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
+import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
   InspectionError,
@@ -17,6 +19,12 @@ import {
   planInitialization,
   promptForProfile,
 } from "./core/init.js";
+import {
+  applyUpgrade,
+  formatUpgrade,
+  planUpgrade,
+  titoOwnedFiles,
+} from "./core/upgrade.js";
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -29,6 +37,7 @@ Usage:
   tito inspect [--root <path>]
   tito apply --dry-run --profile <id> [--root <path>]
   tito init [--profile <id>] [--root <path>] [--confirm]
+  tito upgrade [--root <path>] [--confirm]
 
 Options:
   -h, --help     Show help
@@ -38,6 +47,7 @@ Commands:
   inspect        Report tito.yaml and AGENTS.md. Reads only.
   apply          Dry-run an adoption plan. Writes are not available.
   init           Install Tito files and specialist agents. Confirm before writing.
+  upgrade        Install the latest Tito and replace Tito-owned files only.
 `;
 
 function fail(message: string): void {
@@ -191,6 +201,74 @@ async function runInit(args: string[]): Promise<void> {
   }
 }
 
+async function runUpgrade(args: string[]): Promise<void> {
+  if (args.includes("-h") || args.includes("--help")) {
+    process.stdout.write(help);
+    return;
+  }
+  let root = process.cwd();
+  let confirm = false;
+  let filesOnly = false;
+  try {
+    const { values } = parseArgs({
+      args,
+      options: {
+        confirm: { type: "boolean" },
+        root: { type: "string" },
+        "files-only": { type: "boolean" },
+      },
+      strict: true,
+      allowPositionals: false,
+    });
+    confirm = values.confirm === true;
+    filesOnly = values["files-only"] === true;
+    if (values.root !== undefined) root = values.root;
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Invalid upgrade arguments.");
+    return;
+  }
+
+  const files = planUpgrade(root, titoOwnedFiles());
+  if (!confirm) {
+    process.stdout.write(formatUpgrade(root, files));
+    return;
+  }
+  if (!filesOnly && !isTitoSource(root)) {
+    const install = spawnSync(
+      "npm",
+      ["install", "-D", "@anhvupt/tito@latest"],
+      { cwd: root, encoding: "utf8" },
+    );
+    if (install.status !== 0) {
+      fail(install.stderr || "Could not install the latest Tito.");
+      return;
+    }
+    const installed = join(root, "node_modules/@anhvupt/tito/dist/cli.js");
+    const child = spawnSync(
+      process.execPath,
+      [installed, "upgrade", "--confirm", "--files-only", "--root", root],
+      { encoding: "utf8" },
+    );
+    process.stdout.write(child.stdout ?? "");
+    if (child.stderr) process.stderr.write(child.stderr);
+    process.exitCode = child.status ?? 1;
+    return;
+  }
+  applyUpgrade(root, files);
+  process.stdout.write(formatUpgrade(root, files));
+}
+
+function isTitoSource(root: string): boolean {
+  try {
+    const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
+      name?: string;
+    };
+    return manifest.name === "@anhvupt/tito";
+  } catch {
+    return false;
+  }
+}
+
 async function run(args: string[]): Promise<void> {
   if (args[0] === "inspect") {
     runInspect(args.slice(1));
@@ -202,6 +280,9 @@ async function run(args: string[]): Promise<void> {
   }
   if (args[0] === "init") {
     return runInit(args.slice(1));
+  }
+  if (args[0] === "upgrade") {
+    return runUpgrade(args.slice(1));
   }
 
   let helpRequested = false;

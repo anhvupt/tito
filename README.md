@@ -92,6 +92,17 @@ skills. If `AGENTS.md` already exists, Tito appends its bootstrap and leaves
 the existing guidance in place. It refuses to overwrite a Tito file that is
 already there. Open a new Cursor chat, then start with `/tito`.
 
+Upgrade an existing project after installing a newer Tito:
+
+```sh
+npx tito upgrade
+npx tito upgrade --confirm
+```
+
+`--confirm` installs the latest `@anhvupt/tito` and replaces Tito-owned
+agents, skills, and the Tito section of `AGENTS.md`. Consumer rules, consumer
+agents, and other project skills stay untouched.
+
 Tito is installed in each project. It is not a required global command, and
 there is no global configuration yet. A future personal default would be
 overridden by that project's `tito.yaml`. The safety floor still cannot be

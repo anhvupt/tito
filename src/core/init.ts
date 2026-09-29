@@ -5,9 +5,10 @@ import { compiledCursorAgents } from "./agents.js";
 import type { InspectionReport } from "./inspect.js";
 import { ACTIVE_RISK_PROFILE_IDS } from "./profiles.js";
 import {
-  ADOPTION_AGENTS_MD,
   PlanError,
+  TITO_BOOTSTRAP_START,
   planAdoption,
+  titoBootstrapBlock,
   type PlannedFile,
 } from "./plan.js";
 
@@ -56,7 +57,7 @@ function exists(root: string, path: string): boolean {
   }
 }
 
-function shippedSkills(): { path: string; body: string }[] {
+export function shippedSkills(): { path: string; body: string }[] {
   const root = join(dirname(fileURLToPath(import.meta.url)), "../../templates/cursor/skills");
   return readdirSync(root, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -68,16 +69,19 @@ function shippedSkills(): { path: string; body: string }[] {
 
 function agentsBootstrap(report: InspectionReport): InitFile {
   if (report.agentsMd === "absent") {
-    return { path: "AGENTS.md", action: "create", body: ADOPTION_AGENTS_MD };
+    return { path: "AGENTS.md", action: "create", body: titoBootstrapBlock() };
   }
   const current = readFileSync(join(report.root, "AGENTS.md"), "utf8");
-  if (current.includes("Hola, Tito here!")) {
+  if (
+    current.includes(TITO_BOOTSTRAP_START) ||
+    current.includes("Hola, Tito here!")
+  ) {
     return { path: "AGENTS.md", action: "keep" };
   }
   return {
     path: "AGENTS.md",
     action: "append",
-    body: `\n${ADOPTION_AGENTS_MD}`,
+    body: `\n${titoBootstrapBlock()}`,
   };
 }
 
