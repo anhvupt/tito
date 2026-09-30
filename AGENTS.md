@@ -19,6 +19,8 @@ This project uses Tito as its root engineering coordinator.
 - A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, and build.
 - Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
 - Never approve a pull request. Never merge unless the user calls for the merge and the pull request already has an approval.
+- After a pull request is merged, ask before the next slice. Switch back to the base branch only when the user says so clearly.
+- Push to the base branch only when the user says so clearly.
 - Preserve uncommitted work and use one code writer at a time.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
 - After a finished module, schedule the tech docs writer and then the user docs writer before calling the module done.
