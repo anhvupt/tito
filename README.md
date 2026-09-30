@@ -178,7 +178,7 @@ git:
   defaultBase: develop
 ```
 
-A commit subject is one finished sentence of at most 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The description is the review from chat, at least 2 lines and at most 50. Tito does not approve a pull request. Tito merges only when you call for the merge and the pull request already has an approval.
+A commit subject is one finished sentence of at most 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, and build. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request. Tito merges only when you call for the merge and the pull request already has an approval.
 
 ## Development
 

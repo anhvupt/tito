@@ -7,6 +7,7 @@ import {
   mergeDecision,
   prunePlanIndex,
   pullRequestDescription,
+  pullRequestTemplate,
   suggestBranch,
 } from "../dist/core/git-flow.js";
 
@@ -132,9 +133,69 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
     }).createIssue,
     false,
   );
-  assert.equal(pullRequestDescription("one line"), null);
-  assert.equal(pullRequestDescription("line one\nline two"), "line one\nline two");
-  assert.equal(pullRequestDescription("a\n".repeat(60)).split("\n").length, 50);
+  const description = pullRequestDescription({
+    problem: "Branch names had no shared git-flow rules.",
+    done: ["Suggest a branch before checkout."],
+    reviewFixes: ["Accept dev, develop, main, and master."],
+    checks: ["npm test passed."],
+  });
+  assert.equal(
+    description,
+    [
+      "## Problem",
+      "Branch names had no shared git-flow rules.",
+      "",
+      "## What changed",
+      "- Suggest a branch before checkout.",
+      "",
+      "## Review fixes",
+      "- Accept dev, develop, main, and master.",
+      "",
+      "## Checks",
+      "- npm test passed.",
+    ].join("\n"),
+  );
+  assert.match(description, /## Problem/);
+  assert.equal(pullRequestTemplate().includes("## Problem"), true);
+  assert.equal(pullRequestTemplate().includes("## What changed"), true);
+  assert.equal(pullRequestTemplate().includes("## Review fixes"), true);
+  assert.equal(pullRequestTemplate().includes("## Checks"), true);
+  assert.match(
+    pullRequestDescription({
+      problem: "A short problem.",
+      done: ["One change."],
+      reviewFixes: [],
+      checks: ["Build passed."],
+    }),
+    /No review fixes\./,
+  );
+  assert.equal(
+    pullRequestDescription({
+      problem: "Two\nlines",
+      done: ["One change."],
+      reviewFixes: [],
+      checks: ["Build passed."],
+    }),
+    null,
+  );
+  assert.equal(
+    pullRequestDescription({
+      problem: "A short problem.",
+      done: [],
+      reviewFixes: [],
+      checks: ["Build passed."],
+    }),
+    null,
+  );
+  assert.equal(
+    pullRequestDescription({
+      problem: "A short problem.",
+      done: Array.from({ length: 41 }, () => "Change."),
+      reviewFixes: [],
+      checks: ["Build passed."],
+    }),
+    null,
+  );
   assert.equal(canApprovePullRequest(), false);
   assert.equal(mergeDecision({ userAskedToMerge: true, hasApproval: false }).allowed, false);
   assert.equal(mergeDecision({ userAskedToMerge: false, hasApproval: true }).allowed, false);

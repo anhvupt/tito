@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { pullRequestTemplate } from "../dist/core/git-flow.js";
 
 const cliPath = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -19,6 +20,8 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   writeFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "consumer skill\n");
   writeFileSync(join(root, ".cursor/agents/tito-frontend.md"), "old tito agent\n");
   writeFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "old tito skill\n");
+  mkdirSync(join(root, ".github"), { recursive: true });
+  writeFileSync(join(root, ".github/pull_request_template.md"), "old template\n");
   writeFileSync(
     join(root, "AGENTS.md"),
     "# Tourdef\n\nKeep this.\n\n# Tito bootstrap\n\nOld Tito text.\n",
@@ -42,5 +45,9 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   assert.equal(agents.includes("Old Tito text."), false);
   assert.match(readFileSync(join(root, ".cursor/agents/tito-frontend.md"), "utf8"), /name: tito-frontend/);
   assert.match(readFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "utf8"), /name: tito/);
+  assert.equal(
+    readFileSync(join(root, ".github/pull_request_template.md"), "utf8"),
+    pullRequestTemplate(),
+  );
   rmSync(root, { recursive: true, force: true });
 });

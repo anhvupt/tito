@@ -16,6 +16,8 @@ This project uses Tito as its root engineering coordinator.
 - A commit subject is one finished sentence of at most 70 words. The body is a separate description.
 - When the user reviews a plan, save Tito's plan and the user's edit as separate files under `.tito/feedback/<slug>/`.
 - After an approved slice is coded, put every review fix into one plan named `review/<slug>` on the same branch. Ask before opening a pull request only after that plan is coded, or when the user accepts the code with no changes.
+- A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, and build.
+- Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
 - Never approve a pull request. Never merge unless the user calls for the merge and the pull request already has an approval.
 - Preserve uncommitted work and use one code writer at a time.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.

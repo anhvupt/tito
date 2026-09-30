@@ -131,11 +131,86 @@ export function linearReference(input: {
   };
 }
 
-export function pullRequestDescription(reviewText: string): string | null {
-  const lines = reviewText.split("\n");
-  if (lines.length < 2) return null;
-  if (lines.length <= 50) return reviewText;
-  return [...lines.slice(0, 49), "…"].join("\n");
+export type PullRequestDescriptionInput = {
+  readonly problem: string;
+  readonly done: readonly string[];
+  readonly reviewFixes: readonly string[];
+  readonly checks: readonly string[];
+};
+
+export const PULL_REQUEST_TEMPLATE_PATH = ".github/pull_request_template.md";
+
+const PULL_REQUEST_HEADINGS = {
+  problem: "## Problem",
+  done: "## What changed",
+  review: "## Review fixes",
+  checks: "## Checks",
+} as const;
+
+const MAX_PULL_REQUEST_LINES = 50;
+
+export function pullRequestTemplate(): string {
+  return [
+    PULL_REQUEST_HEADINGS.problem,
+    "",
+    PULL_REQUEST_HEADINGS.done,
+    "",
+    "-",
+    "",
+    PULL_REQUEST_HEADINGS.review,
+    "",
+    "-",
+    "",
+    PULL_REQUEST_HEADINGS.checks,
+    "",
+    "- Lint:",
+    "- Code quality:",
+    "- Conventions:",
+    "- Tests:",
+    "- Build:",
+    "",
+  ].join("\n");
+}
+
+function bullet(item: string): string | null {
+  const text = item.trim();
+  if (text.length === 0 || text.includes("\n")) return null;
+  return `- ${text}`;
+}
+
+function bullets(items: readonly string[]): string[] | null {
+  const lines: string[] = [];
+  for (const item of items) {
+    const line = bullet(item);
+    if (line === null) return null;
+    lines.push(line);
+  }
+  return lines;
+}
+
+export function pullRequestDescription(input: PullRequestDescriptionInput): string | null {
+  const problem = input.problem.trim();
+  if (problem.length === 0 || problem.includes("\n")) return null;
+  const done = bullets(input.done);
+  const checks = bullets(input.checks);
+  if (done === null || checks === null || done.length === 0 || checks.length === 0) return null;
+  const review = bullets(input.reviewFixes.length > 0 ? input.reviewFixes : ["No review fixes."]);
+  if (review === null) return null;
+  const lines = [
+    PULL_REQUEST_HEADINGS.problem,
+    problem,
+    "",
+    PULL_REQUEST_HEADINGS.done,
+    ...done,
+    "",
+    PULL_REQUEST_HEADINGS.review,
+    ...review,
+    "",
+    PULL_REQUEST_HEADINGS.checks,
+    ...checks,
+  ];
+  if (lines.length < 2 || lines.length > MAX_PULL_REQUEST_LINES) return null;
+  return lines.join("\n");
 }
 
 export function mergeDecision(input: {
