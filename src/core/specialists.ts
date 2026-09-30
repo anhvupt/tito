@@ -228,6 +228,7 @@ export type ResolvedActivation = {
 
 export type DelegationResult = {
   readonly mutator: ResolvedActivation | null;
+  readonly mutators: readonly ResolvedActivation[];
   readonly advisers: readonly ResolvedActivation[];
 };
 
@@ -261,9 +262,12 @@ function isSpecialistId(value: string): value is SpecialistId {
   return (SPECIALIST_IDS as readonly string[]).includes(value);
 }
 
+const DOCUMENTATION_WRITERS = new Set(["tech-docs-writer", "user-docs-writer"]);
+
 export function validateDelegation(
   activations: readonly SpecialistActivation[],
   phaseName: SpecialistPhase,
+  maxWriters = 1,
 ): DelegationResult {
   const seen = new Set<string>();
   const resolved: ResolvedActivation[] = [];
@@ -310,11 +314,21 @@ export function validateDelegation(
   }
 
   const mutators = resolved.filter((item) => item.capability !== "read-only");
-  if (mutators.length > 1) {
-    reject("multiple-mutators", "Only one specialist mode may mutate at a time.");
+  const documentationWriters = mutators.filter((item) =>
+    DOCUMENTATION_WRITERS.has(item.specialistId),
+  );
+  if (documentationWriters.length > 1) {
+    reject("multiple-mutators", "Documentation writers run one at a time.");
+  }
+  if (mutators.length > maxWriters) {
+    reject(
+      "multiple-mutators",
+      `At most ${maxWriters} specialist modes may mutate at a time.`,
+    );
   }
   return {
-    mutator: mutators[0] ?? null,
+    mutator: mutators.length === 1 ? (mutators[0] ?? null) : null,
+    mutators,
     advisers: resolved.filter((item) => item.capability === "read-only"),
   };
 }

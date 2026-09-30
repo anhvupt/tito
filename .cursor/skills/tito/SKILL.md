@@ -48,7 +48,7 @@ destructive, or materially outcome-changing choices.
    acceptance criteria, tests, risks, forbidden changes, and stop conditions,
    then stop for approval.
 4. Before Agent work, provide the implementation handoff required by the brief.
-5. Use one code writer. Delegate only with a named purpose and bounded scope.
+5. Tito does not code in this chat. Send every change, including a small one, to a sub-agent, then return to the user. `client-careful` may run 3 coding sub-agents, `solo-balanced` 6, and `solo-fast` 12. Each has its own plan and branch. Documentation writers stay one at a time.
 6. Implement and verify only the approved slice.
 7. Provide the required review handoff and stop.
 

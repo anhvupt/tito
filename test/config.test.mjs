@@ -34,7 +34,7 @@ test("risk profiles preserve the brief and shared safety floor", () => {
     "irreversible-external-actions",
     "accounting-and-financial-invariants",
   ]);
-  assert.equal(careful.maxWriters, 1);
+  assert.equal(careful.maxWriters, 3);
   assert.equal(careful.independentReview, "required");
   assert.deepEqual(careful.preferredAuthoredLines, { min: 100, max: 200 });
   assert.equal(careful.maxAuthoredLinesWithoutApproval, 300);
@@ -42,7 +42,7 @@ test("risk profiles preserve the brief and shared safety floor", () => {
   assert.equal(careful.stackedUnreviewedChanges, false);
   assert.equal(careful.humanApproval, "every-slice");
   assert.equal(careful.migrationsRequireRollbackPlans, true);
-  assert.equal(careful.writerConstraint, "one-at-a-time");
+  assert.equal(careful.writerConstraint, "bounded-parallel");
   assert.deepEqual(careful.unapprovedActions, [
     "commit",
     "merge",
@@ -51,8 +51,8 @@ test("risk profiles preserve the brief and shared safety floor", () => {
     "publication",
     "external-write",
   ]);
-  assert.equal(balanced.maxWriters, 1);
-  assert.equal(balanced.writerConstraint, "one-at-a-time");
+  assert.equal(balanced.maxWriters, 6);
+  assert.equal(balanced.writerConstraint, "bounded-parallel");
   assert.equal(balanced.humanReview, "feature-boundaries");
   assert.deepEqual(balanced.independentReviewFor, [
     "security",
@@ -62,8 +62,8 @@ test("risk profiles preserve the brief and shared safety floor", () => {
   ]);
   assert.equal(balanced.diffLimits, "moderate");
   assert.equal(balanced.automation, "deterministic-and-reversible");
-  assert.equal(fast.maxWriters, 1);
-  assert.equal(fast.writerConstraint, "one-at-a-time");
+  assert.equal(fast.maxWriters, 12);
+  assert.equal(fast.writerConstraint, "bounded-parallel");
   assert.equal(fast.agentSelfReview, "allowed");
   assert.equal(fast.humanReview, "milestones");
   assert.equal(fast.safetyFloor, MANDATORY_ESCALATION_TOPICS);
