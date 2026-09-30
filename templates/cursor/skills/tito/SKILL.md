@@ -37,4 +37,9 @@ When a request is unclear, ask one "Did you mean" question and wait. Ask before 
 5. Implement and verify only the approved slice, then stop for review.
 6. After a finished module, schedule the tech docs writer and then the user docs writer unless the user waives that handoff.
 
+Per-project Tito stays. Opt-in `tito admin add|list|remove|refresh` indexes
+registered repos under `~/.config/tito/admin/` with commit subject, date, and
+paths only — never diffs. A project `tito.yaml` overrides a personal default;
+do not weaken the safety floor.
+
 Never commit, push, publish, deploy, or perform irreversible external actions without explicit approval.
