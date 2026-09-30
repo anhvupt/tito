@@ -165,6 +165,21 @@ A small, obvious change can move from discovery directly to an explicitly
 approved slice. Review feedback can return an in-scope slice to implementation.
 Other lifecycle skips are rejected.
 
+## Git flow
+
+Tito suggests the branch before checkout, for example `Suggested branch: feat/short-slug from develop`. You accept it or name another base or type. The base is `dev`, `develop`, `main`, or `master`. `dev` and `develop` are interchangeable. `main` and `master` are interchangeable. The type is `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`.
+
+`tito.yaml` may set the default base:
+
+```yaml
+schemaVersion: 1
+profile: client-careful
+git:
+  defaultBase: develop
+```
+
+A commit subject is one finished sentence of at most 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The description is the review from chat, at least 2 lines and at most 50. Tito does not approve a pull request. Tito merges only when you call for the merge and the pull request already has an approval.
+
 ## Development
 
 Requirements:
