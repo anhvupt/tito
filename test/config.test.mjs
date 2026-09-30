@@ -80,6 +80,12 @@ test("parses every active profile and rejects closed-schema violations", () => {
       profile,
     });
   }
+  for (const defaultBase of ["dev", "develop", "main", "master"]) {
+    assert.deepEqual(
+      parseConfig(`schemaVersion: 1\nprofile: solo-balanced\ngit:\n  defaultBase: ${defaultBase}\n`),
+      { schemaVersion: 1, profile: "solo-balanced", git: { defaultBase } },
+    );
+  }
 
   const cases = [
     ["schemaVersion: [\n", ["yaml-syntax"]],
@@ -88,6 +94,7 @@ test("parses every active profile and rejects closed-schema violations", () => {
     ["- a\n", ["not-a-mapping"]],
     ["schemaVersion: 1\nschemaVersion: 2\nprofile: solo-balanced\n", ["duplicate-key"]],
     ["schemaVersion: 1\nprofile: solo-balanced\nsafetyFloor: []\n", ["unknown-field"]],
+    ["schemaVersion: 1\nprofile: solo-balanced\ngit:\n  defaultBase: trunk\n", ["unknown-field"]],
     ["profile: solo-balanced\n", ["missing-field"]],
     ["schemaVersion: 1\n", ["missing-field"]],
     ["schemaVersion: 2\nprofile: solo-balanced\n", ["unsupported-schema-version"]],

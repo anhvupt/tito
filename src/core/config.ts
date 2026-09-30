@@ -1,4 +1,5 @@
 import { isMap, isScalar, parseAllDocuments } from "yaml";
+import { BRANCH_BASES, type BranchBase } from "./git-flow.js";
 import {
   ACTIVE_RISK_PROFILE_IDS,
   isActiveRiskProfileId,
@@ -7,7 +8,7 @@ import {
 } from "./profiles.js";
 
 export const CONFIG_SCHEMA_VERSION = 1;
-const FIELDS = new Set(["schemaVersion", "profile"]);
+const FIELDS = new Set(["schemaVersion", "profile", "git"]);
 const NON_SCALAR = Symbol("non-scalar");
 
 export type ConfigIssueCode =
@@ -29,6 +30,7 @@ export type ConfigIssue = {
 export type TitoConfig = {
   readonly schemaVersion: typeof CONFIG_SCHEMA_VERSION;
   readonly profile: ActiveRiskProfileId;
+  readonly git?: { readonly defaultBase: BranchBase };
 };
 
 export class ConfigValidationError extends Error {
@@ -56,6 +58,22 @@ function shown(value: unknown): string {
     return String(value);
   }
   return "a non-scalar value";
+}
+
+function isBranchBase(value: unknown): value is BranchBase {
+  return typeof value === "string" && (BRANCH_BASES as readonly string[]).includes(value);
+}
+
+function readGitBase(node: unknown): BranchBase | "invalid" | null {
+  if (!isMap(node)) return "invalid";
+  let base: BranchBase | "invalid" | null = null;
+  for (const item of node.items) {
+    const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
+    if (key !== "defaultBase") return "invalid";
+    const value = isScalar(item.value) ? item.value.value : null;
+    base = isBranchBase(value) ? value : "invalid";
+  }
+  return base;
 }
 
 function profileIssue(value: unknown): ConfigIssue | null {
@@ -131,6 +149,15 @@ export function parseConfig(text: string): TitoConfig {
       issues.push(issue("unknown-field", `Unknown field "${key}".`, key));
       continue;
     }
+    if (key === "git") {
+      const base = readGitBase(item.value);
+      if (base === "invalid") {
+        issues.push(issue("unknown-field", 'Unknown field "git.defaultBase".', "git.defaultBase"));
+      } else if (base) {
+        values.set("git.defaultBase", base);
+      }
+      continue;
+    }
     values.set(key, isScalar(item.value) ? item.value.value : NON_SCALAR);
   }
 
@@ -158,6 +185,10 @@ export function parseConfig(text: string): TitoConfig {
     throw new ConfigValidationError([
       issue("unknown-profile", "Profile must be a string.", "profile"),
     ]);
+  }
+  const defaultBase = values.get("git.defaultBase");
+  if (isBranchBase(defaultBase)) {
+    return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git: { defaultBase } };
   }
   return { schemaVersion: CONFIG_SCHEMA_VERSION, profile };
 }

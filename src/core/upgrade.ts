@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { compiledCursorAgents } from "./agents.js";
+import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate } from "./git-flow.js";
 import { shippedSkills } from "./init.js";
 import {
   TITO_BOOTSTRAP_END,
@@ -69,7 +70,11 @@ export function planUpgrade(
 }
 
 export function titoOwnedFiles(): { path: string; body: string }[] {
-  return [...compiledCursorAgents(), ...shippedSkills()];
+  return [
+    ...compiledCursorAgents(),
+    ...shippedSkills(),
+    { path: PULL_REQUEST_TEMPLATE_PATH, body: pullRequestTemplate() },
+  ];
 }
 
 export function formatUpgrade(root: string, files: readonly UpgradeFile[]): string {

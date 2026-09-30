@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSy
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compiledCursorAgents } from "./agents.js";
+import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate } from "./git-flow.js";
 import type { InspectionReport } from "./inspect.js";
 import { ACTIVE_RISK_PROFILE_IDS } from "./profiles.js";
 import {
@@ -104,7 +105,15 @@ export function planInitialization(report: InspectionReport, profile: string): {
       ? { path: skill.path, action: "keep" as const }
       : { path: skill.path, action: "create" as const, body: skill.body },
   );
-  return { root: adoption.root, profile: adoption.profile, files: [...files, ...agents, ...skills] };
+  const template = pullRequestTemplate();
+  const pullRequest = exists(report.root, PULL_REQUEST_TEMPLATE_PATH)
+    ? { path: PULL_REQUEST_TEMPLATE_PATH, action: "keep" as const }
+    : { path: PULL_REQUEST_TEMPLATE_PATH, action: "create" as const, body: template };
+  return {
+    root: adoption.root,
+    profile: adoption.profile,
+    files: [...files, ...agents, ...skills, pullRequest],
+  };
 }
 
 export function formatInitialization(plan: ReturnType<typeof planInitialization>): string {
