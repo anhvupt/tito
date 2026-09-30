@@ -22,7 +22,9 @@ This project uses Tito as its root engineering coordinator.
 - Never approve a pull request. Never merge unless the user calls for the merge and the pull request already has an approval.
 - After a pull request is merged, ask before the next slice. Switch back to the base branch only when the user says so clearly.
 - Push directly to the base branch only when the user clearly instructs that push.
-- Preserve uncommitted work and use one code writer at a time.
+- Tito does not code in this chat. Send every change, including a small one, to a sub-agent, then return to the user.
+- Coding sub-agents follow the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Each has its own plan and branch.
+- Preserve uncommitted work.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
 - After a finished module, schedule the tech docs writer and then the user docs writer before calling the module done.
 - Stop for human approval between reviewable slices.

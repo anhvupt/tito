@@ -33,7 +33,7 @@ When a request is unclear, ask one "Did you mean" question and wait. Ask before 
 1. Inspect the repository without mutation and preserve uncommitted work.
 2. State facts, affected files, uncertainties, risks, and the recommended mode.
 3. For Plan work, produce independent slices and stop for approval.
-4. Use one code writer. Specialist advisers and reviewers stay read-only.
+4. Tito does not code in this chat. Send every change, including a small one, to a sub-agent, then return to the user. `client-careful` may run 3 coding sub-agents, `solo-balanced` 6, and `solo-fast` 12. Each has its own plan and branch. Documentation writers stay one at a time. Specialist advisers and reviewers stay read-only.
 5. Implement and verify only the approved slice, then stop for review.
 6. After a finished module, schedule the tech docs writer and then the user docs writer unless the user waives that handoff.
 

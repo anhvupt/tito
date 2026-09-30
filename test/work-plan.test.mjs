@@ -188,10 +188,39 @@ test("rejects inconsistent progress and multiple active writers", () => {
     "invalid-progress",
     progress({ activeReadOnlySliceIds: ["missing"] }),
   );
-  rejects(
+  evaluateWorkPlan(
     candidate,
-    "multiple-active-writers",
     progress({ implementationStates: { a: "IMPLEMENTING", b: "IMPLEMENTING" } }),
+  );
+  const overBalanced = Array.from({ length: 7 }, (_, index) => write(`w${index}`));
+  rejects(
+    plan(overBalanced),
+    "multiple-active-writers",
+    progress({
+      implementationStates: Object.fromEntries(
+        overBalanced.map((slice) => [slice.id, "IMPLEMENTING"]),
+      ),
+    }),
+  );
+  const careful = ["a", "b", "c", "d"].map((id) => write(id, [], "independent"));
+  const carefulReviews = careful.map((slice) => review(`${slice.id}-review`, slice.id));
+  evaluateWorkPlan(
+    plan([...careful.slice(0, 3), ...carefulReviews.slice(0, 3)], "client-careful"),
+    progress({
+      implementationStates: { a: "IMPLEMENTING", b: "IMPLEMENTING", c: "IMPLEMENTING" },
+    }),
+  );
+  rejects(
+    plan([...careful, ...carefulReviews], "client-careful"),
+    "invalid-progress",
+    progress({
+      implementationStates: {
+        a: "IMPLEMENTING",
+        b: "IMPLEMENTING",
+        c: "READY_FOR_REVIEW",
+        d: "READY_FOR_REVIEW",
+      },
+    }),
   );
   rejects(
     plan([write("a"), review("review", "a")]),
@@ -219,26 +248,24 @@ test("rejects inconsistent progress and multiple active writers", () => {
     "invalid-progress",
     progress({ implementationStates: { a: "APPROVED_FOR_COMMIT" } }),
   );
-  rejects(
+  evaluateWorkPlan(
     plan([
       write("a", [], "independent"),
       review("a-review", "a"),
       write("b", [], "independent"),
       review("b-review", "b"),
     ], "client-careful"),
-    "invalid-progress",
     progress({
       implementationStates: { a: "READY_FOR_REVIEW", b: "IMPLEMENTING" },
     }),
   );
-  rejects(
+  evaluateWorkPlan(
     plan([
       write("a", [], "independent"),
       review("a-review", "a"),
       write("b", [], "independent"),
       review("b-review", "b"),
     ], "client-careful"),
-    "invalid-progress",
     progress({
       implementationStates: {
         a: "READY_FOR_REVIEW",

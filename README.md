@@ -56,8 +56,11 @@ mode decides whether it may change anything:
 | Tech docs writer | — | Update technical documentation |
 | User docs writer | — | Update user documentation |
 
-Several read-only specialists may work together. Only one mutating mode may be
-active. Backend and frontend work is split into sequential slices. After a
+Several read-only specialists may work together. Coding sub-agents follow the
+profile cap: `client-careful` 3, `solo-balanced` 6, and `solo-fast` 12. Each
+has its own plan and branch. Tito does not code in the chat. Every change,
+including a small one, goes to a sub-agent, and Tito returns to the user.
+Backend and frontend work can run together inside that cap. After a
 module is finished, Tito schedules the tech docs writer and then the user docs
 writer, one at a time, before calling that module done. Skip that handoff only
 when you explicitly waive it for that module. Each specialist carries triggers,

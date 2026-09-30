@@ -3,6 +3,7 @@ import {
   type LifecycleState,
 } from "./lifecycle.js";
 import {
+  RISK_PROFILES,
   isActiveRiskProfileId,
   type ActiveRiskProfileId,
 } from "./profiles.js";
@@ -318,8 +319,12 @@ export function evaluateWorkPlan(
       slice.kind === "implementation" &&
       progress.implementationStates[slice.id] === "IMPLEMENTING",
   );
-  if (activeWriters.length > 1) {
-    reject("multiple-active-writers", "Only one implementation slice may be active.");
+  const maxWriters = RISK_PROFILES[validated.profile].maxWriters;
+  if (activeWriters.length > maxWriters) {
+    reject(
+      "multiple-active-writers",
+      `At most ${maxWriters} implementation slices may be active.`,
+    );
   }
   const unreviewedSlices = validated.slices.filter(
     (slice) =>
@@ -328,9 +333,12 @@ export function evaluateWorkPlan(
   );
   if (
     validated.profile === "client-careful" &&
-    activeWriters.length + unreviewedSlices.length > 1
+    activeWriters.length + unreviewedSlices.length > maxWriters
   ) {
-    reject("invalid-progress", "Client-careful cannot stack unreviewed work.");
+    reject(
+      "invalid-progress",
+      "Client-careful cannot stack unreviewed work beyond its writer cap.",
+    );
   }
 
   const dependencyReasons = (slice: WorkPlanSlice): string[] => {

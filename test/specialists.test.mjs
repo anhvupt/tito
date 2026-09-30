@@ -11,9 +11,9 @@ function activation(specialistId, modeId, purpose = "Bounded purpose") {
   return { specialistId, modeId, purpose };
 }
 
-function rejects(activations, phase, code) {
+function rejects(activations, phase, code, maxWriters) {
   assert.throws(
-    () => validateDelegation(activations, phase),
+    () => validateDelegation(activations, phase, maxWriters),
     (error) => {
       assert.ok(error instanceof DelegationError);
       assert.equal(error.code, code);
@@ -87,6 +87,28 @@ test("delegation follows the selected specialist mode", () => {
     ],
     "implementation",
     "multiple-mutators",
+  );
+  const parallel = validateDelegation(
+    [
+      activation("backend-engineer", "implement"),
+      activation("frontend-engineer", "implement"),
+      activation("devops-engineer", "implement"),
+    ],
+    "implementation",
+    3,
+  );
+  assert.equal(parallel.mutators.length, 3);
+  assert.equal(parallel.mutator, null);
+  rejects(
+    [
+      activation("backend-engineer", "implement"),
+      activation("frontend-engineer", "implement"),
+      activation("devops-engineer", "implement"),
+      activation("tech-docs-writer", "update"),
+    ],
+    "implementation",
+    "multiple-mutators",
+    3,
   );
   rejects([activation("erp-specialist", "implement")], "implementation", "unknown-mode");
   rejects([activation("frontend-engineer", "implement")], "planning", "wrong-phase");

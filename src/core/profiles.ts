@@ -36,8 +36,8 @@ export const RISK_PROFILES = deepFreeze({
   "client-careful": {
     id: "client-careful",
     status: "active",
-    maxWriters: 1,
-    writerConstraint: "one-at-a-time",
+    maxWriters: 3,
+    writerConstraint: "bounded-parallel",
     independentReview: "required",
     preferredAuthoredLines: { min: 100, max: 200 },
     maxAuthoredLinesWithoutApproval: 300,
@@ -58,8 +58,8 @@ export const RISK_PROFILES = deepFreeze({
   "solo-balanced": {
     id: "solo-balanced",
     status: "active",
-    maxWriters: 1,
-    writerConstraint: "one-at-a-time",
+    maxWriters: 6,
+    writerConstraint: "bounded-parallel",
     humanReview: "feature-boundaries",
     independentReviewFor: ["security", "data", "migrations", "architecture"],
     diffLimits: "moderate",
@@ -69,8 +69,8 @@ export const RISK_PROFILES = deepFreeze({
   "solo-fast": {
     id: "solo-fast",
     status: "active",
-    maxWriters: 1,
-    writerConstraint: "one-at-a-time",
+    maxWriters: 12,
+    writerConstraint: "bounded-parallel",
     agentSelfReview: "allowed",
     humanReview: "milestones",
     safetyFloor: MANDATORY_ESCALATION_TOPICS,

@@ -74,7 +74,7 @@ Tito may delegate to:
 
 Only specialists relevant to the task should be loaded. Tito remains the root coordinator and is never delegated to as a specialist.
 
-Backend, frontend, and DevOps engineers may write, but only one mutating mode may be active. A mode owns that authority: frontend design is read-only, while frontend implementation writes files; DevOps planning is read-only, while DevOps implementation changes infrastructure only with human approval. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers stay read-only. A change that needs both backend and frontend work is split into sequential writer slices. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
+Backend, frontend, and DevOps engineers may write. `client-careful` may run 3 coding sub-agents, `solo-balanced` 6, and `solo-fast` 12. A mode owns that authority: frontend design is read-only, while frontend implementation writes files; DevOps planning is read-only, while DevOps implementation changes infrastructure only with human approval. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers stay read-only. Backend and frontend slices can run together inside the profile cap. Each slice keeps its own plan and branch. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
 
 Each specialist manifest indexes its role, model gate, triggers, knowledge references, handoffs, and modes. Role prompts stay lean and load knowledge progressively. If a requested model is unavailable, Tito asks which model to use instead of substituting one silently.
 
@@ -448,8 +448,9 @@ prerequisites. The graph determines readiness; the lifecycle remains the
 authority for human approval and implementation state.
 
 - Independent read-only slices may be ready together.
-- Multiple implementation slices may be ready candidates, but Tito does not
-  select one silently and only one writer may be active.
+- Multiple implementation slices may be ready candidates. Tito does not
+  select one silently. Active coding slices stay within the profile cap:
+  `client-careful` 3, `solo-balanced` 6, `solo-fast` 12.
 - A review slice may start when its implementation reaches
   `READY_FOR_REVIEW`.
 - In `client-careful`, implementation dependents wait for
@@ -610,7 +611,7 @@ Use a worktree for:
 - explicitly approved parallel writers;
 - work that should not affect the current checkout.
 
-Client-careful mode defaults to one writer and one active implementation branch.
+Client-careful mode allows 3 writers. Each writer has its own plan, branch, and review size. Active writers plus unreviewed slices stay within that cap. `solo-balanced` allows 6 writers and `solo-fast` allows 12. Tito does not code in the coordinator chat. Every change, including a small one, goes to a sub-agent, and Tito returns to the user.
 
 ### Review routing
 
