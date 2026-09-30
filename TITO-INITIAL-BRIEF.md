@@ -304,6 +304,12 @@ Use Node built-ins where practical. Keep the dependency tree small.
 - No client data, secrets, transcripts, or private fixtures.
 - No remote telemetry by default.
 
+Per-project install stays the default. An opt-in local admin index
+(`tito admin add|list|remove|refresh`) may register repositories under
+`~/.config/tito/admin/` and refresh recent commit subjects, dates, and touched
+paths only — never commit diffs. A project `tito.yaml` overrides any personal
+default, and the safety floor must not be weakened.
+
 ## Self-hosting
 
 Tito should eventually develop Tito.

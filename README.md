@@ -110,10 +110,11 @@ npx tito upgrade --confirm
 agents, skills, and the Tito section of `AGENTS.md`. Consumer rules, consumer
 agents, and other project skills stay untouched.
 
-Tito is installed in each project. It is not a required global command, and
-there is no global configuration yet. A future personal default would be
-overridden by that project's `tito.yaml`. The safety floor still cannot be
-weakened.
+Tito is installed in each project. It is not a required global command.
+An opt-in local admin index (`tito admin add|list|remove|refresh`) can register
+repos under `~/.config/tito/admin/` and store recent commit subjects, dates, and
+touched paths — never diffs. A project `tito.yaml` still overrides any personal
+default. The safety floor cannot be weakened.
 
 ## What works today
 
@@ -149,6 +150,10 @@ node dist/cli.js inspect
 node dist/cli.js inspect --root .
 node dist/cli.js apply --dry-run --profile solo-balanced
 node dist/cli.js init --profile solo-balanced
+node dist/cli.js admin add
+node dist/cli.js admin list
+node dist/cli.js admin refresh
+node dist/cli.js admin remove --root /path/to/repo
 ```
 
 `inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is
@@ -161,6 +166,11 @@ does not write. `apply` without `--dry-run` is refused.
 specialist agent files. It writes those files only with `--confirm`, and it
 refuses when an existing file would be overwritten. In chat, `/tito-init` runs
 this same command.
+
+`admin` is opt-in. `add` registers the current repo (or `--root`), `list` prints
+registered paths, `remove` drops one path, and `refresh` writes local branch plus
+the last 50 commit subjects, dates, and file paths (secrets like `.env` skipped;
+no diffs) for chat and CLI to share.
 
 ## How work moves
 

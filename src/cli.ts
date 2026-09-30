@@ -25,6 +25,16 @@ import {
   planUpgrade,
   titoOwnedFiles,
 } from "./core/upgrade.js";
+import {
+  AdminError,
+  addRepo,
+  formatContexts,
+  formatRepos,
+  listRepos,
+  refreshRepos,
+  removeRepo,
+  resolveAdminRoot,
+} from "./core/admin.js";
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -38,6 +48,10 @@ Usage:
   tito apply --dry-run --profile <id> [--root <path>]
   tito init [--profile <id>] [--root <path>] [--confirm]
   tito upgrade [--root <path>] [--confirm]
+  tito admin add [--root <path>] [--admin-root <path>]
+  tito admin list [--admin-root <path>]
+  tito admin remove --root <path> [--admin-root <path>]
+  tito admin refresh [--admin-root <path>]
 
 Options:
   -h, --help     Show help
@@ -48,6 +62,7 @@ Commands:
   apply          Dry-run an adoption plan. Writes are not available.
   init           Install Tito files and specialist agents. Confirm before writing.
   upgrade        Install the latest Tito and replace Tito-owned files only.
+  admin          Opt-in local repo index: add, list, remove, refresh.
 `;
 
 function fail(message: string): void {
@@ -269,6 +284,82 @@ function isTitoSource(root: string): boolean {
   }
 }
 
+function runAdmin(args: string[]): void {
+  if (args.includes("-h") || args.includes("--help") || args.length === 0) {
+    process.stdout.write(help);
+    return;
+  }
+
+  const action = args[0];
+  const rest = args.slice(1);
+  if (
+    action !== "add" &&
+    action !== "list" &&
+    action !== "remove" &&
+    action !== "refresh"
+  ) {
+    fail(`Unknown admin action: ${action}`);
+    return;
+  }
+
+  let root = process.cwd();
+  let adminRoot = resolveAdminRoot();
+  let rootProvided = false;
+  try {
+    const { values } = parseArgs({
+      args: rest,
+      options: {
+        root: { type: "string" },
+        "admin-root": { type: "string" },
+      },
+      strict: true,
+      allowPositionals: false,
+    });
+    if (values.root !== undefined) {
+      root = values.root;
+      rootProvided = true;
+    }
+    if (values["admin-root"] !== undefined) {
+      adminRoot = resolveAdminRoot(values["admin-root"]);
+    }
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Invalid admin arguments.");
+    return;
+  }
+
+  try {
+    if (action === "add") {
+      const result = addRepo(adminRoot, root);
+      process.stdout.write(
+        result.created
+          ? `added: ${result.repo.path}\n`
+          : `kept: ${result.repo.path}\n`,
+      );
+      return;
+    }
+    if (action === "list") {
+      process.stdout.write(formatRepos(listRepos(adminRoot)));
+      return;
+    }
+    if (action === "remove") {
+      if (!rootProvided) {
+        fail("Missing required option --root.");
+        return;
+      }
+      const removed = removeRepo(adminRoot, root);
+      process.stdout.write(`removed: ${removed.path}\n`);
+      return;
+    }
+    process.stdout.write(formatContexts(refreshRepos(adminRoot)));
+  } catch (error) {
+    if (error instanceof AdminError) {
+      fail(`${error.code}: ${error.message}`);
+      return;
+    }
+    throw error;
+  }
+}
+
 async function run(args: string[]): Promise<void> {
   if (args[0] === "inspect") {
     runInspect(args.slice(1));
@@ -283,6 +374,10 @@ async function run(args: string[]): Promise<void> {
   }
   if (args[0] === "upgrade") {
     return runUpgrade(args.slice(1));
+  }
+  if (args[0] === "admin") {
+    runAdmin(args.slice(1));
+    return;
   }
 
   let helpRequested = false;

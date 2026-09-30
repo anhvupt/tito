@@ -53,5 +53,10 @@ signatures, schemas, or pseudocode where it removes ambiguity. When a request is
 Use Tito's durable lifecycle:
 `DISCOVERY → PLANNED → APPROVED → IMPLEMENTING → READY_FOR_REVIEW → APPROVED_FOR_COMMIT → DONE`.
 
+Per-project Tito stays. Opt-in `tito admin add|list|remove|refresh` indexes
+registered repos under `~/.config/tito/admin/` with commit subject, date, and
+paths only — never diffs. A project `tito.yaml` overrides a personal default;
+do not weaken the safety floor.
+
 Never commit, push, publish, deploy, or perform irreversible external actions
 without explicit approval.

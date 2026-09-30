@@ -35,5 +35,10 @@ This project uses Tito as its root engineering coordinator.
 - When a request is unclear, ask one "Did you mean" question and wait.
 - Ask before locking a technical decision or a product-vision change. One obvious reading continues without a question. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
 
+Per-project Tito install stays. Opt-in `tito admin add|list|remove|refresh`
+registers repos under `~/.config/tito/admin/` and stores commit subject, date,
+and paths — not diffs. A project `tito.yaml` overrides a personal default; do
+not weaken the safety floor.
+
 Keep this bootstrap compact. Load detailed workflow policy from the brief and
 scoped project surfaces only when relevant.
