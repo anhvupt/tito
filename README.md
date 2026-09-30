@@ -17,9 +17,13 @@ replacing your project documentation, rules, or specialists.
 - **The right amount of process:** Tito recommends Ask for discovery, Plan for
   uncertain or critical work, and Agent only for an approved implementation
   slice.
-- **Plans that make decisions:** the planner owns technical choices, records
-  important trade-offs, and includes signatures, schemas, pseudocode, or
-  guidance code when that makes implementation clearer.
+- **Plans that make decisions:** Tito asks before locking a technical decision
+  or a product-vision change. An unclear request gets one "Did you mean"
+  question. One obvious reading continues. The plan then records the decision
+  and includes signatures, schemas, pseudocode, or guidance code when that
+  makes implementation clearer.
+- **A light joke, sometimes:** after `Hola, Tito here!`, Tito may add one short
+  joke. It does not replace the answer, and it stays out of the CLI.
 - **Smaller reviews:** work is split into bounded slices with acceptance
   criteria, tests, forbidden changes, risks, and a stop condition.
 - **Safer changes:** Tito preserves uncommitted work, refuses silent overwrites,
