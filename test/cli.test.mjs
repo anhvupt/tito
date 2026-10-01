@@ -25,9 +25,14 @@ test("compiled CLI exposes help and version", async () => {
   assert.match(help.stdout, /tito apply --dry-run --profile <id>/);
   assert.equal(help.stderr, "");
 
+  const packageJson = JSON.parse(
+    await readFile(new URL("../package.json", import.meta.url), "utf8"),
+  );
+  const packageVersion = packageJson.version;
+
   const version = runCli(["--version"]);
   assert.equal(version.status, 0);
-  assert.equal(version.stdout, "0.1.3\n");
+  assert.equal(version.stdout, `${packageVersion}\n`);
   assert.equal(version.stderr, "");
 
   const compiled = await readFile(cliUrl, "utf8");
