@@ -8,8 +8,11 @@ import {
 } from "./profiles.js";
 
 export const CONFIG_SCHEMA_VERSION = 1;
-const FIELDS = new Set(["schemaVersion", "profile", "git"]);
+const FIELDS = new Set(["schemaVersion", "profile", "git", "product"]);
+const SCREEN_LANGUAGES = ["vi", "en"] as const;
 const NON_SCALAR = Symbol("non-scalar");
+
+export type ScreenLanguage = (typeof SCREEN_LANGUAGES)[number];
 
 export type ConfigIssueCode =
   | "yaml-syntax"
@@ -31,6 +34,7 @@ export type TitoConfig = {
   readonly schemaVersion: typeof CONFIG_SCHEMA_VERSION;
   readonly profile: ActiveRiskProfileId;
   readonly git?: { readonly defaultBase: BranchBase };
+  readonly product?: { readonly screenLanguage: ScreenLanguage };
 };
 
 export class ConfigValidationError extends Error {
@@ -74,6 +78,22 @@ function readGitBase(node: unknown): BranchBase | "invalid" | null {
     base = isBranchBase(value) ? value : "invalid";
   }
   return base;
+}
+
+function isScreenLanguage(value: unknown): value is ScreenLanguage {
+  return typeof value === "string" && (SCREEN_LANGUAGES as readonly string[]).includes(value);
+}
+
+function readScreenLanguage(node: unknown): ScreenLanguage | "invalid" | null {
+  if (!isMap(node)) return "invalid";
+  let language: ScreenLanguage | "invalid" | null = null;
+  for (const item of node.items) {
+    const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
+    if (key !== "screenLanguage") return "invalid";
+    const value = isScalar(item.value) ? item.value.value : null;
+    language = isScreenLanguage(value) ? value : "invalid";
+  }
+  return language;
 }
 
 function profileIssue(value: unknown): ConfigIssue | null {
@@ -158,6 +178,17 @@ export function parseConfig(text: string): TitoConfig {
       }
       continue;
     }
+    if (key === "product") {
+      const language = readScreenLanguage(item.value);
+      if (language === "invalid") {
+        issues.push(
+          issue("unknown-field", 'Unknown field "product.screenLanguage".', "product.screenLanguage"),
+        );
+      } else if (language) {
+        values.set("product.screenLanguage", language);
+      }
+      continue;
+    }
     values.set(key, isScalar(item.value) ? item.value.value : NON_SCALAR);
   }
 
@@ -187,8 +218,11 @@ export function parseConfig(text: string): TitoConfig {
     ]);
   }
   const defaultBase = values.get("git.defaultBase");
-  if (isBranchBase(defaultBase)) {
-    return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git: { defaultBase } };
-  }
+  const screenLanguage = values.get("product.screenLanguage");
+  const git = isBranchBase(defaultBase) ? { defaultBase } : undefined;
+  const product = isScreenLanguage(screenLanguage) ? { screenLanguage } : undefined;
+  if (git && product) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git, product };
+  if (git) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git };
+  if (product) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, product };
   return { schemaVersion: CONFIG_SCHEMA_VERSION, profile };
 }
