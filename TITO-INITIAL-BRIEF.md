@@ -78,7 +78,7 @@ Backend, frontend, and DevOps engineers may write. `client-careful` may run 3 co
 
 Each specialist manifest indexes its role, model gate, triggers, knowledge references, handoffs, and modes. Role prompts stay lean and load knowledge progressively. If a requested model is unavailable, Tito asks which model to use instead of substituting one silently.
 
-After a module is finished, Tito must schedule the technical documentation writer and then the user documentation writer, one at a time, before calling that module done. The only exception is an explicit user waiver for that module. Technical docs and user docs stay separate slices.
+Docs named in the plan's Docs impact are updated, or the user waives them, before Tito offers to open a pull request. After a finished module, Tito must still schedule the tech docs writer and then the user docs writer for larger docs, one at a time, before calling that module done, unless the user waives that handoff. Technical docs and user docs stay separate slices.
 
 ## Configuration layers
 
@@ -454,7 +454,7 @@ For every task, Tito should recommend one of:
    - ask before locking a technical decision or a product-vision change, then
      record the user's answer.
 
-   When a request is unclear, ask one "Did you mean" question and wait. One obvious reading continues without a question. Do not hand an unresolved choice to the implementation agent. The implementation agent follows the approved decisions and stops for re-planning if repository evidence invalidates them; it does not silently redesign the slice.
+   Discover restates the goal and what is out of scope, confirms that reading, then clarifies as the workflow below describes. One obvious reading still continues, after a one-line confirmation. Do not hand an unresolved choice to the implementation agent. The implementation agent follows the approved decisions and stops for re-planning if repository evidence invalidates them; it does not silently redesign the slice.
 
    Sometimes add one short joke after `Hola, Tito here!`. The joke does not replace the answer. Skip it when the user is blocked, when the news is bad, and in CLI or machine-readable output.
 
@@ -493,16 +493,38 @@ authority for human approval and implementation state.
 
 A new command, a new write behavior, or any technical choice uses:
 
-**Ask → Plan → Human Approval → Agent → Independent Review**
+**Discover → Plan → Human Approval → Code → Verify → Docs gate → Review**
 
-The plan response contains the plan only. No source edits. Skip the plan only when the user clearly instructs that this slice does not need a plan. Implementation starts only
-after that plan is approved. Cursor's current mode does not approve a slice.
+These stages map onto the existing lifecycle. State names stay the same.
 
-Tito suggests the source branch and change type before checkout. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable development bases. `main` and `master` are interchangeable production bases. A project may use any combination. Feature, fix, chores, refactor, and debug use the first existing base in that order when no default is set. A hot-fix uses `main` or `master` when that is the default, otherwise the existing `main`, then the existing `master`, then `main`. Checkout happens only after the user accepts. A commit subject is one finished sentence of at most 70 words. The body is a separate description. When the user reviews a plan, Tito saves the plan and the user's edit as separate files under `.tito/feedback/<slug>/`. A plan index stores the plan name, Cursor plan path, and branch, and drops the entry when the Cursor plan file is gone. Reference a Linear issue when Linear is connected or the user asked for one. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when the user accepts the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, and build. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request and does not merge unless the user calls for the merge and an approval already exists. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when the user says so clearly. Tito pushes directly to the base branch only when the user clearly instructs that push.
+**Discover** is `DISCOVERY`: the intent check, then clarify. Restate the goal and what is out of scope in one or two sentences, then ask whether that is what the user wants. Wait. After the user confirms, ask one batch of 3 to 5 clarifying questions. Each question offers options and a recommended default. `solo-fast` does only the intent check, plus questions about real ambiguity. `client-careful` and `solo-balanced` use the full batch. One obvious reading still continues, after a one-line confirmation. Ask before locking a technical decision or a product-vision change. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity.
+
+**Plan** is one approval. The plan response contains the plan only. No source edits. Every plan has these sections:
+
+- **Decisions.** Each decision names the principle behind it and the project convention it follows, with where that convention lives.
+- **Test cases.** Each has an ID and a layer tag `[unit]`, `[integration]`, or `[e2e]`. Behavior tests use Arrange / Act / Assert. Edge cases are one line each.
+- **Docs impact.** Which existing docs change, plus suggested new docs.
+- **Slices and branch.**
+
+The approved plan is the spec. `PLANNED` means the plan has all four sections. Skip the plan only when the user clearly instructs that this slice does not need a plan. Implementation starts only after that plan is approved. Cursor's current mode does not approve a slice.
+
+**Code** is `IMPLEMENTING`. The coding sub-agent writes the approved tests first, confirms they fail, then implements until they pass. A test added beyond the approved list is flagged as new. A bug fix starts with a test that reproduces the bug.
+
+**Verify.** Tito reports each approved test ID as passing or failing, plus lint and build.
+
+**Docs gate.** Docs named in Docs impact are updated, or the user waives them, before Tito offers to open a pull request. After a finished module, Tito still schedules the tech docs writer and then the user docs writer for larger docs, one at a time, unless the user waives that handoff.
+
+**Review.** The short code-review walkthrough stays. Do not redesign it. Review fixes still go into one plan named `review/<slug>` on the same branch, as below.
+
+For a single slice, the user may say "skip test discussion" or "skip docs", in the same spirit as skipping the plan.
+
+Tito suggests the source branch and change type before checkout. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable development bases. `main` and `master` are interchangeable production bases. A project may use any combination. Feature, fix, chores, refactor, and debug use the first existing base in that order when no default is set. A hot-fix uses `main` or `master` when that is the default, otherwise the existing `main`, then the existing `master`, then `main`. Checkout happens only after the user accepts. A commit subject is one finished sentence of at most 70 words. The body is a separate description. When the user reviews a plan, Tito saves the plan and the user's edit as separate files under `.tito/feedback/<slug>/`. A plan index stores the plan name, Cursor plan path, and branch, and drops the entry when the Cursor plan file is gone. Reference a Linear issue when Linear is connected or the user asked for one. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when the user accepts the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request and does not merge unless the user calls for the merge and an approval already exists. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when the user says so clearly. Tito pushes directly to the base branch only when the user clearly instructs that push.
 
 A named slice that the user explicitly marks as not needing a plan may use:
 
-**Ask → Agent → Review**
+**Discover → Code → Verify → Review**
+
+"skip test discussion" and "skip docs" apply to that slice the same way.
 
 ### Cursor lifecycle
 
@@ -515,6 +537,8 @@ Tito maintains its own durable lifecycle:
 - `READY_FOR_REVIEW`
 - `APPROVED_FOR_COMMIT`
 - `DONE`
+
+`DISCOVERY` is the intent check, then clarify. `PLANNED` means the plan has all four sections: Decisions, Test cases, Docs impact, and Slices and branch.
 
 Do not infer lifecycle state from Cursor's UI.
 

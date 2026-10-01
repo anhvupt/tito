@@ -115,7 +115,8 @@ export const SPECIALISTS = Object.freeze({
     triggers: ["where code lives", "how behavior works"],
     knowledge: [knowledge("explorer-scout", "always")],
     modes: [specialistMode("scout", "read-only", phase.discovery)],
-    stopCondition: "Return evidence, gaps, and the next specialist.",
+    stopCondition:
+      "When scouting for a plan, report the principles and project conventions relevant to the decisions, and where each convention lives (AGENTS.md, a .cursor/rules file, or an existing pattern). Stay read-only. Return evidence, gaps, and the next specialist to Tito.",
   }),
   "product-analyst": manifest("product-analyst", {
     tier: "Standard",
@@ -185,7 +186,8 @@ export const SPECIALISTS = Object.freeze({
     triggers: ["review correctness", "check edge cases"],
     knowledge: [knowledge("qa-review", "always")],
     modes: [specialistMode("review", "read-only", phase.review)],
-    stopCondition: "Return findings without editing the slice.",
+    stopCondition:
+      "For a plan, return Arrange / Act / Assert test cases with an ID and a layer tag `[unit]`, `[integration]`, or `[e2e]`. After coding, check each approved test ID as passing or failing, and flag any test that was not in the approved list. Stay read-only. Return findings without editing the slice.",
   }),
   "security-reviewer": manifest("security-reviewer", {
     tier: "Reasoning",
@@ -201,7 +203,8 @@ export const SPECIALISTS = Object.freeze({
     triggers: ["module finished", "update technical documentation"],
     knowledge: [knowledge("tech-docs", "task")],
     modes: [specialistMode("update", "write-files", phase.implementation)],
-    stopCondition: "Stop after the technical docs match the finished module.",
+    stopCondition:
+      "Apply the plan's Docs impact (update named docs, or record a waiver) before a pull request. The module-end pass still covers larger docs. Stop after that docs work matches the plan.",
   }),
   "user-docs-writer": manifest("user-docs-writer", {
     tier: "Standard",
@@ -209,7 +212,8 @@ export const SPECIALISTS = Object.freeze({
     triggers: ["module finished", "update user documentation"],
     knowledge: [knowledge("user-docs", "task")],
     modes: [specialistMode("update", "write-files", phase.implementation)],
-    stopCondition: "Stop after the user docs match the finished module.",
+    stopCondition:
+      "Apply the plan's Docs impact (update named docs, or record a waiver) before a pull request. The module-end pass still covers larger docs. Stop after that docs work matches the plan.",
   }),
 } as const satisfies Record<SpecialistId, SpecialistManifest>);
 

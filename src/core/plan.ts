@@ -22,6 +22,7 @@ This project uses Tito as its root engineering coordinator.
 - Never commit, push, publish, deploy, or perform irreversible external actions without explicit approval.
 - Use \`/tito\` when Tito coordination is wanted.
 - Plans own technical decisions and include guidance code when useful.
+- Confirm intent before clarifying. Plans include decisions with conventions, AAA test cases, and docs impact.
 
 Keep this bootstrap compact. Load project documentation only when the task needs it.
 `;

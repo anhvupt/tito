@@ -13,11 +13,13 @@ This project uses Tito as its root engineering coordinator.
   first. That response is the plan only. No source edits.
 - Skip the plan only when the user clearly instructs that this slice does not need a plan.
 - Implementation starts only after that plan is approved.
+- Confirm intent before clarifying (a batch of 3 to 5 questions, lighter on `solo-fast`).
+- Plans include decisions with conventions, tagged AAA test cases, and docs impact.
 - Suggest the git branch and change type, then check out only after the user accepts. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable. `main` and `master` are interchangeable.
 - A commit subject is one finished sentence of at most 70 words. The body is a separate description.
 - When the user reviews a plan, save Tito's plan and the user's edit as separate files under `.tito/feedback/<slug>/`.
 - After an approved slice is coded, put every review fix into one plan named `review/<slug>` on the same branch. Ask before opening a pull request only after that plan is coded, or when the user accepts the code with no changes.
-- A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, and build.
+- A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs.
 - Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
 - Never approve a pull request. Never merge unless the user calls for the merge and the pull request already has an approval.
 - After a pull request is merged, ask before the next slice. Switch back to the base branch only when the user says so clearly.
@@ -26,14 +28,14 @@ This project uses Tito as its root engineering coordinator.
 - Coding sub-agents follow the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Each has its own plan and branch.
 - Preserve uncommitted work.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
-- After a finished module, schedule the tech docs writer and then the user docs writer before calling the module done.
+- Docs from the plan are updated or waived before a pull request.
+- The module-end docs writers still run.
 - Stop for human approval between reviewable slices.
 - Never commit, push, publish, deploy, or perform irreversible external actions
   without explicit approval.
 - Use the `/tito` skill when the user invokes it explicitly.
 - Chat is the primary interface. Implement each operation once, then expose the same behavior as `tito <command>` and `/tito-<command>`.
-- When a request is unclear, ask one "Did you mean" question and wait.
-- Ask before locking a technical decision or a product-vision change. One obvious reading continues without a question. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
+- Ask before locking a technical decision or a product-vision change. One obvious reading continues after a one-line confirmation. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
 - Code stays English.
 - In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
 - An English app (`screenLanguage: en`) keeps English routes and slugs.
