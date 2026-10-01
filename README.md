@@ -3,12 +3,13 @@
 **Quiet orchestration. Trusted continuity.**
 
 Tito is a chat-first engineering coordinator for solo builders. You talk to one
-coordinator; Tito explores the repository, chooses the right working mode,
-turns larger work into reviewable slices, and keeps implementation inside the
-scope you approved.
+coordinator. Tito confirms what you want, writes the plan as the spec, and
+sends only the approved slice to a sub-agent.
 
-It is local-first, Git-friendly, and designed to add coordination without
-replacing your project documentation, rules, or specialists.
+The spec records the decisions and the conventions behind them, the test cases
+you review before they are written, and the docs that must change. Tito is
+local-first and Git-friendly. It coordinates your documentation, rules, and
+specialists, and it updates the docs named in the plan before a pull request.
 
 ## What Tito helps with
 
