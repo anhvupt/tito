@@ -93,6 +93,16 @@ Apply policy in this order:
 
 A task may increase caution. It must not silently weaken the project safety floor.
 
+Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid.
+
+- Code stays English.
+- In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
+- An English app (`screenLanguage: en`) keeps English routes and slugs.
+- In a Vietnamese app (`screenLanguage: vi`), every string a person reads is Vietnamese: tables, labels, buttons, headings, and messages. Write native Vietnamese first. Do not invent it by translating English word for word. English may exist as a second field only when the product is bilingual, and it comes after the Vietnamese.
+- An English app (`screenLanguage: en`) stays English on screen.
+- When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
+- Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
+
 ## Project ownership
 
 Every project continues to own:

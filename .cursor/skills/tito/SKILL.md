@@ -38,6 +38,14 @@ For Plan work, prefer a Reasoning-tier model unless the plan is obvious and
 bounded or the user chose another model. The implementation agent follows the approved decision and does not invent a new one. Include concise guidance code,
 signatures, schemas, or pseudocode where it removes ambiguity. When a request is unclear, ask one "Did you mean" question and wait. Ask before locking a technical decision or a product-vision change. One obvious reading continues without a question. After the user answers, record the decision in the plan and include guidance code when it removes ambiguity.
 
+- Code stays English.
+- In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
+- An English app (`screenLanguage: en`) keeps English routes and slugs.
+- In a Vietnamese app (`screenLanguage: vi`), every string a person reads is Vietnamese: tables, labels, buttons, headings, and messages. Write native Vietnamese first. Do not invent it by translating English word for word. English may exist as a second field only when the product is bilingual, and it comes after the Vietnamese.
+- An English app (`screenLanguage: en`) stays English on screen.
+- When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
+- Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
+
 ## Execute
 
 1. Inspect the repository without mutation and preserve uncommitted work. When a Tito command exists, use that same core behavior in chat instead of sending the person to the terminal.

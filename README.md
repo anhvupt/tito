@@ -195,6 +195,21 @@ git:
   defaultBase: develop
 ```
 
+`product.screenLanguage` is optional and accepts only `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Unknown product fields are rejected.
+
+```yaml
+product:
+  screenLanguage: vi
+```
+
+- Code stays English.
+- In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
+- An English app (`screenLanguage: en`) keeps English routes and slugs.
+- In a Vietnamese app (`screenLanguage: vi`), every string a person reads is Vietnamese: tables, labels, buttons, headings, and messages. Write native Vietnamese first. Do not invent it by translating English word for word. English may exist as a second field only when the product is bilingual, and it comes after the Vietnamese.
+- An English app (`screenLanguage: en`) stays English on screen.
+- When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
+- Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
+
 A commit subject is one finished sentence of at most 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, and build. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request. Tito merges only when you call for the merge and the pull request already has an approval. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when you say so clearly. Tito pushes directly to the base branch only when you clearly instruct that push.
 
 ## Development

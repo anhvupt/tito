@@ -124,3 +124,32 @@ test("parses every active profile and rejects closed-schema violations", () => {
     "schemaVersion",
   );
 });
+
+test("parses optional product.screenLanguage and rejects other product fields", () => {
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n"),
+    { schemaVersion: 1, profile: "solo-balanced", product: { screenLanguage: "vi" } },
+  );
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: en\n"),
+    { schemaVersion: 1, profile: "solo-balanced", product: { screenLanguage: "en" } },
+  );
+  assert.deepEqual(parseConfig("schemaVersion: 1\nprofile: solo-balanced\n"), {
+    schemaVersion: 1,
+    profile: "solo-balanced",
+  });
+  assert.deepEqual(parseConfig("schemaVersion: 1\nprofile: solo-balanced\nproduct: {}\n"), {
+    schemaVersion: 1,
+    profile: "solo-balanced",
+  });
+  assert.deepEqual(
+    issueCodes(
+      "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: fr\n",
+    ).map((item) => item.code),
+    ["unknown-field"],
+  );
+  assert.equal(
+    issueCodes("schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  locale: vi\n")[0].path,
+    "product.screenLanguage",
+  );
+});

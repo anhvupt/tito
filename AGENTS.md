@@ -34,6 +34,13 @@ This project uses Tito as its root engineering coordinator.
 - Chat is the primary interface. Implement each operation once, then expose the same behavior as `tito <command>` and `/tito-<command>`.
 - When a request is unclear, ask one "Did you mean" question and wait.
 - Ask before locking a technical decision or a product-vision change. One obvious reading continues without a question. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
+- Code stays English.
+- In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
+- An English app (`screenLanguage: en`) keeps English routes and slugs.
+- In a Vietnamese app (`screenLanguage: vi`), every string a person reads is Vietnamese: tables, labels, buttons, headings, and messages. Write native Vietnamese first. Do not invent it by translating English word for word. English may exist as a second field only when the product is bilingual, and it comes after the Vietnamese.
+- An English app (`screenLanguage: en`) stays English on screen.
+- When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
+- Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
 
 Per-project Tito install stays. Opt-in `tito admin add|list|remove|refresh`
 registers repos under `~/.config/tito/admin/` and stores commit subject, date,

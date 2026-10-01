@@ -28,6 +28,14 @@ Suggest the source branch and change type before checkout. Bases are `dev`, `dev
 
 When a request is unclear, ask one "Did you mean" question and wait. Ask before locking a technical decision or a product-vision change. One obvious reading continues without a question. After the user answers, the plan records that decision and includes guidance code when it removes ambiguity.
 
+- Code stays English.
+- In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
+- An English app (`screenLanguage: en`) keeps English routes and slugs.
+- In a Vietnamese app (`screenLanguage: vi`), every string a person reads is Vietnamese: tables, labels, buttons, headings, and messages. Write native Vietnamese first. Do not invent it by translating English word for word. English may exist as a second field only when the product is bilingual, and it comes after the Vietnamese.
+- An English app (`screenLanguage: en`) stays English on screen.
+- When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
+- Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
+
 ## Execute
 
 1. Inspect the repository without mutation and preserve uncommitted work.
