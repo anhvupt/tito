@@ -43,6 +43,7 @@ This project uses Tito as its root engineering coordinator.
 - An English app (`screenLanguage: en`) stays English on screen.
 - When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
 - Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
+- Multi-tenant or multi-surface work includes isolation, consistency, propagation, and permission cases.
 
 Per-project Tito install stays. Opt-in `tito admin add|list|remove|refresh`
 registers repos under `~/.config/tito/admin/` and stores commit subject, date,

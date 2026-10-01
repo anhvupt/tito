@@ -1,4 +1,4 @@
-import { isMap, isScalar, parseAllDocuments } from "yaml";
+import { isMap, isScalar, isSeq, parseAllDocuments } from "yaml";
 import { BRANCH_BASES, type BranchBase } from "./git-flow.js";
 import {
   ACTIVE_RISK_PROFILE_IDS,
@@ -10,9 +10,23 @@ import {
 export const CONFIG_SCHEMA_VERSION = 1;
 const FIELDS = new Set(["schemaVersion", "profile", "git", "product"]);
 const SCREEN_LANGUAGES = ["vi", "en"] as const;
+const TENANCY_VALUES = ["single", "multi"] as const;
+const PRODUCT_FIELDS = new Set(["screenLanguage", "tenancy", "surfaces"]);
+const SURFACE_ID = /^[a-z][a-z0-9-]*$/;
 const NON_SCALAR = Symbol("non-scalar");
 
 export type ScreenLanguage = (typeof SCREEN_LANGUAGES)[number];
+export type Tenancy = (typeof TENANCY_VALUES)[number];
+
+export type ProductSurface = {
+  readonly id: string;
+};
+
+export type ProductConfig = {
+  readonly screenLanguage?: ScreenLanguage;
+  readonly tenancy?: Tenancy;
+  readonly surfaces?: readonly ProductSurface[];
+};
 
 export type ConfigIssueCode =
   | "yaml-syntax"
@@ -34,7 +48,7 @@ export type TitoConfig = {
   readonly schemaVersion: typeof CONFIG_SCHEMA_VERSION;
   readonly profile: ActiveRiskProfileId;
   readonly git?: { readonly defaultBase: BranchBase };
-  readonly product?: { readonly screenLanguage: ScreenLanguage };
+  readonly product?: ProductConfig;
 };
 
 export class ConfigValidationError extends Error {
@@ -84,16 +98,166 @@ function isScreenLanguage(value: unknown): value is ScreenLanguage {
   return typeof value === "string" && (SCREEN_LANGUAGES as readonly string[]).includes(value);
 }
 
-function readScreenLanguage(node: unknown): ScreenLanguage | "invalid" | null {
-  if (!isMap(node)) return "invalid";
-  let language: ScreenLanguage | "invalid" | null = null;
-  for (const item of node.items) {
-    const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
-    if (key !== "screenLanguage") return "invalid";
-    const value = isScalar(item.value) ? item.value.value : null;
-    language = isScreenLanguage(value) ? value : "invalid";
+function isTenancy(value: unknown): value is Tenancy {
+  return typeof value === "string" && (TENANCY_VALUES as readonly string[]).includes(value);
+}
+
+function mappingKey(key: unknown): string | null {
+  return isScalar(key) && typeof key.value === "string" ? key.value : null;
+}
+
+function assembleProduct(parts: {
+  screenLanguage: ScreenLanguage | undefined;
+  tenancy: Tenancy | undefined;
+  surfaces: readonly ProductSurface[] | undefined;
+}): ProductConfig | undefined {
+  const product: {
+    screenLanguage?: ScreenLanguage;
+    tenancy?: Tenancy;
+    surfaces?: readonly ProductSurface[];
+  } = {};
+  if (parts.screenLanguage !== undefined) product.screenLanguage = parts.screenLanguage;
+  if (parts.tenancy !== undefined) product.tenancy = parts.tenancy;
+  if (parts.surfaces !== undefined) product.surfaces = parts.surfaces;
+  return Object.keys(product).length > 0 ? product : undefined;
+}
+
+function readSurfaces(
+  node: unknown,
+): { readonly ok: true; readonly surfaces: readonly ProductSurface[] } | { readonly ok: false; readonly issues: readonly ConfigIssue[] } {
+  if (!isSeq(node)) {
+    return {
+      ok: false,
+      issues: [
+        issue("unknown-field", 'Field "product.surfaces" must be a list of ids.', "product.surfaces"),
+      ],
+    };
   }
-  return language;
+  if (node.items.length === 0) {
+    return {
+      ok: false,
+      issues: [
+        issue(
+          "unknown-field",
+          'Field "product.surfaces" must not be empty. Omit the key instead.',
+          "product.surfaces",
+        ),
+      ],
+    };
+  }
+  const issues: ConfigIssue[] = [];
+  const surfaces: ProductSurface[] = [];
+  const ids = new Set<string>();
+  for (const entry of node.items) {
+    if (!isMap(entry)) {
+      issues.push(
+        issue("unknown-field", "Each surface must be a mapping with an id.", "product.surfaces"),
+      );
+      continue;
+    }
+    let id: unknown;
+    let sawId = false;
+    for (const pair of entry.items) {
+      const key = mappingKey(pair.key);
+      if (key !== "id") {
+        issues.push(
+          issue(
+            "unknown-field",
+            `Unknown field "product.surfaces.${key ?? ""}".`,
+            "product.surfaces",
+          ),
+        );
+        continue;
+      }
+      if (sawId) {
+        issues.push(issue("duplicate-key", 'Duplicate key "id".', "product.surfaces"));
+        continue;
+      }
+      sawId = true;
+      id = isScalar(pair.value) ? pair.value.value : NON_SCALAR;
+    }
+    if (!sawId) {
+      issues.push(issue("missing-field", "Missing surface id.", "product.surfaces"));
+      continue;
+    }
+    if (typeof id !== "string") {
+      issues.push(issue("unknown-field", "Surface id must be a string.", "product.surfaces"));
+      continue;
+    }
+    if (!SURFACE_ID.test(id)) {
+      issues.push(
+        issue(
+          "unknown-field",
+          `Surface id ${JSON.stringify(id)} must match ^[a-z][a-z0-9-]*$.`,
+          "product.surfaces",
+        ),
+      );
+      continue;
+    }
+    if (ids.has(id)) {
+      issues.push(issue("duplicate-key", `Duplicate surface id "${id}".`, "product.surfaces"));
+      continue;
+    }
+    ids.add(id);
+    surfaces.push({ id });
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, surfaces };
+}
+
+function readProduct(node: unknown): { readonly product?: ProductConfig; readonly issues: readonly ConfigIssue[] } {
+  if (!isMap(node)) {
+    return { issues: [issue("unknown-field", 'Unknown field "product".', "product")] };
+  }
+  const issues: ConfigIssue[] = [];
+  const seen = new Set<string>();
+  let screenLanguage: ScreenLanguage | undefined;
+  let tenancy: Tenancy | undefined;
+  let surfaces: readonly ProductSurface[] | undefined;
+  for (const item of node.items) {
+    const key = mappingKey(item.key);
+    if (key === null) {
+      issues.push(issue("unknown-field", "Mapping keys must be strings.", "product"));
+      continue;
+    }
+    if (seen.has(key)) {
+      issues.push(issue("duplicate-key", `Duplicate key "${key}".`, `product.${key}`));
+      continue;
+    }
+    seen.add(key);
+    if (!PRODUCT_FIELDS.has(key)) {
+      issues.push(issue("unknown-field", `Unknown field "product.${key}".`, `product.${key}`));
+      continue;
+    }
+    if (key === "screenLanguage") {
+      const value = isScalar(item.value) ? item.value.value : null;
+      if (!isScreenLanguage(value)) {
+        issues.push(
+          issue("unknown-field", 'Unknown field "product.screenLanguage".', "product.screenLanguage"),
+        );
+      } else {
+        screenLanguage = value;
+      }
+      continue;
+    }
+    if (key === "tenancy") {
+      const value = isScalar(item.value) ? item.value.value : null;
+      if (!isTenancy(value)) {
+        issues.push(issue("unknown-field", `Unknown tenancy ${shown(value)}.`, "product.tenancy"));
+      } else {
+        tenancy = value;
+      }
+      continue;
+    }
+    const parsed = readSurfaces(item.value);
+    if (!parsed.ok) {
+      issues.push(...parsed.issues);
+      continue;
+    }
+    surfaces = parsed.surfaces;
+  }
+  if (issues.length > 0) return { issues };
+  const product = assembleProduct({ screenLanguage, tenancy, surfaces });
+  return product ? { product, issues } : { issues };
 }
 
 function profileIssue(value: unknown): ConfigIssue | null {
@@ -153,6 +317,7 @@ export function parseConfig(text: string): TitoConfig {
   const issues: ConfigIssue[] = [];
   const occurrences = new Map<string, number>();
   const values = new Map<string, unknown>();
+  let product: ProductConfig | undefined;
   for (const item of document.contents.items) {
     const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
     if (key === null) {
@@ -179,14 +344,9 @@ export function parseConfig(text: string): TitoConfig {
       continue;
     }
     if (key === "product") {
-      const language = readScreenLanguage(item.value);
-      if (language === "invalid") {
-        issues.push(
-          issue("unknown-field", 'Unknown field "product.screenLanguage".', "product.screenLanguage"),
-        );
-      } else if (language) {
-        values.set("product.screenLanguage", language);
-      }
+      const parsed = readProduct(item.value);
+      issues.push(...parsed.issues);
+      if (parsed.product) product = parsed.product;
       continue;
     }
     values.set(key, isScalar(item.value) ? item.value.value : NON_SCALAR);
@@ -218,9 +378,7 @@ export function parseConfig(text: string): TitoConfig {
     ]);
   }
   const defaultBase = values.get("git.defaultBase");
-  const screenLanguage = values.get("product.screenLanguage");
   const git = isBranchBase(defaultBase) ? { defaultBase } : undefined;
-  const product = isScreenLanguage(screenLanguage) ? { screenLanguage } : undefined;
   if (git && product) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git, product };
   if (git) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git };
   if (product) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, product };

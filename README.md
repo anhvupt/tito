@@ -199,11 +199,14 @@ git:
   defaultBase: develop
 ```
 
-`product.screenLanguage` is optional and accepts only `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Unknown product fields are rejected.
+`product.screenLanguage` is optional and accepts only `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Unknown product fields are rejected. `product.tenancy` is optional (`single` or `multi`). `product.surfaces` is an optional list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid.
 
 ```yaml
 product:
   screenLanguage: vi
+  tenancy: single
+  surfaces:
+    - id: admin
 ```
 
 - Code stays English.
