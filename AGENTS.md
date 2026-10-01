@@ -18,7 +18,7 @@ This project uses Tito as its root engineering coordinator.
 - Suggest the git branch and change type, then check out only after the user accepts. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable. `main` and `master` are interchangeable.
 - A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`.
 - The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description.
-- When the user reviews a plan, save Tito's plan and the user's edit as separate files under `.tito/feedback/<slug>/`.
+- When the user reviews a plan, save Tito's plan and the user's edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`.
 - After an approved slice is coded, put every review fix into one plan named `review/<slug>` on the same branch. Ask before opening a pull request only after that plan is coded, or when the user accepts the code with no changes.
 - A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs.
 - Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
