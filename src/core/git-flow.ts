@@ -168,6 +168,7 @@ export function pullRequestTemplate(): string {
     "- Conventions:",
     "- Tests:",
     "- Build:",
+    "- Docs:",
     "",
   ].join("\n");
 }

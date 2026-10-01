@@ -29,4 +29,4 @@ Return the result to Tito. Suggest another specialist only from this manifest's 
 
 ## Stop
 
-Return findings without editing the slice.
+For a plan, return Arrange / Act / Assert test cases with an ID and a layer tag `[unit]`, `[integration]`, or `[e2e]`. After coding, check each approved test ID as passing or failing, and flag any test that was not in the approved list. Stay read-only. Return findings without editing the slice.

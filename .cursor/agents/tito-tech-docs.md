@@ -29,4 +29,4 @@ Return the result to Tito. Suggest another specialist only from this manifest's 
 
 ## Stop
 
-Stop after the technical docs match the finished module.
+Apply the plan's Docs impact (update named docs, or record a waiver) before a pull request. The module-end pass still covers larger docs. Stop after that docs work matches the plan.

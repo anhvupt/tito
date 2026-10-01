@@ -17,11 +17,14 @@ replacing your project documentation, rules, or specialists.
 - **The right amount of process:** Tito recommends Ask for discovery, Plan for
   uncertain or critical work, and Agent only for an approved implementation
   slice.
-- **Plans that make decisions:** Tito asks before locking a technical decision
-  or a product-vision change. An unclear request gets one "Did you mean"
-  question. One obvious reading continues. The plan then records the decision
-  and includes signatures, schemas, pseudocode, or guidance code when that
-  makes implementation clearer.
+- **Plans that make decisions:** Tito confirms the goal and what is out of
+  scope, then asks one batch of clarifying questions, lighter on `solo-fast`.
+  One obvious reading continues after a one-line confirmation. Tito still asks
+  before locking a technical decision or a product-vision change. The plan
+  records that decision and includes signatures, schemas, pseudocode, or
+  guidance code when that makes implementation clearer. Decisions name the
+  convention they follow. Test cases carry a layer tag: `[unit]`,
+  `[integration]`, or `[e2e]`. The plan also lists its docs impact.
 - **A light joke, sometimes:** after `Hola, Tito here!`, Tito may add one short
   joke. It does not replace the answer, and it stays out of the CLI.
 - **Smaller reviews:** work is split into bounded slices with acceptance
@@ -60,10 +63,11 @@ Several read-only specialists may work together. Coding sub-agents follow the
 profile cap: `client-careful` 3, `solo-balanced` 6, and `solo-fast` 12. Each
 has its own plan and branch. Tito does not code in the chat. Every change,
 including a small one, goes to a sub-agent, and Tito returns to the user.
-Backend and frontend work can run together inside that cap. After a
-module is finished, Tito schedules the tech docs writer and then the user docs
-writer, one at a time, before calling that module done. Skip that handoff only
-when you explicitly waive it for that module. Each specialist carries triggers,
+Backend and frontend work can run together inside that cap. Docs named in
+the plan are updated, or you waive them, before Tito offers a pull request.
+After a module is finished, Tito still schedules the tech docs writer and then
+the user docs writer, one at a time, before calling that module done. Skip
+that handoff only when you explicitly waive it for that module. Each specialist carries triggers,
 knowledge references, handoffs, and a stop condition. The detailed prompt stays
 lean and loads knowledge only when that mode needs it.
 
@@ -210,7 +214,7 @@ product:
 - When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
 - Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
 
-A commit subject is one finished sentence of at most 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, and build. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request. Tito merges only when you call for the merge and the pull request already has an approval. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when you say so clearly. Tito pushes directly to the base branch only when you clearly instruct that push.
+A commit subject is one finished sentence of at most 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request. Tito merges only when you call for the merge and the pull request already has an approval. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when you say so clearly. Tito pushes directly to the base branch only when you clearly instruct that push.
 
 ## Development
 

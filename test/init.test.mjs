@@ -45,6 +45,15 @@ test("init previews specialist agents and writes only after confirmation", () =>
   rmSync(root, { recursive: true, force: true });
 });
 
+test("init of a repo with no AGENTS.md writes the intent sentence", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+  assert.equal(confirmed.status, 0, confirmed.stderr);
+  const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+  assert.equal(agents.includes("Confirm intent before clarifying"), true);
+  rmSync(root, { recursive: true, force: true });
+});
+
 test("profile prompt accepts a menu number or a profile id", async () => {
   const { promptForProfile } = await import("../dist/core/init.js");
   assert.equal(await promptForProfile(async () => "1"), "client-careful");

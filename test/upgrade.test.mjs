@@ -42,6 +42,7 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
   assert.match(agents, /# Tourdef/);
   assert.match(agents, /Keep this/);
+  assert.equal(agents.split("Confirm intent before clarifying").length - 1, 1);
   assert.equal(agents.includes("Old Tito text."), false);
   assert.match(readFileSync(join(root, ".cursor/agents/tito-frontend.md"), "utf8"), /name: tito-frontend/);
   assert.match(readFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "utf8"), /name: tito/);
@@ -49,5 +50,6 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
     readFileSync(join(root, ".github/pull_request_template.md"), "utf8"),
     pullRequestTemplate(),
   );
+  assert.equal(pullRequestTemplate().includes("Docs"), true);
   rmSync(root, { recursive: true, force: true });
 });
