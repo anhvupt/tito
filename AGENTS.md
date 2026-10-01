@@ -16,7 +16,8 @@ This project uses Tito as its root engineering coordinator.
 - Confirm intent before clarifying (a batch of 3 to 5 questions, lighter on `solo-fast`).
 - Plans include decisions with conventions, tagged AAA test cases, and docs impact.
 - Suggest the git branch and change type, then check out only after the user accepts. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable. `main` and `master` are interchangeable.
-- A commit subject is one finished sentence of at most 70 words. The body is a separate description.
+- A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`.
+- The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description.
 - When the user reviews a plan, save Tito's plan and the user's edit as separate files under `.tito/feedback/<slug>/`.
 - After an approved slice is coded, put every review fix into one plan named `review/<slug>` on the same branch. Ask before opening a pull request only after that plan is coded, or when the user accepts the code with no changes.
 - A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs.
