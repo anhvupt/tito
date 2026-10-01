@@ -126,10 +126,16 @@ test("parses every active profile and rejects closed-schema violations", () => {
 });
 
 test("parses optional product.screenLanguage and rejects other product fields", () => {
-  assert.deepEqual(
-    parseConfig("schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n"),
-    { schemaVersion: 1, profile: "solo-balanced", product: { screenLanguage: "vi" } },
+  const vietnamese = parseConfig(
+    "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n",
   );
+  assert.deepEqual(vietnamese, {
+    schemaVersion: 1,
+    profile: "solo-balanced",
+    product: { screenLanguage: "vi" },
+  });
+  assert.equal("tenancy" in vietnamese.product, false);
+  assert.equal("surfaces" in vietnamese.product, false);
   assert.deepEqual(
     parseConfig("schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: en\n"),
     { schemaVersion: 1, profile: "solo-balanced", product: { screenLanguage: "en" } },
@@ -150,6 +156,97 @@ test("parses optional product.screenLanguage and rejects other product fields", 
   );
   assert.equal(
     issueCodes("schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  locale: vi\n")[0].path,
-    "product.screenLanguage",
+    "product.locale",
+  );
+});
+
+test("T1 multi-tenant config parses surfaces in order", () => {
+  const config = parseConfig(
+    "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  tenancy: multi\n  surfaces:\n    - id: admin\n    - id: portal\n    - id: api\n",
+  );
+  assert.equal(config.product.tenancy, "multi");
+  assert.deepEqual(
+    config.product.surfaces.map((surface) => surface.id),
+    ["admin", "portal", "api"],
+  );
+});
+
+test("T3 unknown tenancy throws ConfigValidationError", () => {
+  const issues = issueCodes(
+    "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  tenancy: shared\n",
+  );
+  assert.ok(issues.some((item) => item.path?.includes("product.tenancy")));
+});
+
+test("T4 duplicate surface ids throw ConfigValidationError", () => {
+  const issues = issueCodes(
+    "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  surfaces:\n    - id: admin\n    - id: admin\n",
+  );
+  assert.ok(issues.some((item) => item.path?.includes("product.surfaces")));
+});
+
+test("T5 single tenancy with two surfaces parses", () => {
+  assert.deepEqual(
+    parseConfig(
+      "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  tenancy: single\n  surfaces:\n    - id: admin\n    - id: portal\n",
+    ),
+    {
+      schemaVersion: 1,
+      profile: "solo-balanced",
+      product: {
+        tenancy: "single",
+        surfaces: [{ id: "admin" }, { id: "portal" }],
+      },
+    },
+  );
+});
+
+test("rejects an empty surface id and a non-string surface id", () => {
+  const emptyId = issueCodes(
+    'schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  surfaces:\n    - id: ""\n',
+  );
+  assert.ok(emptyId.some((item) => item.path?.includes("product.surfaces")));
+  const numericId = issueCodes(
+    "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  surfaces:\n    - id: 1\n",
+  );
+  assert.ok(numericId.some((item) => item.path?.includes("product.surfaces")));
+});
+
+test("tenancy or surfaces alone stay valid and an empty surfaces list is rejected", () => {
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  tenancy: multi\n"),
+    { schemaVersion: 1, profile: "solo-balanced", product: { tenancy: "multi" } },
+  );
+  assert.deepEqual(
+    parseConfig(
+      "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  surfaces:\n    - id: admin\n",
+    ),
+    {
+      schemaVersion: 1,
+      profile: "solo-balanced",
+      product: { surfaces: [{ id: "admin" }] },
+    },
+  );
+  const emptyList = issueCodes(
+    "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  surfaces: []\n",
+  );
+  assert.ok(emptyList.some((item) => item.path?.includes("product.surfaces")));
+  const badId = issueCodes(
+    "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  surfaces:\n    - id: Admin\n",
+  );
+  assert.ok(badId.some((item) => item.path?.includes("product.surfaces")));
+  assert.deepEqual(
+    parseConfig(
+      "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n  tenancy: single\n  surfaces:\n    - id: admin\n",
+    ),
+    {
+      schemaVersion: 1,
+      profile: "solo-balanced",
+      product: {
+        screenLanguage: "vi",
+        tenancy: "single",
+        surfaces: [{ id: "admin" }],
+      },
+    },
   );
 });

@@ -50,6 +50,17 @@ The workflow is Discover → Plan → Human Approval → Code → Verify → Doc
 - When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
 - Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
 
+Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid.
+
+A plan that touches shared data includes only the kinds that apply:
+
+- Isolation: tenant A cannot read or change tenant B's data. Required when `tenancy` is `multi` and the slice changes tenant-scoped data.
+- Consistency: a write on one surface is the value another surface reads. Required when there are two or more surfaces and the slice changes data more than one surface reads.
+- Propagation: async work is asserted before a deadline, not after a fixed sleep.
+- Permissions: each role on each surface can do only what it should.
+- Default layer is `[integration]`. `[e2e]` only when the plan names a browser journey. `[unit]` stays for logic that does not cross a surface.
+- Arrange uses a fixed seed of at least two tenants and every role when tenancy is multi, reset each run, never production credentials. Tito does not ship the seed or Playwright.
+
 ## Execute
 
 1. Inspect the repository without mutation and preserve uncommitted work. When a Tito command exists, use that same core behavior in chat instead of sending the person to the terminal.
