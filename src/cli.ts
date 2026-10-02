@@ -35,6 +35,7 @@ import {
   removeRepo,
   resolveAdminRoot,
 } from "./core/admin.js";
+import { formatInitError } from "./core/terminal.js";
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -67,6 +68,16 @@ Commands:
 
 function fail(message: string): void {
   process.stderr.write(`${message}\n`);
+  process.exitCode = 1;
+}
+
+function failInit(message: string): void {
+  process.stderr.write(
+    formatInitError(message, {
+      tty: process.stderr.isTTY === true,
+      noColor: process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== "",
+    }),
+  );
   process.exitCode = 1;
 }
 
@@ -174,12 +185,12 @@ async function runInit(args: string[]): Promise<void> {
     if (values.profile !== undefined) profile = values.profile;
     if (values.root !== undefined) root = values.root;
   } catch (error) {
-    fail(error instanceof Error ? error.message : "Invalid init arguments.");
+    failInit(error instanceof Error ? error.message : "Invalid init arguments.");
     return;
   }
   if (profile === undefined) {
     if (!input.isTTY) {
-      fail("Missing required option --profile.");
+      failInit("Missing required option --profile.");
       return;
     }
     const prompts = createInterface({ input, output });
@@ -200,7 +211,7 @@ async function runInit(args: string[]): Promise<void> {
     process.stdout.write(formatInitialization(plan));
   } catch (error) {
     if (error instanceof InspectionError || error instanceof PlanError || error instanceof InitError) {
-      fail(`${error.code}: ${error.message}`);
+      failInit(`${error.code}: ${error.message}`);
       return;
     }
     if (
@@ -209,7 +220,7 @@ async function runInit(args: string[]): Promise<void> {
       "code" in error &&
       error.code === "EPERM"
     ) {
-      fail("filesystem: Tito could not create .cursor/agents.");
+      failInit("filesystem: Tito could not create .cursor/agents.");
       return;
     }
     throw error;

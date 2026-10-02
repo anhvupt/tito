@@ -102,7 +102,8 @@ The first `init` prints the plan and writes nothing. In a terminal, omitting
 `--confirm` creates the missing `tito.yaml`, specialist agents, and `/tito`
 skills. If `AGENTS.md` already exists, Tito appends its bootstrap and leaves
 the existing guidance in place. It refuses to overwrite a Tito file that is
-already there. Open a new Cursor chat, then start with `/tito`.
+already there. Errors on a terminal are red, and `NO_COLOR` turns that off.
+Open a new Cursor chat, then start with `/tito`.
 
 Upgrade an existing project after installing a newer Tito:
 
