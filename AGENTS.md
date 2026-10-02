@@ -23,6 +23,8 @@ This project uses Tito as its root engineering coordinator.
 - A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs.
 - Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
 - Never approve a pull request. Never merge unless the user calls for the merge and the pull request already has an approval.
+- Do not merge a slice branch into `main`, `master`, `dev`, or `develop`, on the machine or on the remote, unless the user calls for that merge and the pull request already has an approval. Finishing a slice leaves the branch as it is.
+- When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update.
 - After a pull request is merged, ask before the next slice. Switch back to the base branch only when the user says so clearly.
 - Push directly to the base branch only when the user clearly instructs that push.
 - Tito does not code in this chat. Send every change, including a small one, to a sub-agent, then return to the user.
