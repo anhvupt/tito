@@ -37,9 +37,11 @@ specialists, and it updates the docs named in the plan before a pull request.
   rules, skills, BMad workflows, and project-owned specialists rather than
   replacing them.
 - **Controlled model use:** Tito recommends the least expensive capable tier,
-  using stronger reasoning models for architecture, ambiguity, migrations,
-  security, and other high-consequence planning. If a requested model is
-  unavailable, Tito asks instead of substituting one silently.
+  and each launch names the selected model. Explore, docs, and ordinary work
+  use the cheap host family (Grok on Cursor, Sonnet on Claude). Core work uses
+  the stronger coding family. Architecture, security, and ERP work stay on the
+  reasoning family. If a requested model is unavailable, Tito asks instead of
+  substituting one silently.
 
 ## Specialists
 

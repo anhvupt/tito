@@ -198,7 +198,7 @@ export const SPECIALISTS = Object.freeze({
     stopCondition: "Return security findings without editing the slice.",
   }),
   "tech-docs-writer": manifest("tech-docs-writer", {
-    tier: "Standard",
+    tier: "Scout",
     role: "Technical documentation writer",
     triggers: ["module finished", "update technical documentation"],
     knowledge: [knowledge("tech-docs", "task")],
@@ -207,7 +207,7 @@ export const SPECIALISTS = Object.freeze({
       "Apply the plan's Docs impact (update named docs, or record a waiver) before a pull request. The module-end pass still covers larger docs. Stop after that docs work matches the plan.",
   }),
   "user-docs-writer": manifest("user-docs-writer", {
-    tier: "Standard",
+    tier: "Scout",
     role: "User documentation writer",
     triggers: ["module finished", "update user documentation"],
     knowledge: [knowledge("user-docs", "task")],
