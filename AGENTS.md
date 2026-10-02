@@ -49,7 +49,8 @@ This project uses Tito as its root engineering coordinator.
 
 Per-project Tito install stays. Opt-in `tito admin add|list|remove|refresh`
 registers repos under `~/.config/tito/admin/` and stores commit subject, date,
-and paths — not diffs. A project `tito.yaml` overrides a personal default; do
+and paths — not diffs. A weekly retro stores counts only, never review text.
+A project `tito.yaml` overrides a personal default; do
 not weaken the safety floor.
 
 Keep this bootstrap compact. Load detailed workflow policy from the brief and

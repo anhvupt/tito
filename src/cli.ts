@@ -35,6 +35,13 @@ import {
   removeRepo,
   resolveAdminRoot,
 } from "./core/admin.js";
+import {
+  RetroError,
+  buildRetro,
+  formatRetro,
+  retroJson,
+  saveRetro,
+} from "./core/retro.js";
 import { formatInitError } from "./core/terminal.js";
 
 const packageJson = JSON.parse(
@@ -53,6 +60,7 @@ Usage:
   tito admin list [--admin-root <path>]
   tito admin remove --root <path> [--admin-root <path>]
   tito admin refresh [--admin-root <path>]
+  tito admin retro [--week <YYYY-Www>] [--timezone <IANA>] [--json] [--admin-root <path>]
 
 Options:
   -h, --help     Show help
@@ -63,7 +71,7 @@ Commands:
   apply          Dry-run an adoption plan. Writes are not available.
   init           Install Tito files and specialist agents. Confirm before writing.
   upgrade        Install the latest Tito and replace Tito-owned files only.
-  admin          Opt-in local repo index: add, list, remove, refresh.
+  admin          Opt-in local repo index: add, list, remove, refresh, retro.
 `;
 
 function fail(message: string): void {
@@ -303,6 +311,10 @@ function runAdmin(args: string[]): void {
 
   const action = args[0];
   const rest = args.slice(1);
+  if (action === "retro") {
+    runRetro(rest);
+    return;
+  }
   if (
     action !== "add" &&
     action !== "list" &&
@@ -364,6 +376,51 @@ function runAdmin(args: string[]): void {
     process.stdout.write(formatContexts(refreshRepos(adminRoot)));
   } catch (error) {
     if (error instanceof AdminError) {
+      fail(`${error.code}: ${error.message}`);
+      return;
+    }
+    throw error;
+  }
+}
+
+function runRetro(args: string[]): void {
+  let week: string | undefined;
+  let timezone: string | undefined;
+  let json = false;
+  let adminRoot = resolveAdminRoot();
+  try {
+    const { values } = parseArgs({
+      args,
+      options: {
+        week: { type: "string" },
+        timezone: { type: "string" },
+        json: { type: "boolean" },
+        "admin-root": { type: "string" },
+      },
+      strict: true,
+      allowPositionals: false,
+    });
+    if (values.week !== undefined) week = values.week;
+    if (values.timezone !== undefined) timezone = values.timezone;
+    json = values.json === true;
+    if (values["admin-root"] !== undefined) {
+      adminRoot = resolveAdminRoot(values["admin-root"]);
+    }
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Invalid admin arguments.");
+    return;
+  }
+
+  try {
+    const report = buildRetro({
+      adminRoot,
+      ...(week !== undefined ? { week } : {}),
+      ...(timezone !== undefined ? { timezone } : {}),
+    });
+    saveRetro(adminRoot, report);
+    process.stdout.write(json ? retroJson(report) : formatRetro(report));
+  } catch (error) {
+    if (error instanceof RetroError || error instanceof AdminError) {
       fail(`${error.code}: ${error.message}`);
       return;
     }
