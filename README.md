@@ -162,6 +162,7 @@ node dist/cli.js admin add
 node dist/cli.js admin list
 node dist/cli.js admin refresh
 node dist/cli.js admin remove --root /path/to/repo
+node dist/cli.js admin retro --week 2026-W40
 ```
 
 `inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is
@@ -179,6 +180,10 @@ this same command.
 registered paths, `remove` drops one path, and `refresh` writes local branch plus
 the last 50 commit subjects, dates, and file paths (secrets like `.env` skipped;
 no diffs) for chat and CLI to share.
+
+`retro` builds that week's report from local git and saves `retros/<week>.json`
+and `retros/<week>.md` under the admin root. Review-fix counts, docs-blank, and
+merge duration say unavailable until GitHub data is added.
 
 ## How work moves
 

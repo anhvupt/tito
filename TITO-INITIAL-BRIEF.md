@@ -336,8 +336,10 @@ Use Node built-ins where practical. Keep the dependency tree small.
 Per-project install stays the default. An opt-in local admin index
 (`tito admin add|list|remove|refresh`) may register repositories under
 `~/.config/tito/admin/` and refresh recent commit subjects, dates, and touched
-paths only — never commit diffs. A project `tito.yaml` overrides any personal
-default, and the safety floor must not be weakened.
+paths only — never commit diffs. Admin may read committed `review.md` outcome
+front matter and stores counts only, never the review text and never diffs.
+A project `tito.yaml` overrides any personal default, and the safety floor
+must not be weakened.
 
 ## Self-hosting
 
