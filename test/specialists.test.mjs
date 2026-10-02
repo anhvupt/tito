@@ -52,6 +52,8 @@ test("specialist manifests describe modes, knowledge, and handoffs", () => {
     ),
     ["write-files", "write-files"],
   );
+  assert.equal(SPECIALISTS["tech-docs-writer"].model.tier, "Scout");
+  assert.equal(SPECIALISTS["user-docs-writer"].model.tier, "Scout");
 });
 
 test("delegation follows the selected specialist mode", () => {
