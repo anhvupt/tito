@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { compiledCursorAgents, compileCursorAgent } from "../dist/core/agents.js";
 import {
   DelegationError,
   documentationHandoff,
@@ -137,4 +138,45 @@ test("a finished module schedules documentation writers one at a time", () => {
     validateDelegation([handoff[0]], "implementation").mutator?.specialistId,
     "tech-docs-writer",
   );
+});
+
+test("[unit] WP-2 every compiled specialist card stays within 400 tokens", () => {
+  for (const card of compiledCursorAgents()) {
+    assert.ok(Math.ceil(card.body.length / 4) <= 400, `${card.path} ${card.body.length}`);
+  }
+});
+
+test("[unit] WP-3 stack cards use official sources and do not name angular", () => {
+  const official =
+    "For a stack entry, use the stack owner's official resource for the project's version. Judge it before use. Do not copy it into the repo.";
+  for (const id of ["frontend-engineer", "backend-engineer", "devops-engineer"]) {
+    const card = compileCursorAgent(id);
+    assert.match(card, /`official-stack-sources` \(stack\)/);
+    assert.equal(card.includes("angular"), false);
+    assert.equal(card.includes(official), true);
+  }
+  assert.equal(compileCursorAgent("qa-reviewer").includes(official), false);
+});
+
+test("[unit] WP-4 architect card weighs options for this risk profile", () => {
+  const card = compileCursorAgent("architect");
+  assert.match(card, /options with pros and cons/);
+  assert.match(card, /risk profile/);
+  assert.match(card, /the pick for this project's risk profile/);
+  assert.match(card, /purpose is unclear/);
+});
+
+test("[unit] WP-5 explorer card reports the official source and a verdict", () => {
+  const card = compileCursorAgent("explorer");
+  assert.match(card, /officially maintained resource/);
+  assert.match(card, /maintainer/);
+  assert.match(card, /last update/);
+  assert.match(card, /verdict/);
+});
+
+test("[unit] WP-6 product analyst returns Domain and at most one suggestion", () => {
+  const card = compileCursorAgent("product-analyst");
+  assert.match(card, /Domain/);
+  assert.match(card, /business impact/);
+  assert.match(card, /at most one optional/);
 });

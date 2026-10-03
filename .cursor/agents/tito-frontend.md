@@ -21,7 +21,9 @@ Use only the mode named in Tito's task packet. A read-only mode must not edit fi
 ## Load when relevant
 
 - `frontend-ux` (always)
-- `angular` (stack)
+- `official-stack-sources` (stack)
+
+For a stack entry, use the stack owner's official resource for the project's version. Judge it before use. Do not copy it into the repo.
 
 Do not restate project documentation. Load it only when the task needs it.
 

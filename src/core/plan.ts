@@ -22,7 +22,8 @@ This project uses Tito as its root engineering coordinator.
 - Never commit, push, publish, deploy, or perform irreversible external actions without explicit approval.
 - Use \`/tito\` when Tito coordination is wanted.
 - Plans own technical decisions and include guidance code when useful.
-- Confirm intent before clarifying. Plans include decisions with conventions, AAA test cases, and docs impact.
+- Research current official sources and judge them before trusting; adopt maintained tools before building our own; show options with pros and cons for this project.
+- Confirm intent before clarifying. Plans open with Domain (business impact first), then Decisions, Test cases, Docs impact, and Slices and branch.
 - Do not merge a slice branch into \`main\`, \`master\`, \`dev\`, or \`develop\`, on the machine or on the remote, unless the user calls for that merge and the pull request already has an approval. Finishing a slice leaves the branch as it is.
 - When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update.
 
