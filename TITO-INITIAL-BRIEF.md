@@ -74,7 +74,7 @@ Tito may delegate to:
 
 Only specialists relevant to the task should be loaded. Tito remains the root coordinator and is never delegated to as a specialist.
 
-Backend, frontend, and DevOps engineers may write. `client-careful` may run 3 coding sub-agents, `solo-balanced` 6, and `solo-fast` 12. A mode owns that authority: frontend design is read-only, while frontend implementation writes files; DevOps planning is read-only, while DevOps implementation changes infrastructure only with human approval. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers stay read-only. Backend and frontend slices can run together inside the profile cap. Each slice keeps its own plan and branch. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
+Backend, frontend, and DevOps engineers may write. `client-careful` may run 3 coding sub-agents, `solo-balanced` 6, and `solo-fast` 12. A mode owns that authority: frontend design is read-only, while frontend implementation writes files; DevOps planning is read-only, while DevOps implementation changes infrastructure only with human approval. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers stay read-only. Backend and frontend slices can run together inside the profile cap. Each slice keeps its own plan and branch. When two or more slices are independent, Tito sends those sub-agents together, each on its own branch, up to that cap, and does not line them up one after another. Check out each branch only after the user accepts that branch. Documentation writers stay one at a time. After the handoff, Tito returns to the user. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
 
 Each specialist manifest indexes its role, model gate, triggers, knowledge references, handoffs, and modes. Role prompts stay lean and load knowledge progressively. If a requested model is unavailable, Tito asks which model to use instead of substituting one silently.
 
@@ -231,7 +231,7 @@ Tito should:
 - Start with the least expensive tier likely to succeed.
 - Escalate only after uncertainty, failure, or increased risk.
 - Respect explicit user model choices.
-- Avoid parallel premium agents by default.
+- Avoid parallel premium-tier models by default. Independent slices still run together, each on its own branch, up to the profile cap.
 - Never silently substitute a materially more expensive model.
 - Avoid hardcoded pricing assumptions.
 - Clearly label token and cost estimates as estimates.
@@ -486,8 +486,12 @@ authority for human approval and implementation state.
 
 - Independent read-only slices may be ready together.
 - Multiple implementation slices may be ready candidates. Tito does not
-  select one silently. Active coding slices stay within the profile cap:
-  `client-careful` 3, `solo-balanced` 6, `solo-fast` 12.
+  select one silently. When two or more are independent, Tito sends those
+  sub-agents together, each on its own branch, up to the profile cap, and
+  does not line them up one after another. Active coding slices stay within
+  the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12.
+  Documentation writers stay one at a time. Check out each branch only after
+  the user accepts that branch.
 - A review slice may start when its implementation reaches
   `READY_FOR_REVIEW`.
 - In `client-careful`, implementation dependents wait for
@@ -673,7 +677,7 @@ Use a worktree for:
 - explicitly approved parallel writers;
 - work that should not affect the current checkout.
 
-Client-careful mode allows 3 writers. Each writer has its own plan, branch, and review size. Active writers plus unreviewed slices stay within that cap. `solo-balanced` allows 6 writers and `solo-fast` allows 12. Tito does not code in the coordinator chat. Every change, including a small one, goes to a sub-agent, and Tito returns to the user.
+Client-careful mode allows 3 writers. Each writer has its own plan, branch, and review size. Active writers plus unreviewed slices stay within that cap. `solo-balanced` allows 6 writers and `solo-fast` allows 12. Tito does not code in the coordinator chat. Every change, including a small one, goes to a sub-agent, and Tito returns to the user. When two or more slices are independent, Tito sends those sub-agents together, each on its own branch, up to that cap, and does not line them up one after another. Documentation writers stay one at a time. Check out each branch only after the user accepts that branch.
 
 ### Review routing
 
