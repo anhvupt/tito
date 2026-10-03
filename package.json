@@ -1,6 +1,6 @@
 {
   "name": "@anhvupt/tito",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Chat-first engineering coordinator for solo builders. The plan is the spec: decisions, test cases, and docs.",
   "license": "Apache-2.0",
   "type": "module",
