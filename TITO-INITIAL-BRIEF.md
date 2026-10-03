@@ -93,7 +93,9 @@ Apply policy in this order:
 
 A task may increase caution. It must not silently weaken the project safety floor.
 
-Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid.
+Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid. Optional `git.autoPullRequest` is a boolean. Missing it is valid.
+
+In a terminal, `tito init --confirm` asks for the git base (`dev`, `develop`, `main`, or `master`), screen language, tenancy, optional surface ids, and whether to auto-create a pull request after implementation. That question defaults to yes (`git.autoPullRequest`). Upgrade asks only for settings that are missing. A non-interactive init with `--profile` stores `git.autoPullRequest: true` and does not invent product fields. Storing the answer does not open a pull request.
 
 - Code stays English.
 - In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.

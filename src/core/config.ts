@@ -9,8 +9,8 @@ import {
 
 export const CONFIG_SCHEMA_VERSION = 1;
 const FIELDS = new Set(["schemaVersion", "profile", "git", "product"]);
-const SCREEN_LANGUAGES = ["vi", "en"] as const;
-const TENANCY_VALUES = ["single", "multi"] as const;
+export const SCREEN_LANGUAGES = ["vi", "en"] as const;
+export const TENANCY_VALUES = ["single", "multi"] as const;
 const PRODUCT_FIELDS = new Set(["screenLanguage", "tenancy", "surfaces"]);
 const SURFACE_ID = /^[a-z][a-z0-9-]*$/;
 const NON_SCALAR = Symbol("non-scalar");
@@ -20,6 +20,11 @@ export type Tenancy = (typeof TENANCY_VALUES)[number];
 
 export type ProductSurface = {
   readonly id: string;
+};
+
+export type GitConfig = {
+  readonly defaultBase?: BranchBase;
+  readonly autoPullRequest?: boolean;
 };
 
 export type ProductConfig = {
@@ -47,7 +52,7 @@ export type ConfigIssue = {
 export type TitoConfig = {
   readonly schemaVersion: typeof CONFIG_SCHEMA_VERSION;
   readonly profile: ActiveRiskProfileId;
-  readonly git?: { readonly defaultBase: BranchBase };
+  readonly git?: GitConfig;
   readonly product?: ProductConfig;
 };
 
@@ -82,16 +87,68 @@ function isBranchBase(value: unknown): value is BranchBase {
   return typeof value === "string" && (BRANCH_BASES as readonly string[]).includes(value);
 }
 
-function readGitBase(node: unknown): BranchBase | "invalid" | null {
-  if (!isMap(node)) return "invalid";
-  let base: BranchBase | "invalid" | null = null;
+export function isSurfaceId(value: string): boolean {
+  return SURFACE_ID.test(value);
+}
+
+function assembleGit(parts: {
+  defaultBase: BranchBase | undefined;
+  autoPullRequest: boolean | undefined;
+}): GitConfig | undefined {
+  const git: { defaultBase?: BranchBase; autoPullRequest?: boolean } = {};
+  if (parts.defaultBase !== undefined) git.defaultBase = parts.defaultBase;
+  if (parts.autoPullRequest !== undefined) git.autoPullRequest = parts.autoPullRequest;
+  return Object.keys(git).length > 0 ? git : undefined;
+}
+
+function readGit(node: unknown): { readonly git?: GitConfig; readonly issues: readonly ConfigIssue[] } {
+  if (!isMap(node)) {
+    return { issues: [issue("unknown-field", 'Field "git" must be a mapping.', "git")] };
+  }
+  const issues: ConfigIssue[] = [];
+  const seen = new Set<string>();
+  let defaultBase: BranchBase | undefined;
+  let autoPullRequest: boolean | undefined = undefined;
   for (const item of node.items) {
     const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
-    if (key !== "defaultBase") return "invalid";
-    const value = isScalar(item.value) ? item.value.value : null;
-    base = isBranchBase(value) ? value : "invalid";
+    if (key === null) {
+      issues.push(issue("unknown-field", "Mapping keys must be strings.", "git"));
+      continue;
+    }
+    if (seen.has(key)) {
+      issues.push(issue("duplicate-key", `Duplicate key "${key}".`, `git.${key}`));
+      continue;
+    }
+    seen.add(key);
+    if (key === "defaultBase") {
+      const value = isScalar(item.value) ? item.value.value : null;
+      if (!isBranchBase(value)) {
+        issues.push(issue("unknown-field", 'Unknown field "git.defaultBase".', "git.defaultBase"));
+      } else {
+        defaultBase = value;
+      }
+      continue;
+    }
+    if (key === "autoPullRequest") {
+      const value = isScalar(item.value) ? item.value.value : NON_SCALAR;
+      if (typeof value !== "boolean") {
+        issues.push(
+          issue(
+            "unknown-field",
+            'Field "git.autoPullRequest" must be a boolean.',
+            "git.autoPullRequest",
+          ),
+        );
+      } else {
+        autoPullRequest = value;
+      }
+      continue;
+    }
+    issues.push(issue("unknown-field", `Unknown field "git.${key}".`, `git.${key}`));
   }
-  return base;
+  if (issues.length > 0) return { issues };
+  const git = assembleGit({ defaultBase, autoPullRequest });
+  return git ? { git, issues } : { issues };
 }
 
 function isScreenLanguage(value: unknown): value is ScreenLanguage {
@@ -317,6 +374,7 @@ export function parseConfig(text: string): TitoConfig {
   const issues: ConfigIssue[] = [];
   const occurrences = new Map<string, number>();
   const values = new Map<string, unknown>();
+  let git: GitConfig | undefined;
   let product: ProductConfig | undefined;
   for (const item of document.contents.items) {
     const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
@@ -335,12 +393,9 @@ export function parseConfig(text: string): TitoConfig {
       continue;
     }
     if (key === "git") {
-      const base = readGitBase(item.value);
-      if (base === "invalid") {
-        issues.push(issue("unknown-field", 'Unknown field "git.defaultBase".', "git.defaultBase"));
-      } else if (base) {
-        values.set("git.defaultBase", base);
-      }
+      const parsed = readGit(item.value);
+      issues.push(...parsed.issues);
+      if (parsed.git) git = parsed.git;
       continue;
     }
     if (key === "product") {
@@ -377,10 +432,13 @@ export function parseConfig(text: string): TitoConfig {
       issue("unknown-profile", "Profile must be a string.", "profile"),
     ]);
   }
-  const defaultBase = values.get("git.defaultBase");
-  const git = isBranchBase(defaultBase) ? { defaultBase } : undefined;
-  if (git && product) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git, product };
-  if (git) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, git };
-  if (product) return { schemaVersion: CONFIG_SCHEMA_VERSION, profile, product };
-  return { schemaVersion: CONFIG_SCHEMA_VERSION, profile };
+  const result: {
+    schemaVersion: typeof CONFIG_SCHEMA_VERSION;
+    profile: ActiveRiskProfileId;
+    git?: GitConfig;
+    product?: ProductConfig;
+  } = { schemaVersion: CONFIG_SCHEMA_VERSION, profile };
+  if (git) result.git = git;
+  if (product) result.product = product;
+  return result;
 }

@@ -55,3 +55,33 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   assert.equal(pullRequestTemplate().includes("Docs"), true);
   rmSync(root, { recursive: true, force: true });
 });
+
+test("upgrade merge fills only missing settings", async () => {
+  const { missingSettings, mergeSettings } = await import("../dist/core/upgrade.js");
+  const { parseConfig } = await import("../dist/core/config.js");
+  const text = "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n";
+  const missing = missingSettings(parseConfig(text));
+  assert.equal(missing.includes("autoPullRequest"), true);
+  assert.equal(missing.includes("screenLanguage"), false);
+  const merged = mergeSettings(text, { autoPullRequest: true, screenLanguage: "en" });
+  const next = parseConfig(merged);
+  assert.equal(next.git.autoPullRequest, true);
+  assert.equal(next.product.screenLanguage, "vi");
+  assert.equal(next.profile, "solo-balanced");
+  assert.match(merged, /screenLanguage: vi/);
+  assert.match(merged, /autoPullRequest: true/);
+});
+
+test("non-TTY upgrade does not require settings answers", { timeout: 5000 }, () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  const original = "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n";
+  writeFileSync(join(root, "tito.yaml"), original);
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, "upgrade", "--confirm", "--files-only", "--root", root],
+    { encoding: "utf8", input: "" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(root, "tito.yaml"), "utf8"), original);
+  rmSync(root, { recursive: true, force: true });
+});

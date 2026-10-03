@@ -125,6 +125,55 @@ test("parses every active profile and rejects closed-schema violations", () => {
   );
 });
 
+test("parses git.autoPullRequest and still accepts defaultBase alone", () => {
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\ngit:\n  autoPullRequest: true\n"),
+    { schemaVersion: 1, profile: "solo-balanced", git: { autoPullRequest: true } },
+  );
+  assert.deepEqual(
+    parseConfig(
+      "schemaVersion: 1\nprofile: solo-balanced\ngit:\n  defaultBase: develop\n  autoPullRequest: false\n",
+    ),
+    {
+      schemaVersion: 1,
+      profile: "solo-balanced",
+      git: { defaultBase: "develop", autoPullRequest: false },
+    },
+  );
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\ngit:\n  autoPullRequest: false\n  defaultBase: master\n"),
+    {
+      schemaVersion: 1,
+      profile: "solo-balanced",
+      git: { defaultBase: "master", autoPullRequest: false },
+    },
+  );
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\ngit:\n  defaultBase: main\n"),
+    { schemaVersion: 1, profile: "solo-balanced", git: { defaultBase: "main" } },
+  );
+  assert.equal(
+    "autoPullRequest" in parseConfig("schemaVersion: 1\nprofile: solo-balanced\ngit:\n  defaultBase: dev\n").git,
+    false,
+  );
+  const stringValue = issueCodes(
+    'schemaVersion: 1\nprofile: solo-balanced\ngit:\n  autoPullRequest: "true"\n',
+  );
+  assert.deepEqual(
+    stringValue.map((item) => item.code),
+    ["unknown-field"],
+  );
+  assert.equal(stringValue[0].path, "git.autoPullRequest");
+  const unknownKey = issueCodes(
+    "schemaVersion: 1\nprofile: solo-balanced\ngit:\n  defaultBase: develop\n  remote: origin\n",
+  );
+  assert.deepEqual(
+    unknownKey.map((item) => item.code),
+    ["unknown-field"],
+  );
+  assert.equal(unknownKey[0].path, "git.remote");
+});
+
 test("parses optional product.screenLanguage and rejects other product fields", () => {
   const vietnamese = parseConfig(
     "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n",
