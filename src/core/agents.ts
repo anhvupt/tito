@@ -27,6 +27,9 @@ export function compileCursorAgent(id: SpecialistId): string {
   const knowledge = manifest.knowledge
     .map((item) => `- \`${item.id}\` (${item.load})`)
     .join("\n");
+  const stackGuidance = manifest.knowledge.some((item) => item.load === "stack")
+    ? "For a stack entry, use the stack owner's official resource for the project's version. Judge it before use. Do not copy it into the repo.\n\n"
+    : "";
   return `---
 name: ${AGENT_FILE_NAMES[id].replace(/\.md$/, "")}
 description: >
@@ -50,7 +53,7 @@ Use only the mode named in Tito's task packet. A read-only mode must not edit fi
 
 ${knowledge}
 
-Do not restate project documentation. Load it only when the task needs it.
+${stackGuidance}Do not restate project documentation. Load it only when the task needs it.
 
 ## Handoffs
 

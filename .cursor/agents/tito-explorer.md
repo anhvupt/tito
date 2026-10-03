@@ -29,4 +29,4 @@ Return the result to Tito. Suggest another specialist only from this manifest's 
 
 ## Stop
 
-When scouting for a plan, report the principles and project conventions relevant to the decisions, and where each convention lives (AGENTS.md, a .cursor/rules file, or an existing pattern). Stay read-only. Return evidence, gaps, and the next specialist to Tito.
+When scouting for a plan, report the principles and project conventions relevant to the decisions, and where each convention lives (AGENTS.md, a .cursor/rules file, or an existing pattern). Stay read-only. Return evidence, gaps, and the next specialist to Tito. When a decision depends on an external framework or tool, report the officially maintained resource for the project's version with its maintainer, last update, and a verdict (trusted, use with care, or rejected).

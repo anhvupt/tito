@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { pullRequestTemplate } from "../dist/core/git-flow.js";
+import { applyUpgrade, planUpgrade, titoOwnedFiles } from "../dist/core/upgrade.js";
 
 const cliPath = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -84,4 +85,72 @@ test("non-TTY upgrade does not require settings answers", { timeout: 5000 }, () 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(readFileSync(join(root, "tito.yaml"), "utf8"), original);
   rmSync(root, { recursive: true, force: true });
+});
+
+test("[integration] WP-8 upgrade replaces Tito surfaces and keeps outside text", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    mkdirSync(join(root, ".cursor/agents"), { recursive: true });
+    mkdirSync(join(root, ".cursor/skills/tito"), { recursive: true });
+    mkdirSync(join(root, ".cursor/skills/project-skill"), { recursive: true });
+    writeFileSync(
+      join(root, ".cursor/agents/tito-frontend.md"),
+      "old card\n- `angular` (stack)\n",
+    );
+    writeFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "old tito skill\n");
+    writeFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "consumer skill\n");
+    const above = "Project notes stay.\n";
+    const below = "\nMore project notes.\n";
+    writeFileSync(
+      join(root, "AGENTS.md"),
+      `${above}<!-- tito:bootstrap start -->\nOld Tito text.\n<!-- tito:bootstrap end -->${below}`,
+    );
+
+    const owned = titoOwnedFiles();
+    applyUpgrade(root, planUpgrade(root, owned));
+
+    const frontend = readFileSync(join(root, ".cursor/agents/tito-frontend.md"), "utf8");
+    const shippedFrontend = owned.find((file) => file.path === ".cursor/agents/tito-frontend.md");
+    assert.equal(frontend, shippedFrontend.body);
+    assert.equal(frontend.includes("angular"), false);
+    assert.match(frontend, /`official-stack-sources` \(stack\)/);
+    const skill = readFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "utf8");
+    const shippedSkill = owned.find((file) => file.path === ".cursor/skills/tito/SKILL.md");
+    assert.equal(skill, shippedSkill.body);
+    assert.match(skill, /Research, then judge/);
+    assert.equal(
+      readFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "utf8"),
+      "consumer skill\n",
+    );
+    const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+    assert.equal(agents.startsWith(above), true);
+    assert.equal(agents.endsWith(below), true);
+    assert.equal(agents.includes("Old Tito text."), false);
+    assert.match(agents, /official sources/);
+    assert.match(agents, /judge/);
+
+    const again = planUpgrade(root, titoOwnedFiles());
+    assert.equal(
+      again.every((file) => file.action === "keep"),
+      true,
+      again.filter((file) => file.action !== "keep").map((file) => file.path).join(", "),
+    );
+
+    const appendRoot = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+    try {
+      const notes = "Project notes with no Tito heading.\n";
+      writeFileSync(join(appendRoot, "AGENTS.md"), notes);
+      applyUpgrade(appendRoot, planUpgrade(appendRoot, titoOwnedFiles()));
+      const appended = readFileSync(join(appendRoot, "AGENTS.md"), "utf8");
+      const marker = appended.indexOf("<!-- tito:bootstrap start -->");
+      assert.equal(appended.includes(notes.trimEnd()), true);
+      assert.ok(marker > appended.indexOf(notes.trimEnd()));
+      assert.equal(notes.includes("# Tito bootstrap"), false);
+      assert.equal(notes.includes("<!-- tito:bootstrap"), false);
+    } finally {
+      rmSync(appendRoot, { recursive: true, force: true });
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

@@ -78,8 +78,9 @@ that handoff only when you explicitly waive it for that module. Each specialist 
 knowledge references, handoffs, and a stop condition. The detailed prompt stays
 lean and loads knowledge only when that mode needs it.
 
-Cursor agent files such as `.cursor/agents/tito-frontend.md` are not generated
-yet. The roster above is the contract those files will follow.
+Stack knowledge points to the stack owner's official resource for the project's version and is never copied in.
+
+`tito init` writes Cursor agent files such as `.cursor/agents/tito-frontend.md` from the roster above, and `tito upgrade` refreshes them.
 
 ## Chat first, CLI when useful
 
@@ -204,6 +205,10 @@ merge duration say unavailable until GitHub data is added.
 The normal careful path is:
 
 `DISCOVERY → PLANNED → APPROVED → IMPLEMENTING → READY_FOR_REVIEW → APPROVED_FOR_COMMIT → DONE`
+
+Work follows clarify, then domain, then the spec doc, then failing tests, then code. Discover clarifies. The plan opens with Domain. In Code, the agent writes the spec doc named in Docs impact first, then the approved tests, confirms they fail, then implements until they pass.
+
+Six working principles guide that path: research, then judge; fixed floor, flexible tools; adopt before building; business before tech; clarify, domain, document, test, then code; and it depends, so show it.
 
 A small, obvious change can move from discovery directly to an explicitly
 approved slice. Review feedback can return an in-scope slice to implementation.

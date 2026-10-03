@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { parseConfig } from "../dist/core/config.js";
-import { PlanError, planAdoption } from "../dist/core/plan.js";
+import { PlanError, planAdoption, titoBootstrapBlock } from "../dist/core/plan.js";
 
 const cliPath = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
 
@@ -80,4 +80,18 @@ test("apply --dry-run prints the plan and does not write", () => {
   assert.match(writeAttempt.stderr, /Re-run with --dry-run/);
   assert.deepEqual(readdirSync(root).sort(), occupied);
   rmSync(root, { recursive: true, force: true });
+});
+
+test("[unit] WP-1 bootstrap researches, judges, and opens plans with Domain", () => {
+  const block = titoBootstrapBlock();
+  assert.match(block, /official sources/);
+  assert.match(block, /judge/);
+  assert.match(block, /Domain/);
+  const sections = ["Domain", "Decisions", "Test cases", "Docs impact", "Slices and branch"];
+  const indexes = sections.map((name) => block.indexOf(name));
+  for (let i = 0; i < indexes.length; i += 1) {
+    assert.ok(indexes[i] >= 0, sections[i]);
+    if (i > 0) assert.ok(indexes[i] > indexes[i - 1], sections[i]);
+  }
+  assert.ok(Math.ceil(block.length / 4) <= 800);
 });

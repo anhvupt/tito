@@ -29,4 +29,4 @@ Return the result to Tito. Suggest another specialist only from this manifest's 
 
 ## Stop
 
-Return the decided approach and guidance code.
+For each technical decision, return the options with pros and cons and the pick for this project's risk profile. Ask Tito when the project's purpose is unclear. Name any official source with its verdict. Return the decided approach and guidance code.

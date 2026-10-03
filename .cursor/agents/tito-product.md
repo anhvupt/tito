@@ -29,4 +29,4 @@ Return the result to Tito. Suggest another specialist only from this manifest's 
 
 ## Stop
 
-Return one slice and its acceptance criteria.
+Return the Domain section (a business impact line, terms, rules, invariants, and users), one slice, and its acceptance criteria. Offer at most one optional business suggestion.

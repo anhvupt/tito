@@ -116,7 +116,7 @@ export const SPECIALISTS = Object.freeze({
     knowledge: [knowledge("explorer-scout", "always")],
     modes: [specialistMode("scout", "read-only", phase.discovery)],
     stopCondition:
-      "When scouting for a plan, report the principles and project conventions relevant to the decisions, and where each convention lives (AGENTS.md, a .cursor/rules file, or an existing pattern). Stay read-only. Return evidence, gaps, and the next specialist to Tito.",
+      "When scouting for a plan, report the principles and project conventions relevant to the decisions, and where each convention lives (AGENTS.md, a .cursor/rules file, or an existing pattern). Stay read-only. Return evidence, gaps, and the next specialist to Tito. When a decision depends on an external framework or tool, report the officially maintained resource for the project's version with its maintainer, last update, and a verdict (trusted, use with care, or rejected).",
   }),
   "product-analyst": manifest("product-analyst", {
     tier: "Standard",
@@ -124,7 +124,8 @@ export const SPECIALISTS = Object.freeze({
     triggers: ["clarify requirements", "define acceptance"],
     knowledge: [knowledge("product-analysis", "task")],
     modes: [specialistMode("analyze", "read-only", phase.planning)],
-    stopCondition: "Return one slice and its acceptance criteria.",
+    stopCondition:
+      "Return the Domain section (a business impact line, terms, rules, invariants, and users), one slice, and its acceptance criteria. Offer at most one optional business suggestion.",
   }),
   architect: manifest("architect", {
     tier: "Reasoning",
@@ -132,13 +133,17 @@ export const SPECIALISTS = Object.freeze({
     triggers: ["choose architecture", "resolve a technical trade-off"],
     knowledge: [knowledge("architecture-decisions", "task")],
     modes: [specialistMode("plan", "read-only", phase.planning)],
-    stopCondition: "Return the decided approach and guidance code.",
+    stopCondition:
+      "For each technical decision, return the options with pros and cons and the pick for this project's risk profile. Ask Tito when the project's purpose is unclear. Name any official source with its verdict. Return the decided approach and guidance code.",
   }),
   "backend-engineer": manifest("backend-engineer", {
     tier: "Standard",
     role: "Backend implementer",
     triggers: ["backend implementation", "API or data change"],
-    knowledge: [knowledge("backend-implementation", "task")],
+    knowledge: [
+      knowledge("backend-implementation", "task"),
+      knowledge("official-stack-sources", "stack"),
+    ],
     modes: [specialistMode("implement", "write-files", phase.implementation)],
     stopCondition: "Stop after the approved backend slice is verified.",
   }),
@@ -148,7 +153,7 @@ export const SPECIALISTS = Object.freeze({
     triggers: ["frontend design", "frontend implementation"],
     knowledge: [
       knowledge("frontend-ux", "always"),
-      knowledge("angular", "stack"),
+      knowledge("official-stack-sources", "stack"),
     ],
     modes: [
       specialistMode("design", "read-only", phase.planning, ["preview"]),
@@ -160,7 +165,10 @@ export const SPECIALISTS = Object.freeze({
     tier: "Standard",
     role: "Infrastructure implementer",
     triggers: ["infrastructure plan", "deployment change"],
-    knowledge: [knowledge("devops-safety", "always")],
+    knowledge: [
+      knowledge("devops-safety", "always"),
+      knowledge("official-stack-sources", "stack"),
+    ],
     modes: [
       specialistMode("plan", "read-only", phase.planning),
       specialistMode("implement", "write-infrastructure", phase.implementation, [

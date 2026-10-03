@@ -171,3 +171,38 @@ test("non-interactive init stores autoPullRequest and does not invent product fi
   assert.equal(readFileSync(join(root, "tito.yaml"), "utf8"), original);
   rmSync(root, { recursive: true, force: true });
 });
+
+test("[unit] WP-7 shipped skill lists principles, plan sections, and code order", () => {
+  const skill = readFileSync(
+    fileURLToPath(new URL("../templates/cursor/skills/tito/SKILL.md", import.meta.url)),
+    "utf8",
+  );
+  const sentence = skill
+    .split(/(?<=[.!?])\s+/)
+    .find((item) =>
+      ["Domain", "Decisions", "Test cases", "Docs impact", "Slices and branch"].every((name) =>
+        item.includes(name),
+      ),
+    );
+  assert.ok(sentence);
+  const indexes = ["Domain", "Decisions", "Test cases", "Docs impact", "Slices and branch"].map(
+    (name) => sentence.indexOf(name),
+  );
+  for (let i = 1; i < indexes.length; i += 1) {
+    assert.ok(indexes[i] > indexes[i - 1]);
+  }
+  for (const name of [
+    "Research, then judge",
+    "Fixed floor, flexible tools",
+    "Adopt before building",
+    "Business before tech",
+    "Clarify, domain, document, test, then code",
+    "It depends, so show it",
+  ]) {
+    assert.equal(skill.includes(name), true, name);
+  }
+  const specAt = skill.indexOf("spec doc");
+  const failingAt = skill.indexOf("failing tests");
+  const codeAt = skill.indexOf("the code", failingAt);
+  assert.ok(specAt >= 0 && failingAt > specAt && codeAt > failingAt);
+});

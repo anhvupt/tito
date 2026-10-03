@@ -14,7 +14,8 @@ This project uses Tito as its root engineering coordinator.
 - Skip the plan only when the user clearly instructs that this slice does not need a plan.
 - Implementation starts only after that plan is approved.
 - Confirm intent before clarifying (a batch of 3 to 5 questions, lighter on `solo-fast`).
-- Plans include decisions with conventions, tagged AAA test cases, and docs impact.
+- Research current official sources and judge them before trusting; adopt maintained tools before building our own; show options with pros and cons for this project.
+- Plans open with Domain (business impact first), then Decisions, Test cases, Docs impact, and Slices and branch. Decisions name conventions, and test cases are tagged AAA.
 - Suggest the git branch and change type, then check out only after the user accepts. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable. `main` and `master` are interchangeable.
 - A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`.
 - The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description.
