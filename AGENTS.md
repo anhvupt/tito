@@ -22,6 +22,7 @@ This project uses Tito as its root engineering coordinator.
 - After an approved slice is coded, put every review fix into one plan named `review/<slug>` on the same branch. Ask before opening a pull request only after that plan is coded, or when the user accepts the code with no changes.
 - A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs.
 - Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
+- In a terminal, `tito init --confirm` asks for the git base, screen language, tenancy, surfaces, and whether to auto-create a pull request after implementation. The auto-pull-request question defaults to yes. Upgrade asks only for settings missing from `tito.yaml`. Storing that answer does not open a pull request.
 - Never approve a pull request. Never merge unless the user calls for the merge and the pull request already has an approval.
 - After a pull request is merged, ask before the next slice. Switch back to the base branch only when the user says so clearly.
 - Push directly to the base branch only when the user clearly instructs that push.

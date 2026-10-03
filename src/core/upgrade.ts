@@ -1,8 +1,9 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { compiledCursorAgents } from "./agents.js";
-import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate } from "./git-flow.js";
-import { shippedSkills } from "./init.js";
+import { parseConfig, type ProductSurface, type ScreenLanguage, type Tenancy, type TitoConfig } from "./config.js";
+import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate, type BranchBase } from "./git-flow.js";
+import { shippedSkills, titoYamlBody, type SettingKey, type TitoSettings } from "./init.js";
 import {
   TITO_BOOTSTRAP_END,
   TITO_BOOTSTRAP_START,
@@ -83,6 +84,66 @@ export function formatUpgrade(root: string, files: readonly UpgradeFile[]): stri
     lines.push(`${file.path}: ${file.action}`);
   }
   return `${lines.join("\n")}\n`;
+}
+
+export function missingSettings(config: TitoConfig): SettingKey[] {
+  const missing: SettingKey[] = [];
+  if (config.git?.defaultBase === undefined) missing.push("defaultBase");
+  if (config.product?.screenLanguage === undefined) missing.push("screenLanguage");
+  if (config.product?.tenancy === undefined) missing.push("tenancy");
+  if (config.product?.surfaces === undefined) missing.push("surfaces");
+  if (config.git?.autoPullRequest === undefined) missing.push("autoPullRequest");
+  return missing;
+}
+
+export function mergeSettings(yamlText: string, answers: TitoSettings): string {
+  const config = parseConfig(yamlText);
+  const settings: {
+    defaultBase?: BranchBase;
+    screenLanguage?: ScreenLanguage;
+    tenancy?: Tenancy;
+    surfaces?: readonly ProductSurface[];
+    autoPullRequest?: boolean;
+  } = {};
+  let changed = false;
+
+  const existingBase = config.git?.defaultBase;
+  if (existingBase !== undefined) settings.defaultBase = existingBase;
+  else if (answers.defaultBase !== undefined) {
+    settings.defaultBase = answers.defaultBase;
+    changed = true;
+  }
+
+  const existingAuto = config.git?.autoPullRequest;
+  if (existingAuto !== undefined) settings.autoPullRequest = existingAuto;
+  else if (answers.autoPullRequest !== undefined) {
+    settings.autoPullRequest = answers.autoPullRequest;
+    changed = true;
+  }
+
+  const existingLanguage = config.product?.screenLanguage;
+  if (existingLanguage !== undefined) settings.screenLanguage = existingLanguage;
+  else if (answers.screenLanguage !== undefined) {
+    settings.screenLanguage = answers.screenLanguage;
+    changed = true;
+  }
+
+  const existingTenancy = config.product?.tenancy;
+  if (existingTenancy !== undefined) settings.tenancy = existingTenancy;
+  else if (answers.tenancy !== undefined) {
+    settings.tenancy = answers.tenancy;
+    changed = true;
+  }
+
+  const existingSurfaces = config.product?.surfaces;
+  if (existingSurfaces !== undefined) settings.surfaces = existingSurfaces;
+  else if (answers.surfaces !== undefined && answers.surfaces.length > 0) {
+    settings.surfaces = answers.surfaces;
+    changed = true;
+  }
+
+  if (!changed) return yamlText;
+  return titoYamlBody(config.profile, settings);
 }
 
 export function applyUpgrade(root: string, files: readonly UpgradeFile[]): void {

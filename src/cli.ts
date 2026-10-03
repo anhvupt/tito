@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
@@ -12,16 +12,22 @@ import {
   inspectRepository,
 } from "./core/inspect.js";
 import { PlanError, formatAdoptionPlan, planAdoption } from "./core/plan.js";
+import { ConfigValidationError, parseConfig } from "./core/config.js";
 import {
+  INIT_SETTING_KEYS,
   InitError,
   applyInitialization,
   formatInitialization,
   planInitialization,
   promptForProfile,
+  promptForSettings,
+  type TitoSettings,
 } from "./core/init.js";
 import {
   applyUpgrade,
   formatUpgrade,
+  mergeSettings,
+  missingSettings,
   planUpgrade,
   titoOwnedFiles,
 } from "./core/upgrade.js";
@@ -210,10 +216,23 @@ async function runInit(args: string[]): Promise<void> {
   }
 
   try {
-    const plan = planInitialization(inspectRepository(root), profile);
+    const report = inspectRepository(root);
+    const creatingYaml = report.titoYaml.status === "absent";
+    let settings: TitoSettings | undefined;
+    if (creatingYaml && !input.isTTY) settings = { autoPullRequest: true };
+    let plan = planInitialization(report, profile, settings);
     if (!confirm) {
       process.stdout.write(formatInitialization(plan));
       return;
+    }
+    if (creatingYaml && input.isTTY) {
+      const prompts = createInterface({ input, output });
+      try {
+        settings = await promptForSettings((prompt) => prompts.question(prompt), INIT_SETTING_KEYS);
+      } finally {
+        prompts.close();
+      }
+      plan = planInitialization(report, profile, settings);
     }
     applyInitialization(plan);
     process.stdout.write(formatInitialization(plan));
@@ -267,6 +286,7 @@ async function runUpgrade(args: string[]): Promise<void> {
     process.stdout.write(formatUpgrade(root, files));
     return;
   }
+  if (!filesOnly && input.isTTY) await fillMissingSettings(root);
   if (!filesOnly && !isTitoSource(root)) {
     const install = spawnSync(
       "npm",
@@ -290,6 +310,30 @@ async function runUpgrade(args: string[]): Promise<void> {
   }
   applyUpgrade(root, files);
   process.stdout.write(formatUpgrade(root, files));
+}
+
+async function fillMissingSettings(root: string): Promise<void> {
+  let text: string;
+  try {
+    text = readFileSync(join(root, "tito.yaml"), "utf8");
+  } catch {
+    return;
+  }
+  let missing: ReturnType<typeof missingSettings>;
+  try {
+    missing = missingSettings(parseConfig(text));
+  } catch (error) {
+    if (error instanceof ConfigValidationError) return;
+    throw error;
+  }
+  if (missing.length === 0) return;
+  const prompts = createInterface({ input, output });
+  try {
+    const answers = await promptForSettings((prompt) => prompts.question(prompt), missing);
+    writeFileSync(join(root, "tito.yaml"), mergeSettings(text, answers), "utf8");
+  } finally {
+    prompts.close();
+  }
 }
 
 function isTitoSource(root: string): boolean {

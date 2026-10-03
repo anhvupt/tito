@@ -104,7 +104,17 @@ The first `init` prints the plan and writes nothing. In a terminal, omitting
 `--confirm` creates the missing `tito.yaml`, specialist agents, and `/tito`
 skills. If `AGENTS.md` already exists, Tito appends its bootstrap and leaves
 the existing guidance in place. It refuses to overwrite a Tito file that is
-already there. Errors on a terminal are red, and `NO_COLOR` turns that off.
+already there. In a terminal, `tito init --confirm` then asks for the git base
+(`dev`, `develop`, `main`, or `master`), screen language (`vi` or `en`),
+tenancy (`single` or `multi`), optional comma-separated surface ids, and
+whether to auto-create a pull request after implementation. That question is
+`Auto-create a pull request after implementation? [Y/n]`. Enter, `y`, or `yes`
+stores yes. `n` or `no` stores no. Empty surface ids omit `product.surfaces`.
+A non-interactive init with `--profile` does not ask; it stores
+`git.autoPullRequest: true` and does not invent the other product fields.
+Preview without `--confirm` does not ask and does not write. An existing
+`tito.yaml` is left unchanged. Storing the answer does not open a pull request.
+Errors on a terminal are red, and `NO_COLOR` turns that off.
 Open a new Cursor chat, then start with `/tito`.
 
 Upgrade an existing project after installing a newer Tito:
@@ -116,7 +126,7 @@ npx tito upgrade --confirm
 
 `--confirm` installs the latest `@anhvupt/tito` and replaces Tito-owned
 agents, skills, and the Tito section of `AGENTS.md`. Consumer rules, consumer
-agents, and other project skills stay untouched.
+agents, and other project skills stay untouched. In a terminal, `tito upgrade --confirm` asks only for settings missing from `tito.yaml`: git base, screen language, tenancy, surfaces, and auto-create pull request. Enter on that last question still stores yes. It does not change a value that is already present, and it does not change the profile. A non-interactive upgrade does not ask. If `tito.yaml` is missing, it skips those questions.
 
 Tito is installed in each project. It is not a required global command.
 An opt-in local admin index (`tito admin add|list|remove|refresh`) can register
@@ -206,7 +216,10 @@ schemaVersion: 1
 profile: client-careful
 git:
   defaultBase: develop
+  autoPullRequest: true
 ```
+
+`git.autoPullRequest` is an optional boolean. Missing it is valid. A non-boolean value is rejected. Storing it does not open a pull request.
 
 `product.screenLanguage` is optional and accepts only `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Unknown product fields are rejected. `product.tenancy` is optional (`single` or `multi`). `product.surfaces` is an optional list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid.
 

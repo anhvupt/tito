@@ -2,7 +2,20 @@ import { mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSy
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compiledCursorAgents } from "./agents.js";
-import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate } from "./git-flow.js";
+import {
+  SCREEN_LANGUAGES,
+  TENANCY_VALUES,
+  isSurfaceId,
+  type ProductSurface,
+  type ScreenLanguage,
+  type Tenancy,
+} from "./config.js";
+import {
+  BRANCH_BASES,
+  PULL_REQUEST_TEMPLATE_PATH,
+  pullRequestTemplate,
+  type BranchBase,
+} from "./git-flow.js";
 import type { InspectionReport } from "./inspect.js";
 import { ACTIVE_RISK_PROFILE_IDS } from "./profiles.js";
 import {
@@ -50,6 +63,126 @@ export async function promptForProfile(
   return answer;
 }
 
+export const GIT_BASE_PROMPT = "Git base (dev, develop, main, master): ";
+export const SCREEN_LANGUAGE_PROMPT = "Screen language (vi, en): ";
+export const TENANCY_PROMPT = "Tenancy (single, multi): ";
+export const SURFACES_PROMPT = "Surfaces (comma-separated ids): ";
+export const AUTO_PULL_REQUEST_PROMPT =
+  "Auto-create a pull request after implementation? [Y/n] ";
+
+export const INIT_SETTING_KEYS = [
+  "defaultBase",
+  "screenLanguage",
+  "tenancy",
+  "surfaces",
+  "autoPullRequest",
+] as const;
+
+export type SettingKey = (typeof INIT_SETTING_KEYS)[number];
+
+export type TitoSettings = {
+  readonly defaultBase?: BranchBase;
+  readonly screenLanguage?: ScreenLanguage;
+  readonly tenancy?: Tenancy;
+  readonly surfaces?: readonly ProductSurface[];
+  readonly autoPullRequest?: boolean;
+};
+
+async function askOneOf<T extends string>(
+  ask: (prompt: string) => Promise<string>,
+  prompt: string,
+  allowed: readonly T[],
+): Promise<T> {
+  for (;;) {
+    const answer = (await ask(prompt)).trim();
+    if ((allowed as readonly string[]).includes(answer)) return answer as T;
+  }
+}
+
+async function askSurfaces(
+  ask: (prompt: string) => Promise<string>,
+): Promise<readonly ProductSurface[] | undefined> {
+  for (;;) {
+    const answer = (await ask(SURFACES_PROMPT)).trim();
+    if (answer === "") return undefined;
+    const ids = answer
+      .split(",")
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+    if (ids.length === 0) return undefined;
+    const seen = new Set<string>();
+    const valid = ids.every((id) => {
+      if (!isSurfaceId(id) || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    if (valid) return ids.map((id) => ({ id }));
+  }
+}
+
+async function askAutoPullRequest(ask: (prompt: string) => Promise<string>): Promise<boolean> {
+  for (;;) {
+    const answer = (await ask(AUTO_PULL_REQUEST_PROMPT)).trim().toLowerCase();
+    if (answer === "" || answer === "y" || answer === "yes") return true;
+    if (answer === "n" || answer === "no") return false;
+  }
+}
+
+export async function promptForSettings(
+  ask: (prompt: string) => Promise<string>,
+  keys: readonly SettingKey[],
+): Promise<TitoSettings> {
+  const answers: {
+    defaultBase?: BranchBase;
+    screenLanguage?: ScreenLanguage;
+    tenancy?: Tenancy;
+    surfaces?: readonly ProductSurface[];
+    autoPullRequest?: boolean;
+  } = {};
+  for (const key of keys) {
+    if (key === "defaultBase") {
+      answers.defaultBase = await askOneOf(ask, GIT_BASE_PROMPT, BRANCH_BASES);
+      continue;
+    }
+    if (key === "screenLanguage") {
+      answers.screenLanguage = await askOneOf(ask, SCREEN_LANGUAGE_PROMPT, SCREEN_LANGUAGES);
+      continue;
+    }
+    if (key === "tenancy") {
+      answers.tenancy = await askOneOf(ask, TENANCY_PROMPT, TENANCY_VALUES);
+      continue;
+    }
+    if (key === "surfaces") {
+      const surfaces = await askSurfaces(ask);
+      if (surfaces !== undefined) answers.surfaces = surfaces;
+      continue;
+    }
+    answers.autoPullRequest = await askAutoPullRequest(ask);
+  }
+  return answers;
+}
+
+export function titoYamlBody(profile: string, settings: TitoSettings): string {
+  const lines = ["schemaVersion: 1", `profile: ${profile}`];
+  const gitLines: string[] = [];
+  if (settings.defaultBase !== undefined) gitLines.push(`  defaultBase: ${settings.defaultBase}`);
+  if (settings.autoPullRequest !== undefined) {
+    gitLines.push(`  autoPullRequest: ${settings.autoPullRequest}`);
+  }
+  if (gitLines.length > 0) lines.push("git:", ...gitLines);
+  const productLines: string[] = [];
+  if (settings.screenLanguage !== undefined) {
+    productLines.push(`  screenLanguage: ${settings.screenLanguage}`);
+  }
+  if (settings.tenancy !== undefined) productLines.push(`  tenancy: ${settings.tenancy}`);
+  if (settings.surfaces !== undefined && settings.surfaces.length > 0) {
+    productLines.push("  surfaces:");
+    for (const surface of settings.surfaces) productLines.push(`    - id: ${surface.id}`);
+  }
+  if (productLines.length > 0) lines.push("product:", ...productLines);
+  return `${lines.join("\n")}\n`;
+}
+
 function exists(root: string, path: string): boolean {
   try {
     return statSync(join(root, path)).isFile();
@@ -86,15 +219,27 @@ function agentsBootstrap(report: InspectionReport): InitFile {
   };
 }
 
-export function planInitialization(report: InspectionReport, profile: string): {
+export function planInitialization(
+  report: InspectionReport,
+  profile: string,
+  settings?: TitoSettings,
+): {
   root: string;
   profile: ReturnType<typeof planAdoption>["profile"];
   files: InitFile[];
 } {
   const adoption = planAdoption(report, profile);
-  const files = adoption.files.map((file) =>
-    file.path === "AGENTS.md" ? agentsBootstrap(report) : file,
-  );
+  const files: InitFile[] = adoption.files.map((file) => {
+    if (file.path === "AGENTS.md") return agentsBootstrap(report);
+    if (file.path === "tito.yaml" && file.action === "create" && settings !== undefined) {
+      return {
+        path: "tito.yaml" as const,
+        action: "create" as const,
+        body: titoYamlBody(adoption.profile, settings),
+      };
+    }
+    return file;
+  });
   const agents = compiledCursorAgents().map((agent) =>
     exists(report.root, agent.path)
       ? { path: agent.path, action: "conflict" as const }
