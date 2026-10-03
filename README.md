@@ -66,7 +66,11 @@ Several read-only specialists may work together. Coding sub-agents follow the
 profile cap: `client-careful` 3, `solo-balanced` 6, and `solo-fast` 12. Each
 has its own plan and branch. Tito does not code in the chat. Every change,
 including a small one, goes to a sub-agent, and Tito returns to the user.
-Backend and frontend work can run together inside that cap. Docs named in
+When two or more slices are independent, Tito sends those sub-agents together,
+each on its own branch, up to that cap, and does not line them up one after
+another. Check out each branch only after you accept that branch.
+Documentation writers stay one at a time. Backend and frontend work can run
+together inside that cap. Docs named in
 the plan are updated, or you waive them, before Tito offers a pull request.
 After a module is finished, Tito still schedules the tech docs writer and then
 the user docs writer, one at a time, before calling that module done. Skip

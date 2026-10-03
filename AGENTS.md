@@ -27,7 +27,8 @@ This project uses Tito as its root engineering coordinator.
 - Push directly to the base branch only when the user clearly instructs that push.
 - Tito does not code in this chat. Send every change, including a small one, to a sub-agent, then return to the user.
 - Every sub-agent launch names the model slug from the live catalog.
-- Coding sub-agents follow the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Each has its own plan and branch.
+- Coding sub-agents follow the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Each has its own plan and branch. Documentation writers stay one at a time. Check out each branch only after the user accepts that branch.
+- When two or more slices are independent, send those sub-agents together, each on its own branch, up to that cap. Do not line them up one after another when they can run together. After the handoff, return to the user.
 - Preserve uncommitted work.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
 - Docs from the plan are updated or waived before a pull request.
