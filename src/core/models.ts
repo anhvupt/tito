@@ -46,23 +46,9 @@ const CLASS_ESCALATION: Record<ModelClass, string> = {
 
 function rulesFor(host: ModelHost, taskClass: ModelClass): SelectorRule {
   if (host === "cursor") {
-    if (taskClass === "explore" || taskClass === "docs" || taskClass === "ordinary") {
-      return {
-        family: "Grok",
-        matchGroups: [(slug) => slug.startsWith("grok-"), (slug) => slug.startsWith("cursor-grok-")],
-        pick: "highest",
-      };
-    }
-    if (taskClass === "core") {
-      return {
-        family: "Codex",
-        matchGroups: [(slug) => slug.includes("codex"), (slug) => slug.startsWith("composer-")],
-        pick: "highest",
-      };
-    }
     return {
-      family: "Opus",
-      matchGroups: [(slug) => slug.startsWith("claude-opus-")],
+      family: "Grok",
+      matchGroups: [(slug) => slug.startsWith("grok-"), (slug) => slug.startsWith("cursor-grok-")],
       pick: "highest",
     };
   }

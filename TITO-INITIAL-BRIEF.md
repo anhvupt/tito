@@ -248,10 +248,8 @@ Tito should:
 - Clearly label token and cost estimates as estimates.
 
 Host and class routing stays deterministic and catalog-resolved. On Cursor,
-explore, docs, and ordinary work prefer Grok (first `grok-`, then
-`cursor-grok-`, highest version). Cursor core work prefers Codex (a slug that
-contains `codex`, otherwise `composer-`, highest version). Cursor reasoning
-uses `claude-opus-` (highest version). On Claude, explore and docs use
+explore, docs, ordinary, core, and reasoning all use Grok, `grok-` first, then
+`cursor-grok-`, highest version. On Claude, explore and docs use
 `claude-sonnet-` (lowest version), ordinary uses `claude-sonnet-` (highest
 version), and core plus reasoning use `claude-opus-` (highest version). If a
 family is unavailable in the live catalog, Tito asks instead of substituting a

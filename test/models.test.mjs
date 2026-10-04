@@ -72,7 +72,7 @@ test("MOD-4 ordinary and core classes pick cheap and stronger families", () => {
     assert.equal(cursorOrdinary.model, "grok-4.7-high-fast");
   }
   if (cursorCore.status === "selected") {
-    assert.equal(cursorCore.model, "gpt-5.3-codex");
+    assert.equal(cursorCore.model, "grok-4.7-high-fast");
   }
   if (claudeOrdinary.status === "selected") {
     assert.equal(claudeOrdinary.model, "claude-sonnet-5-5-high");
@@ -101,10 +101,15 @@ test("MOD-6 missing required family asks the user", () => {
     taskClass: "explore",
     catalog: ["composer-2.5-fast"],
   });
-  const coreOnCursor = recommendModel({
+  const coreOnGrok = recommendModel({
     host: "cursor",
     taskClass: "core",
     catalog: ["grok-4.7-high-fast"],
+  });
+  const coreOnComposer = recommendModel({
+    host: "cursor",
+    taskClass: "core",
+    catalog: ["composer-2.5-fast"],
   });
 
   assert.deepEqual(exploreOnCursor, {
@@ -112,14 +117,18 @@ test("MOD-6 missing required family asks the user", () => {
     family: "Grok",
     reason: "No matching Grok model was found in the current catalog.",
   });
-  assert.deepEqual(coreOnCursor, {
+  assert.equal(coreOnGrok.status, "selected");
+  if (coreOnGrok.status === "selected") {
+    assert.equal(coreOnGrok.model, "grok-4.7-high-fast");
+  }
+  assert.deepEqual(coreOnComposer, {
     status: "ask",
-    family: "Codex",
-    reason: "No matching Codex model was found in the current catalog.",
+    family: "Grok",
+    reason: "No matching Grok model was found in the current catalog.",
   });
 });
 
-test("MOD-7 reasoning on both hosts returns the Opus slug", () => {
+test("MOD-7 reasoning uses Grok on Cursor and Opus on Claude", () => {
   const cursor = recommendModel({
     host: "cursor",
     taskClass: "reasoning",
@@ -134,7 +143,7 @@ test("MOD-7 reasoning on both hosts returns the Opus slug", () => {
   assert.equal(cursor.status, "selected");
   assert.equal(claude.status, "selected");
   if (cursor.status === "selected") {
-    assert.equal(cursor.model, "claude-opus-5-5-medium");
+    assert.equal(cursor.model, "grok-4.7-high-fast");
   }
   if (claude.status === "selected") {
     assert.equal(claude.model, "claude-opus-5-5-medium");
