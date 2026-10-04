@@ -66,6 +66,7 @@ Several read-only specialists may work together. Coding sub-agents follow the
 profile cap: `client-careful` 3, `solo-balanced` 6, and `solo-fast` 12. Each
 has its own plan and branch. Tito does not code in the chat. Every change,
 including a small one, goes to a sub-agent, and Tito returns to the user.
+Before writing an approved slice, Tito lists installed skills, reads only each name and description, and names in the handoff the ones the writer must read.
 When two or more slices are independent, Tito sends those sub-agents together,
 each on its own branch, up to that cap, and does not line them up one after
 another. Check out each branch only after you accept that branch.
