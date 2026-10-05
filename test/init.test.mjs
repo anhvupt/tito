@@ -52,6 +52,10 @@ test("init of a repo with no AGENTS.md writes the intent sentence", () => {
   const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
   assert.equal(agents.includes("Confirm intent before clarifying"), true);
   assert.equal(agents.includes("Finishing a slice leaves the branch as it is."), true);
+  assert.equal(
+    agents.includes("The implementation handoff names the skills it will read."),
+    true,
+  );
   assert.equal(agents.includes("Review fixes lists every comment"), true);
   rmSync(root, { recursive: true, force: true });
 });

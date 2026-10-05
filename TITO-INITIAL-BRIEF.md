@@ -547,6 +547,8 @@ The approved plan is the spec. `PLANNED` means the plan has all five sections. S
 
 **Code** is `IMPLEMENTING`. The coding sub-agent writes the spec doc named in Docs impact first, then the approved tests, confirms they fail, then implements until they pass. Writing is not committing. The spec doc is waived when the slice changes no behavior. A test added beyond the approved list is flagged as new. A bug fix starts with a test that reproduces the bug.
 
+Before writing an approved slice, list installed skills in `.cursor/skills` and `.agents/skills`. Read only each skill's name and description, and name in the handoff the ones the writer must read. Do not load the whole set. Pick the skills that match the slice's stack and task, usually one to three. The coordinator skill named `tito` is not a pick. Skills that do not match are not read. The writer reads the named files before coding. If none match, the handoff says so and continues. If two skills conflict, ask once.
+
 **Verify.** Tito reports each approved test ID as passing or failing, plus lint and build.
 
 **Docs gate.** Docs named in Docs impact are updated, or the user waives them, before Tito offers to open a pull request. After a finished module, Tito still schedules the tech docs writer and then the user docs writer for larger docs, one at a time, unless the user waives that handoff.

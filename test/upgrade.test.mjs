@@ -45,6 +45,10 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   assert.match(agents, /Keep this/);
   assert.equal(agents.split("Confirm intent before clarifying").length - 1, 1);
   assert.equal(agents.split("Finishing a slice leaves the branch as it is.").length - 1, 1);
+  assert.equal(
+    agents.split("The implementation handoff names the skills it will read.").length - 1,
+    1,
+  );
   assert.equal(agents.split("Review fixes lists every comment").length - 1, 1);
   assert.equal(agents.includes("Old Tito text."), false);
   assert.match(readFileSync(join(root, ".cursor/agents/tito-frontend.md"), "utf8"), /name: tito-frontend/);
