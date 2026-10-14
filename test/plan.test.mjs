@@ -95,3 +95,23 @@ test("[unit] WP-1 bootstrap researches, judges, and opens plans with Domain", ()
   }
   assert.ok(Math.ceil(block.length / 4) <= 800);
 });
+
+test("[unit] an implementation plan renders the Test-first commit section", async () => {
+  const { renderImplementationPlan } = await import("../dist/core/plan.js");
+  const rendered = renderImplementationPlan({
+    domain: "Business impact: a slice stops when the first commit is not tests.",
+    decisions: ["Commit 1 changes only the listed test files."],
+    testCases: ["Arrange a first commit touching a file outside the test list."],
+    docsImpact: ["The git and pull request section of TITO-INITIAL-BRIEF.md."],
+    slicesAndBranch: ["feat/test-first-guard from main."],
+    testFirst: [
+      { file: "test/test-first.test.mjs", expectedFailure: "the guard is missing" },
+      { file: "test/git-flow.test.mjs", expectedFailure: "the finisher is missing" },
+    ],
+  });
+  assert.match(rendered, /## Test-first commit/);
+  assert.match(rendered, /test\/test-first\.test\.mjs/);
+  assert.match(rendered, /the guard is missing/);
+  assert.match(rendered, /test\/git-flow\.test\.mjs/);
+  assert.match(rendered, /the finisher is missing/);
+});
