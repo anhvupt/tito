@@ -93,5 +93,5 @@ test("[unit] WP-1 bootstrap researches, judges, and opens plans with Domain", ()
     assert.ok(indexes[i] >= 0, sections[i]);
     if (i > 0) assert.ok(indexes[i] > indexes[i - 1], sections[i]);
   }
-  assert.ok(Math.ceil(block.length / 4) <= 800);
+  assert.ok(Math.ceil(block.length / 4) <= 1500);
 });

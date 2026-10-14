@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -56,7 +56,9 @@ test("init of a repo with no AGENTS.md writes the intent sentence", () => {
     agents.includes("The implementation handoff names the skills it will read."),
     true,
   );
-  assert.equal(agents.includes("Review fixes lists every comment"), true);
+  assert.equal(agents.includes("Review fixes lists every comment"), false);
+  const pullRequestRule = readFileSync(join(root, ".cursor/rules/pull-request.mdc"), "utf8");
+  assert.match(pullRequestRule, /Review fixes lists every comment/);
   rmSync(root, { recursive: true, force: true });
 });
 
@@ -173,6 +175,37 @@ test("non-interactive init stores autoPullRequest and does not invent product fi
   assert.equal(kept.status, 1);
   assert.match(kept.stderr, /conflict:/);
   assert.equal(readFileSync(join(root, "tito.yaml"), "utf8"), original);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("fresh init keeps the bootstrap within 1,500 tokens and installs scoped rules", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  mkdirSync(join(root, ".cursor/rules"), { recursive: true });
+  writeFileSync(join(root, ".cursor/rules/tourdef.mdc"), "consumer rule\n");
+  writeFileSync(join(root, ".cursor/rules/pull-request.mdc"), "user edited rule\n");
+  const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+  assert.equal(confirmed.status, 0, confirmed.stderr);
+  const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+  assert.ok(Math.ceil(agents.length / 4) <= 1500);
+  assert.match(agents, /Hola, Tito here!/);
+  assert.match(agents, /always Plan first/);
+  assert.match(agents, /check out only after the user accepts/);
+  assert.match(agents, /Never approve a pull request/);
+  assert.match(agents, /Tito does not code in this chat/);
+  assert.match(agents, /`client-careful` 3/);
+  assert.match(agents, /`solo-balanced` 6/);
+  assert.match(agents, /`solo-fast` 12/);
+  assert.equal(readFileSync(join(root, ".cursor/rules/tourdef.mdc"), "utf8"), "consumer rule\n");
+  assert.equal(readFileSync(join(root, ".cursor/rules/pull-request.mdc"), "utf8"), "user edited rule\n");
+  for (const name of ["screen-language.mdc", "init-upgrade-admin.mdc", "commit-branch.mdc"]) {
+    const body = readFileSync(join(root, ".cursor/rules", name), "utf8");
+    assert.match(body, /^---\n/);
+    assert.match(body, /description:/);
+    assert.match(body, /alwaysApply:\s*false/);
+  }
+  const repoAgents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+  assert.ok(Math.ceil(repoAgents.length / 4) <= 1500);
+  assert.equal(repoAgents.includes("A pull request description has four parts"), false);
   rmSync(root, { recursive: true, force: true });
 });
 

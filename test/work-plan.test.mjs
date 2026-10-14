@@ -180,6 +180,35 @@ test("applies review and profile-specific prerequisite thresholds", () => {
   );
 });
 
+test("slice handoff names the spec, targets, and skills only", async () => {
+  const { buildSliceHandoff } = await import("../dist/core/work-plan.js");
+  assert.equal(typeof buildSliceHandoff, "function");
+  const history = "CHAT-HISTORY-SECRET the user asked about yesterday";
+  const text = buildSliceHandoff({
+    specPath: ".tito/feedback/lean-pipeline/edit.md",
+    targetFiles: ["AGENTS.md", "src/core/init.ts", "src/core/upgrade.ts"],
+    skillNames: ["tito-init"],
+    chatHistory: history,
+  });
+  assert.match(text, /\.tito\/feedback\/lean-pipeline\/edit\.md/);
+  assert.match(text, /AGENTS\.md/);
+  assert.match(text, /src\/core\/init\.ts/);
+  assert.match(text, /src\/core\/upgrade\.ts/);
+  assert.match(text, /tito-init/);
+  assert.equal(text.includes(history), false);
+  assert.equal(text.includes("CHAT-HISTORY-SECRET"), false);
+  assert.ok(Math.ceil(text.length / 4) <= 1200);
+  const empty = buildSliceHandoff({
+    specPath: "docs/spec.md",
+    targetFiles: ["src/core/init.ts"],
+    skillNames: [],
+    chatHistory: history,
+  });
+  assert.match(empty, /Skills: none/);
+  assert.equal(empty.includes("CHAT-HISTORY-SECRET"), false);
+  assert.ok(Math.ceil(empty.length / 4) <= 1200);
+});
+
 test("rejects inconsistent progress and multiple active writers", () => {
   const candidate = plan([read("analysis"), write("a"), write("b")]);
   rejects(candidate, "invalid-progress", null);
