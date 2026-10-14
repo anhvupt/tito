@@ -140,3 +140,56 @@ test("MOD-7 reasoning on both hosts returns the Opus slug", () => {
     assert.equal(claude.model, "claude-opus-5-5-medium");
   }
 });
+
+test("MOD-8 implementer on Cursor prefers the non-fast Grok slug", () => {
+  const result = recommendModel({
+    host: "cursor",
+    role: "implementer",
+    catalog: ["grok-4.7-high", "cursor-grok-4.6-medium-fast"],
+  });
+
+  assert.equal(result.status, "selected");
+  if (result.status === "selected") {
+    assert.equal(result.model, "grok-4.7-high");
+    assert.notEqual(result.fast, true);
+  }
+});
+
+test("MOD-9 explorer flags a fast Grok slug when it is the only match", () => {
+  const result = recommendModel({
+    host: "cursor",
+    role: "explorer",
+    catalog: ["cursor-grok-4.6-medium-fast"],
+  });
+
+  assert.equal(result.status, "selected");
+  if (result.status === "selected") {
+    assert.equal(result.model, "cursor-grok-4.6-medium-fast");
+    assert.equal(result.fast, true);
+    assert.match(result.reason, /-fast/);
+  }
+});
+
+test("MOD-10 finisher asks when Sonnet is missing, then selects it", () => {
+  const missing = recommendModel({
+    host: "cursor",
+    role: "finisher",
+    catalog: ["grok-4.7-high", "claude-opus-5-5-medium"],
+  });
+
+  assert.equal(missing.status, "ask");
+  if (missing.status === "ask") {
+    assert.equal(missing.family, "Sonnet");
+  }
+
+  const selected = recommendModel({
+    host: "cursor",
+    role: "finisher",
+    catalog: ["grok-4.7-high", "claude-opus-5-5-medium", "claude-sonnet-5-5-high"],
+  });
+
+  assert.equal(selected.status, "selected");
+  if (selected.status === "selected") {
+    assert.equal(selected.model, "claude-sonnet-5-5-high");
+  }
+});
