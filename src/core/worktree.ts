@@ -9,6 +9,7 @@ export type WorktreeStatus =
   | "dirty"
   | "unmerged"
   | "behind"
+  | "fresh"
   | "missing"
   | "protected";
 
@@ -233,7 +234,11 @@ function cherryMerged(root: string, base: string, branch: string): boolean {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
-  return lines.every((line) => line.startsWith("-"));
+  return lines.length > 0 && lines.every((line) => line.startsWith("-"));
+}
+
+function branchMoved(root: string, branch: string): boolean {
+  return spawnGit(root, ["rev-parse", "--verify", "--quiet", `${branch}@{1}`]).status === 0;
 }
 
 function row(input: {
@@ -276,11 +281,11 @@ function classifyEntry(input: {
     return row({ ...baseFields, status: "unmerged", removable: false });
   }
   const branch = entry.branch;
-  if (branch !== null && input.merged.has(branch)) {
-    if (behind > 0) return row({ ...baseFields, status: "behind", removable: false });
+  if (branch === null) return row({ ...baseFields, status: "unmerged", removable: false });
+  const contained = input.merged.has(branch);
+  if (contained && behind > 0) {
     return row({ ...baseFields, status: "merged-clean", removable: true });
   }
-  if (branch === null) return row({ ...baseFields, status: "unmerged", removable: false });
   const pullRequest = input.ghMerged(branch);
   if (pullRequest === true) {
     return row({ ...baseFields, status: "merged-clean", removable: true, squashMerged: true });
@@ -288,6 +293,13 @@ function classifyEntry(input: {
   if (pullRequest === null && cherryMerged(input.root, input.base, branch)) {
     return row({ ...baseFields, status: "merged-clean", removable: true });
   }
+  if (contained && behind === 0) {
+    if (branchMoved(input.root, branch)) {
+      return row({ ...baseFields, status: "merged-clean", removable: true });
+    }
+    return row({ ...baseFields, status: "fresh", removable: false });
+  }
+  if (behind > 0) return row({ ...baseFields, status: "behind", removable: false });
   return row({ ...baseFields, status: "unmerged", removable: false });
 }
 
