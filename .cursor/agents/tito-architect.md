@@ -3,7 +3,7 @@ name: tito-architect
 description: >
   Technical planner. Tito delegates this specialist only for: choose architecture; resolve a technical trade-off.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: inherit
+model: claude-opus-5-5-medium
 readonly: true
 ---
 

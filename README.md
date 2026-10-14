@@ -248,6 +248,17 @@ product:
     - id: admin
 ```
 
+Optional `models` maps pipeline roles to Cursor model slugs. Each Tito specialist card compiles to one role: explorer, planner, implementer, reviewer, or finisher. Missing keys fall back to the defaults below. Empty or unknown keys are rejected. `tito init` writes the full block; `tito upgrade` adds missing roles without changing values you already set, and rewrites Tito-owned specialist cards so pinned slugs stay current.
+
+```yaml
+models:
+  explorer: cursor-grok-4.6-medium-fast
+  planner: claude-opus-5-5-medium
+  implementer: grok-4.7-high
+  reviewer: grok-4.7-high
+  finisher: claude-sonnet-5-5-high
+```
+
 - Code stays English.
 - In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
 - An English app (`screenLanguage: en`) keeps English routes and slugs.

@@ -209,6 +209,36 @@ test("parses optional product.screenLanguage and rejects other product fields", 
   );
 });
 
+test("[unit] PM-4 models map parses role slugs and exports the defaults", async () => {
+  const { DEFAULT_MODELS, MODEL_ROLES } = await import("../dist/core/config.js");
+  assert.deepEqual([...MODEL_ROLES], ["explorer", "planner", "implementer", "reviewer", "finisher"]);
+  assert.deepEqual(DEFAULT_MODELS, {
+    explorer: "cursor-grok-4.6-medium-fast",
+    planner: "claude-opus-5-5-medium",
+    implementer: "grok-4.7-high",
+    reviewer: "grok-4.7-high",
+    finisher: "claude-sonnet-5-5-high",
+  });
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\nmodels:\n  implementer: gpt-5.3-codex\n"),
+    { schemaVersion: 1, profile: "solo-balanced", models: { implementer: "gpt-5.3-codex" } },
+  );
+});
+
+test("[unit] PM-5 an empty or unknown models entry names its path", () => {
+  const empty = issueCodes('schemaVersion: 1\nprofile: solo-balanced\nmodels:\n  implementer: ""\n');
+  assert.deepEqual(empty.map((item) => item.path), ["models.implementer"]);
+  assert.match(empty[0].message, /models\.implementer/);
+  const blank = issueCodes('schemaVersion: 1\nprofile: solo-balanced\nmodels:\n  planner: "  "\n');
+  assert.equal(blank[0].path, "models.planner");
+  const numeric = issueCodes("schemaVersion: 1\nprofile: solo-balanced\nmodels:\n  reviewer: 4\n");
+  assert.equal(numeric[0].path, "models.reviewer");
+  const unknown = issueCodes("schemaVersion: 1\nprofile: solo-balanced\nmodels:\n  coder: grok-4.7-high\n");
+  assert.equal(unknown[0].path, "models.coder");
+  const notMap = issueCodes("schemaVersion: 1\nprofile: solo-balanced\nmodels: grok-4.7-high\n");
+  assert.equal(notMap[0].path, "models");
+});
+
 test("T1 multi-tenant config parses surfaces in order", () => {
   const config = parseConfig(
     "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  tenancy: multi\n  surfaces:\n    - id: admin\n    - id: portal\n    - id: api\n",

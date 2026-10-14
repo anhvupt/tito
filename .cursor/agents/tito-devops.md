@@ -3,7 +3,7 @@ name: tito-devops
 description: >
   Infrastructure implementer. Tito delegates this specialist only for: infrastructure plan; deployment change.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: inherit
+model: grok-4.7-high
 readonly: false
 ---
 

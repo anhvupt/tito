@@ -1,3 +1,4 @@
+import { resolveModels, type ModelsConfig } from "./config.js";
 import { SPECIALIST_IDS, SPECIALISTS, type SpecialistId } from "./specialists.js";
 
 const AGENT_FILE_NAMES = {
@@ -18,8 +19,9 @@ export function cursorAgentPath(id: SpecialistId): string {
   return `.cursor/agents/${AGENT_FILE_NAMES[id]}`;
 }
 
-export function compileCursorAgent(id: SpecialistId): string {
+export function compileCursorAgent(id: SpecialistId, models?: ModelsConfig): string {
   const manifest = SPECIALISTS[id];
+  const model = resolveModels(models)[manifest.model.role];
   const readOnly = manifest.modes.every((mode) => mode.capability === "read-only");
   const modes = manifest.modes
     .map((mode) => `- \`${mode.id}\`: ${mode.capability}`)
@@ -35,7 +37,7 @@ name: ${AGENT_FILE_NAMES[id].replace(/\.md$/, "")}
 description: >
   ${manifest.role}. Tito delegates this specialist only for: ${manifest.triggers.join("; ")}.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: inherit
+model: ${model}
 readonly: ${readOnly}
 ---
 
@@ -65,9 +67,11 @@ ${manifest.stopCondition}
 `;
 }
 
-export function compiledCursorAgents(): readonly { path: string; body: string }[] {
+export function compiledCursorAgents(
+  models?: ModelsConfig,
+): readonly { path: string; body: string }[] {
   return SPECIALIST_IDS.map((id) => ({
     path: cursorAgentPath(id),
-    body: compileCursorAgent(id),
+    body: compileCursorAgent(id, models),
   }));
 }
