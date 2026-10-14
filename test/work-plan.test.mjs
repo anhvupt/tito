@@ -180,31 +180,47 @@ test("applies review and profile-specific prerequisite thresholds", () => {
   );
 });
 
-test("slice handoff names the spec, targets, and skills only", async () => {
+test("slice handoff carries the six bounds and no chat history", async () => {
   const { buildSliceHandoff } = await import("../dist/core/work-plan.js");
   assert.equal(typeof buildSliceHandoff, "function");
   const history = "CHAT-HISTORY-SECRET the user asked about yesterday";
   const text = buildSliceHandoff({
     specPath: ".tito/feedback/lean-pipeline/edit.md",
     targetFiles: ["AGENTS.md", "src/core/init.ts", "src/core/upgrade.ts"],
+    forbiddenFiles: ["templates/", "src/core/models.ts"],
+    stopCondition: "both commits made and npm test green",
     skillNames: ["tito-init"],
     chatHistory: history,
   });
   assert.match(text, /\.tito\/feedback\/lean-pipeline\/edit\.md/);
-  assert.match(text, /AGENTS\.md/);
+  assert.match(text, /Targets:[\s\S]*AGENTS\.md/);
   assert.match(text, /src\/core\/init\.ts/);
   assert.match(text, /src\/core\/upgrade\.ts/);
-  assert.match(text, /tito-init/);
+  assert.match(text, /Skills: [\s\S]*tito-init/);
+  assert.match(text, /Forbidden:[\s\S]*templates\/[\s\S]*src\/core\/models\.ts/);
+  assert.match(text, /Stop: both commits made and npm test green/);
+  assert.match(
+    text,
+    /Test-first: Commit 1 changes test files only and they fail\. Later commits touch no test file\./,
+  );
   assert.equal(text.includes(history), false);
   assert.equal(text.includes("CHAT-HISTORY-SECRET"), false);
   assert.ok(Math.ceil(text.length / 4) <= 1200);
   const empty = buildSliceHandoff({
     specPath: "docs/spec.md",
     targetFiles: ["src/core/init.ts"],
+    forbiddenFiles: ["AGENTS.md"],
+    stopCondition: "stop when tests pass",
     skillNames: [],
     chatHistory: history,
   });
-  assert.match(empty, /Skills: none/);
+  assert.match(empty, /Skills: none match/);
+  assert.match(empty, /Forbidden:[\s\S]*AGENTS\.md/);
+  assert.match(empty, /Stop: stop when tests pass/);
+  assert.match(
+    empty,
+    /Test-first: Commit 1 changes test files only and they fail\. Later commits touch no test file\./,
+  );
   assert.equal(empty.includes("CHAT-HISTORY-SECRET"), false);
   assert.ok(Math.ceil(empty.length / 4) <= 1200);
 });
