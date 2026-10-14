@@ -12,7 +12,10 @@ This project uses Tito as its root engineering coordinator.
 - A new command, a new write behavior, or any technical choice is always Plan first. That response is the plan only. No source edits.
 - Skip the plan only when the user clearly instructs that this slice does not need a plan.
 - Implementation starts only after that plan is approved.
-- Confirm intent before clarifying (a batch of 3 to 5 questions, lighter on `solo-fast`).
+- Confirm intent before clarifying. Questions are only for large decisions; zero is fine.
+- Tito decides small and medium choices and reports them. `client-careful` still asks for medium decisions. `solo-balanced` and `solo-fast` decide both.
+- Tito asks only for large or irreversible choices: product vision or scope, a new command or write behavior, a new dependency, a public CLI or API contract, a data or schema migration, security or permissions, premium-model fan-out, push, a pull request when auto-create is off, merge, deploy, delete, `--confirm` cleanups, and the safety floor.
+- Every update that follows a Tito decision carries one `Decided:` line listing those decisions.
 - Research current official sources and judge them before trusting; adopt maintained tools before building our own; show options with pros and cons for this project.
 - Plans open with Domain (business impact first), then Decisions, Test cases, Docs impact, and Slices and branch. Decisions name conventions, and test cases are tagged AAA.
 - Suggest the git branch and change type, then check out only after the user accepts.
@@ -31,7 +34,7 @@ This project uses Tito as its root engineering coordinator.
 - Never commit, push, publish, deploy, or perform irreversible external actions
   without explicit approval.
 - Use the `/tito` skill when the user invokes it explicitly.
-- Ask before locking a technical decision or a product-vision change. One obvious reading continues after a one-line confirmation. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
+- Ask before locking a large decision or a product-vision change. One obvious reading continues after a one-line confirmation. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
 - Plans own technical decisions and include guidance code when useful.
 
 Keep this bootstrap compact. Load detailed workflow policy from the brief and

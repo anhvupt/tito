@@ -30,8 +30,8 @@ Success is not measured by how many agents Tito launches. Success means better o
 2. Fixed floor, flexible tools. These are fixed: the safety floor, mandatory escalation, lifecycle stages, approval gates, git and pull request conventions, screen-language and UTC rules, and project conventions. Libraries, tools, patterns, and approaches are flexible and chosen per project. Research can change a flexible choice. It never weakens a fixed one.
 3. Adopt before building. Before writing a skill, rule, knowledge pack, or library, look for one that its owner maintains (for example the Angular team's best-practices rules, `llms.txt`, and Angular CLI MCP server at angular.dev/ai). Prefer official, then widely maintained community, then our own. Reference it; do not copy it into Tito or the project. Building our own needs a decision that says why.
 4. Business before tech. Every plan says who it helps and which workflow gets smoother. Offer at most one optional business suggestion, only when it clearly helps. Never add it to scope without asking; an accepted suggestion records `outcome: expanded`.
-5. Clarify, domain, document, test, then code. Discover clarifies. The plan opens with Domain. In Code, the agent writes the spec doc first, then the failing tests, then the code. Writing is not committing. The spec doc is waived when the slice changes no behavior.
-6. It depends, so show it. Every technical decision lists the options with pros and cons, then picks one for this project. Start from the risk profile: `client-careful` prefers proven tools, `solo-balanced` keeps a proven core and uses modern tools where they help the pace, `solo-fast` prefers modern and fast. When the choice depends on what the project is for (client work, commercial product, showcase, or experiment) and that is unclear, ask during development, then record the answer in the plan. Reuse an answer already recorded in this project's plans instead of asking again. There is no new `tito.yaml` field for this.
+5. Clarify, domain, document, test, then code. Discover asks only for large decisions; zero questions is fine. Tito decides small and medium choices and reports them on a `Decided:` line. Ask before locking a large decision. `client-careful` still asks for medium decisions. `solo-balanced` and `solo-fast` decide both. The plan opens with Domain. In Code, the agent writes the spec doc first, then the failing tests, then the code. Writing is not committing. The spec doc is waived when the slice changes no behavior.
+6. It depends, so show it. A large decision lists the options with pros and cons, then picks one for this project. Start from the risk profile: `client-careful` prefers proven tools, `solo-balanced` keeps a proven core and uses modern tools where they help the pace, `solo-fast` prefers modern and fast. When the choice depends on what the project is for (client work, commercial product, showcase, or experiment) and that is unclear, that is a large decision: ask during development, then record the answer in the plan. Reuse an answer already recorded in this project's plans instead of asking again. There is no new `tito.yaml` field for this.
 
 ## Primary user
 
@@ -508,8 +508,9 @@ For every task, Tito should recommend one of:
      removes implementation ambiguity;
    - define acceptance criteria, tests, migration or rollback needs, risks,
      forbidden changes, and stop conditions for every slice;
-   - ask before locking a technical decision or a product-vision change, then
-     record the user's answer.
+   - decide small and medium choices and report them on a `Decided:` line;
+     ask before locking a large decision or a product-vision change
+     (`client-careful` also asks for medium ones), then record the user's answer.
 
    Discover restates the goal and what is out of scope, confirms that reading, then clarifies as the workflow below describes. One obvious reading still continues, after a one-line confirmation. Do not hand an unresolved choice to the implementation agent. The implementation agent follows the approved decisions and stops for re-planning if repository evidence invalidates them; it does not silently redesign the slice.
 
@@ -558,7 +559,13 @@ A new command, a new write behavior, or any technical choice uses:
 
 These stages map onto the existing lifecycle. State names stay the same.
 
-**Discover** is `DISCOVERY`: the intent check, then clarify. Restate the goal and what is out of scope in one or two sentences, then ask whether that is what the user wants. Wait. After the user confirms, ask one batch of 3 to 5 clarifying questions. Each question offers options and a recommended default. `solo-fast` does only the intent check, plus questions about real ambiguity. `client-careful` and `solo-balanced` use the full batch. One obvious reading still continues, after a one-line confirmation. Ask before locking a technical decision or a product-vision change. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity.
+**Discover** is `DISCOVERY`: the intent check, then clarify only large decisions. Restate the goal and what is out of scope in one or two sentences, then ask whether that is what the user wants. Wait. After the user confirms, ask only the questions that are large. Each question offers options and a recommended default. Zero questions is fine. `client-careful` still asks for medium decisions. `solo-balanced` and `solo-fast` decide small and medium. One obvious reading continues after a one-line confirmation. Ask before locking a large decision or a product-vision change. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity.
+
+Tito decides, then reports, without stopping: naming, file placement, internal structure, test approach, stacking a branch on an approved dependency, accepting a writer's sensible deviation, sending a writer or finisher back to fix a gap that restores the approved spec or docs gate, small in-scope docs fixes, model choice from the routing table, and one obvious reading of a request.
+
+Tito asks, and stops, for a product vision or scope change, a new command or new write behavior (Plan), a new dependency, a public CLI or API contract change, a data or schema migration, security or permissions, premium-model fan-out, anything irreversible or external (push, or a pull request when `git.autoPullRequest` is not true, merge, deploy, delete, and `--confirm` cleanups), and anything touching the safety floor.
+
+Every update that follows a Tito decision carries one `Decided:` line listing those decisions so the user can overrule them.
 
 **Plan** is one approval. The plan response contains the plan only. No source edits. Every plan has these sections, in this order:
 

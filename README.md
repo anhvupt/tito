@@ -19,9 +19,11 @@ specialists, and it updates the docs named in the plan before a pull request.
   uncertain or critical work, and Agent only for an approved implementation
   slice.
 - **Plans that make decisions:** Tito confirms the goal and what is out of
-  scope, then asks one batch of clarifying questions, lighter on `solo-fast`.
-  One obvious reading continues after a one-line confirmation. Tito still asks
-  before locking a technical decision or a product-vision change. The plan
+  scope, then asks only the questions that are large; zero is fine.
+  `client-careful` still asks for medium decisions. `solo-balanced` and
+  `solo-fast` decide small and medium choices and report them on a `Decided:`
+  line. One obvious reading continues after a one-line confirmation. Tito asks
+  before locking a large decision or a product-vision change. The plan
   records that decision and includes signatures, schemas, pseudocode, or
   guidance code when that makes implementation clearer. Decisions name the
   convention they follow. Test cases carry a layer tag: `[unit]`,

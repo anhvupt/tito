@@ -96,6 +96,27 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   rmSync(root, { recursive: true, force: true });
 });
 
+test("[unit] upgrade of an old AGENTS.md installs the decision-authority rule", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    writeFileSync(join(root, "AGENTS.md"), "# Tito bootstrap\n\nOld Tito text.\n");
+    const result = spawnSync(
+      process.execPath,
+      [cliPath, "upgrade", "--confirm", "--files-only", "--root", root],
+      { encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+    assert.equal(agents.includes("Old Tito text."), false);
+    assert.match(agents, /decides small and medium/);
+    assert.match(agents, /`client-careful` still asks for medium/);
+    assert.match(agents, /premium-model fan-out/);
+    assert.match(agents, /`Decided:`/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("upgrade merge fills only missing settings", async () => {
   const { missingSettings, mergeSettings } = await import("../dist/core/upgrade.js");
   const { parseConfig } = await import("../dist/core/config.js");
