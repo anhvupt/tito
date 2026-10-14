@@ -29,6 +29,7 @@ import {
   mergeSettings,
   missingSettings,
   planUpgrade,
+  projectModels,
   titoOwnedFiles,
 } from "./core/upgrade.js";
 import {
@@ -281,12 +282,15 @@ async function runUpgrade(args: string[]): Promise<void> {
     return;
   }
 
-  const files = planUpgrade(root, titoOwnedFiles());
+  let files = planUpgrade(root, titoOwnedFiles(projectModels(root)));
   if (!confirm) {
     process.stdout.write(formatUpgrade(root, files));
     return;
   }
-  if (!filesOnly && input.isTTY) await fillMissingSettings(root);
+  if (!filesOnly && input.isTTY) {
+    await fillMissingSettings(root);
+    files = planUpgrade(root, titoOwnedFiles(projectModels(root)));
+  }
   if (!filesOnly && !isTitoSource(root)) {
     const install = spawnSync(
       "npm",

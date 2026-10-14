@@ -3,7 +3,7 @@ name: tito-qa
 description: >
   Independent QA reviewer. Tito delegates this specialist only for: review correctness; check edge cases.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: inherit
+model: grok-4.7-high
 readonly: true
 ---
 

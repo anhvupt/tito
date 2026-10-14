@@ -102,7 +102,7 @@ Apply policy in this order:
 
 A task may increase caution. It must not silently weaken the project safety floor.
 
-Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid. Optional `git.autoPullRequest` is a boolean. Missing it is valid.
+Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid. Optional `git.autoPullRequest` is a boolean. Missing it is valid. Optional `models` maps pipeline roles (`explorer`, `planner`, `implementer`, `reviewer`, `finisher`) to non-empty model slugs. Each specialist compiles to one role. Missing keys use the package defaults; empty or unknown keys fail validation. Init writes the full map; upgrade adds missing roles only.
 
 In a terminal, `tito init --confirm` asks for the git base (`dev`, `develop`, `main`, or `master`), screen language, tenancy, optional surface ids, and whether to auto-create a pull request after implementation. That question defaults to yes (`git.autoPullRequest`). Upgrade asks only for settings that are missing. A non-interactive init with `--profile` stores `git.autoPullRequest: true` and does not invent product fields. Storing the answer does not open a pull request.
 
@@ -225,6 +225,10 @@ Tito uses progressive disclosure:
 A trivial task should not spawn another agent.
 
 ## Cost-aware model routing
+
+Each Tito specialist file under `.cursor/agents/` pins a concrete model slug in frontmatter. Cursor uses that slug when a launch names no model, so a sub-agent does not silently run on the coordinator's model. The slug comes from `tito.yaml` `models` for the specialist's role, with package defaults when a key is missing. `AGENTS.md` still requires every launch to name a model; the pinned card is the backstop.
+
+`inherit` is not a model choice. Tito never passes `inherit` when launching a sub-agent. The handoff names the resolved slug from `tito.yaml` for that role. When the role's model family is out of usage, Tito falls back to a Cursor-pool slug whose name starts with `composer-`, states that fallback in the output, and never substitutes the coordinator's model.
 
 Tito recommends a capability tier before choosing a specific model:
 

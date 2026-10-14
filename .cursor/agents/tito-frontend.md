@@ -3,7 +3,7 @@ name: tito-frontend
 description: >
   Frontend designer and implementer. Tito delegates this specialist only for: frontend design; frontend implementation.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: inherit
+model: grok-4.7-high
 readonly: false
 ---
 

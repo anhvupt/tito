@@ -3,9 +3,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compiledCursorAgents } from "./agents.js";
 import {
+  MODEL_ROLES,
   SCREEN_LANGUAGES,
   TENANCY_VALUES,
   isSurfaceId,
+  resolveModels,
+  type ModelsConfig,
   type ProductSurface,
   type ScreenLanguage,
   type Tenancy,
@@ -86,6 +89,7 @@ export type TitoSettings = {
   readonly tenancy?: Tenancy;
   readonly surfaces?: readonly ProductSurface[];
   readonly autoPullRequest?: boolean;
+  readonly models?: ModelsConfig;
 };
 
 async function askOneOf<T extends string>(
@@ -180,6 +184,8 @@ export function titoYamlBody(profile: string, settings: TitoSettings): string {
     for (const surface of settings.surfaces) productLines.push(`    - id: ${surface.id}`);
   }
   if (productLines.length > 0) lines.push("product:", ...productLines);
+  const models = resolveModels(settings.models);
+  lines.push("models:", ...MODEL_ROLES.map((role) => `  ${role}: ${models[role]}`));
   return `${lines.join("\n")}\n`;
 }
 
@@ -231,16 +237,18 @@ export function planInitialization(
   const adoption = planAdoption(report, profile);
   const files: InitFile[] = adoption.files.map((file) => {
     if (file.path === "AGENTS.md") return agentsBootstrap(report);
-    if (file.path === "tito.yaml" && file.action === "create" && settings !== undefined) {
+    if (file.path === "tito.yaml" && file.action === "create") {
       return {
         path: "tito.yaml" as const,
         action: "create" as const,
-        body: titoYamlBody(adoption.profile, settings),
+        body: titoYamlBody(adoption.profile, settings ?? {}),
       };
     }
     return file;
   });
-  const agents = compiledCursorAgents().map((agent) =>
+  const models =
+    report.titoYaml.status === "valid" ? report.titoYaml.config.models : settings?.models;
+  const agents = compiledCursorAgents(models).map((agent) =>
     exists(report.root, agent.path)
       ? { path: agent.path, action: "conflict" as const }
       : { path: agent.path, action: "create" as const, body: agent.body },

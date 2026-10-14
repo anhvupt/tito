@@ -12,6 +12,50 @@ function run(root, args) {
   return spawnSync(process.execPath, [cliPath, ...args], { encoding: "utf8" });
 }
 
+const DEFAULT_MODELS_BLOCK = [
+  "models:",
+  "  explorer: cursor-grok-4.6-medium-fast",
+  "  planner: claude-opus-5-5-medium",
+  "  implementer: grok-4.7-high",
+  "  reviewer: grok-4.7-high",
+  "  finisher: claude-sonnet-5-5-high",
+];
+
+const CARD_SLUGS = {
+  "tito-explorer.md": "cursor-grok-4.6-medium-fast",
+  "tito-product.md": "claude-opus-5-5-medium",
+  "tito-architect.md": "claude-opus-5-5-medium",
+  "tito-backend.md": "grok-4.7-high",
+  "tito-frontend.md": "grok-4.7-high",
+  "tito-devops.md": "grok-4.7-high",
+  "tito-erp.md": "claude-opus-5-5-medium",
+  "tito-qa.md": "grok-4.7-high",
+  "tito-security.md": "claude-opus-5-5-medium",
+  "tito-tech-docs.md": "claude-sonnet-5-5-high",
+  "tito-user-docs.md": "claude-sonnet-5-5-high",
+};
+
+test("[integration] PM-6 fresh init pins every card and writes the default models", async () => {
+  const { parseConfig } = await import("../dist/core/config.js");
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const yaml = readFileSync(join(root, "tito.yaml"), "utf8");
+    assert.equal(yaml.endsWith(`${DEFAULT_MODELS_BLOCK.join("\n")}\n`), true, yaml);
+    assert.equal(parseConfig(yaml).models.implementer, "grok-4.7-high");
+    const cards = readdirSync(join(root, ".cursor/agents")).sort();
+    assert.deepEqual(cards, Object.keys(CARD_SLUGS).sort());
+    for (const name of cards) {
+      const card = readFileSync(join(root, ".cursor/agents", name), "utf8");
+      assert.equal(card.includes("model: inherit"), false, name);
+      assert.match(card, new RegExp(`^model: ${CARD_SLUGS[name].replace(/\./g, "\\.")}$`, "m"), name);
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("init previews specialist agents and writes only after confirmation", () => {
   const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
   const preview = run(root, ["init", "--profile", "solo-balanced", "--root", root]);
@@ -102,6 +146,7 @@ test("init settings prompts render tito.yaml", async () => {
       "  tenancy: single",
       "  surfaces:",
       "    - id: admin",
+      ...DEFAULT_MODELS_BLOCK,
       "",
     ].join("\n"),
   );
@@ -115,7 +160,14 @@ test("init settings prompts render tito.yaml", async () => {
   assert.equal(declined.autoPullRequest, false);
   assert.equal(
     titoYamlBody("solo-balanced", declined),
-    ["schemaVersion: 1", "profile: solo-balanced", "git:", "  autoPullRequest: false", ""].join("\n"),
+    [
+      "schemaVersion: 1",
+      "profile: solo-balanced",
+      "git:",
+      "  autoPullRequest: false",
+      ...DEFAULT_MODELS_BLOCK,
+      "",
+    ].join("\n"),
   );
 
   const skipped = await promptForSettings(async (prompt) => {
