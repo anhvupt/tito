@@ -50,6 +50,11 @@ import {
   saveRetro,
 } from "./core/retro.js";
 import { formatInitError } from "./core/terminal.js";
+import {
+  TestFirstError,
+  formatTestFirstReport,
+  guardTestFirst,
+} from "./core/test-first.js";
 import { WorktreeError, formatTidyReport, tidyWorktrees } from "./core/worktree.js";
 
 const packageJson = JSON.parse(
@@ -69,6 +74,7 @@ Usage:
   tito admin remove --root <path> [--admin-root <path>]
   tito admin refresh [--admin-root <path>]
   tito admin retro [--week <YYYY-Www>] [--timezone <IANA>] [--json] [--admin-root <path>]
+  tito guard test-first --base <ref> --test <file> [--root <path>]
   tito worktree tidy [--confirm] [--root <path>]
 
 Options:
@@ -81,6 +87,7 @@ Commands:
   init           Install Tito files and specialist agents. Confirm before writing.
   upgrade        Install the latest Tito and replace Tito-owned files only.
   admin          Opt-in local repo index: add, list, remove, refresh, retro.
+  guard          Check that commit 1 changes only the listed test files.
   worktree       Report stale worktrees. Confirm before removing merged clean ones.
 `;
 
@@ -479,6 +486,61 @@ function runRetro(args: string[]): void {
   }
 }
 
+function runGuard(args: string[]): void {
+  if (args.includes("-h") || args.includes("--help")) {
+    process.stdout.write(help);
+    return;
+  }
+  const [subcommand, ...rest] = args;
+  if (subcommand !== "test-first") {
+    fail("Unknown guard. Use: tito guard test-first --base <ref> --test <file>");
+    return;
+  }
+
+  let root = process.cwd();
+  let base: string | undefined;
+  let testFiles: string[] = [];
+  try {
+    const { values } = parseArgs({
+      args: rest,
+      options: {
+        base: { type: "string" },
+        root: { type: "string" },
+        test: { type: "string", multiple: true },
+      },
+      strict: true,
+      allowPositionals: false,
+    });
+    if (values.base !== undefined) base = values.base;
+    if (values.root !== undefined) root = values.root;
+    if (Array.isArray(values.test)) testFiles = values.test;
+    else if (typeof values.test === "string") testFiles = [values.test];
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Invalid guard arguments.");
+    return;
+  }
+  if (base === undefined) {
+    fail("Missing required option --base.");
+    return;
+  }
+  if (testFiles.length === 0) {
+    fail("Missing required option --test.");
+    return;
+  }
+
+  try {
+    const report = guardTestFirst({ root, base, testFiles });
+    process.stdout.write(formatTestFirstReport(report));
+    if (!report.ok) process.exitCode = 1;
+  } catch (error) {
+    if (error instanceof TestFirstError) {
+      fail(`${error.code}: ${error.message}`);
+      return;
+    }
+    throw error;
+  }
+}
+
 function runWorktree(args: string[]): void {
   if (args.includes("-h") || args.includes("--help")) {
     process.stdout.write(help);
@@ -536,6 +598,10 @@ async function run(args: string[]): Promise<void> {
   }
   if (args[0] === "admin") {
     runAdmin(args.slice(1));
+    return;
+  }
+  if (args[0] === "guard") {
+    runGuard(args.slice(1));
     return;
   }
   if (args[0] === "worktree") {

@@ -89,3 +89,38 @@ export function formatAdoptionPlan(plan: AdoptionPlan): string {
   }
   return `${lines.join("\n")}\n`;
 }
+
+export type TestFirstExpectation = {
+  readonly file: string;
+  readonly expectedFailure: string;
+};
+
+export type ImplementationPlanDocument = {
+  readonly domain: string;
+  readonly decisions: readonly string[];
+  readonly testCases: readonly string[];
+  readonly docsImpact: readonly string[];
+  readonly slicesAndBranch: readonly string[];
+  readonly testFirst: readonly TestFirstExpectation[];
+};
+
+function bulletSection(title: string, lines: readonly string[]): string {
+  const body = lines.length > 0 ? lines.map((line) => `- ${line}`).join("\n") : "-";
+  return `## ${title}\n${body}`;
+}
+
+export function renderImplementationPlan(plan: ImplementationPlanDocument): string {
+  const cases =
+    plan.testFirst.length > 0
+      ? plan.testFirst.map((item) => `- \`${item.file}\`: ${item.expectedFailure}`).join("\n")
+      : "-";
+  return [
+    bulletSection("Domain", [plan.domain]),
+    bulletSection("Decisions", plan.decisions),
+    bulletSection("Test cases", plan.testCases),
+    `## Test-first commit\n${cases}`,
+    bulletSection("Docs impact", plan.docsImpact),
+    bulletSection("Slices and branch", plan.slicesAndBranch),
+    "",
+  ].join("\n\n");
+}
