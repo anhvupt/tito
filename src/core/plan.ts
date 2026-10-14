@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   ACTIVE_RISK_PROFILE_IDS,
   isActiveRiskProfileId,
@@ -9,27 +12,10 @@ import type { InspectionReport } from "./inspect.js";
 export const TITO_BOOTSTRAP_START = "<!-- tito:bootstrap start -->";
 export const TITO_BOOTSTRAP_END = "<!-- tito:bootstrap end -->";
 
-export const ADOPTION_AGENTS_MD = `# Tito bootstrap
-
-This project uses Tito as its root engineering coordinator.
-
-- Start every Tito-coordinated chat response exactly with \`Hola, Tito here!\`
-- Keep that marker out of CLI and machine-readable output.
-- Treat ordinary requests as Tito-coordinated work.
-- Recommend Ask, Plan, or Agent before acting.
-- Preserve uncommitted work and use one code writer at a time.
-- Stop for human approval between reviewable slices.
-- Never commit, push, publish, deploy, or perform irreversible external actions without explicit approval.
-- Use \`/tito\` when Tito coordination is wanted.
-- Plans own technical decisions and include guidance code when useful.
-- Research current official sources and judge them before trusting; adopt maintained tools before building our own; show options with pros and cons for this project.
-- Confirm intent before clarifying. Plans open with Domain (business impact first), then Decisions, Test cases, Docs impact, and Slices and branch.
-- Do not merge a slice branch into \`main\`, \`master\`, \`dev\`, or \`develop\`, on the machine or on the remote, unless the user calls for that merge and the pull request already has an approval. Finishing a slice leaves the branch as it is.
-- When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update.
-- The implementation handoff names the skills it will read.
-
-Keep this bootstrap compact. Load project documentation only when the task needs it.
-`;
+export const ADOPTION_AGENTS_MD = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "../../templates/cursor/AGENTS.md"),
+  "utf8",
+);
 
 export function titoBootstrapBlock(): string {
   return `${TITO_BOOTSTRAP_START}\n${ADOPTION_AGENTS_MD.trim()}\n${TITO_BOOTSTRAP_END}\n`;

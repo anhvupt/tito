@@ -447,3 +447,15 @@ export function evaluateWorkPlan(
 
   return deepFreeze({ readyReadOnly, readyWriterCandidates, blocked });
 }
+
+export type SliceHandoffInput = {
+  readonly specPath: string;
+  readonly targetFiles: readonly string[];
+  readonly skillNames: readonly string[];
+};
+
+export function buildSliceHandoff(input: SliceHandoffInput): string {
+  const skills =
+    input.skillNames.length === 0 ? "Skills: none" : `Skills: ${input.skillNames.join(", ")}`;
+  return [`Spec: ${input.specPath}`, "Targets:", ...input.targetFiles, skills, ""].join("\n");
+}

@@ -205,7 +205,7 @@ Tito can guarantee limits on its own context, fan-out, and retries. It cannot gu
 
 Initial budgets:
 
-- Bootstrap context: maximum 800 estimated tokens
+- Bootstrap context: maximum 1,500 estimated tokens
 - Task packet: maximum 1,200 estimated tokens
 - Specialist card: maximum 400 estimated tokens
 - Domain context: maximum 2,000 estimated tokens
@@ -717,22 +717,7 @@ For Bugbot review, use `.cursor/BUGBOT.md`. Do not assume ordinary Cursor projec
 
 ### Implementation handoff
 
-Before Agent mode, Tito must provide:
-
-```text
-Goal:
-Approved slice:
-Business reason:
-Relevant contracts:
-Files likely affected:
-Files forbidden:
-Acceptance criteria:
-Diff budget:
-Tests required:
-Browser verification:
-Risk escalation conditions:
-Stop condition:
-```
+Before a sub-agent writes an approved slice, Tito builds a handoff that contains only the spec file path, the target files, and the skill names the writer must read. The handoff includes no chat history. It stays within 1,200 estimated tokens. When no installed skill matches, the handoff says none match.
 
 ### Review handoff
 

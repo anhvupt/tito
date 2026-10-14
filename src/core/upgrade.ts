@@ -3,7 +3,13 @@ import { dirname, join } from "node:path";
 import { compiledCursorAgents } from "./agents.js";
 import { parseConfig, type ProductSurface, type ScreenLanguage, type Tenancy, type TitoConfig } from "./config.js";
 import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate, type BranchBase } from "./git-flow.js";
-import { shippedSkills, titoYamlBody, type SettingKey, type TitoSettings } from "./init.js";
+import {
+  shippedCursorRules,
+  shippedSkills,
+  titoYamlBody,
+  type SettingKey,
+  type TitoSettings,
+} from "./init.js";
 import {
   TITO_BOOTSTRAP_END,
   TITO_BOOTSTRAP_START,
@@ -74,6 +80,7 @@ export function titoOwnedFiles(): { path: string; body: string }[] {
   return [
     ...compiledCursorAgents(),
     ...shippedSkills(),
+    ...shippedCursorRules(),
     { path: PULL_REQUEST_TEMPLATE_PATH, body: pullRequestTemplate() },
   ];
 }
