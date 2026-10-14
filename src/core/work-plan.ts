@@ -451,11 +451,28 @@ export function evaluateWorkPlan(
 export type SliceHandoffInput = {
   readonly specPath: string;
   readonly targetFiles: readonly string[];
+  readonly forbiddenFiles: readonly string[];
+  readonly stopCondition: string;
   readonly skillNames: readonly string[];
 };
 
+const TEST_FIRST_RULE =
+  "Test-first: Commit 1 changes test files only and they fail. Later commits touch no test file.";
+
 export function buildSliceHandoff(input: SliceHandoffInput): string {
   const skills =
-    input.skillNames.length === 0 ? "Skills: none" : `Skills: ${input.skillNames.join(", ")}`;
-  return [`Spec: ${input.specPath}`, "Targets:", ...input.targetFiles, skills, ""].join("\n");
+    input.skillNames.length === 0
+      ? "Skills: none match"
+      : `Skills: ${input.skillNames.join(", ")}`;
+  return [
+    `Spec: ${input.specPath}`,
+    "Targets:",
+    ...input.targetFiles,
+    "Forbidden:",
+    ...input.forbiddenFiles,
+    `Stop: ${input.stopCondition}`,
+    TEST_FIRST_RULE,
+    skills,
+    "",
+  ].join("\n");
 }

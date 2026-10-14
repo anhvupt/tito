@@ -717,7 +717,7 @@ For Bugbot review, use `.cursor/BUGBOT.md`. Do not assume ordinary Cursor projec
 
 ### Implementation handoff
 
-Before a sub-agent writes an approved slice, Tito builds a handoff that contains only the spec file path, the target files, and the skill names the writer must read. The handoff includes no chat history. It stays within 1,200 estimated tokens. When no installed skill matches, the handoff says none match.
+Before a sub-agent writes an approved slice, Tito builds a handoff that contains the spec file path, the target files, the forbidden files, the stop condition, the test-first commit rule, and the skill names the writer must read. Commit 1 changes test files only and those tests fail. Later commits touch no test file. The handoff includes no chat history. It stays within 1,200 estimated tokens. When no installed skill matches, the handoff says none match.
 
 ### Review handoff
 
