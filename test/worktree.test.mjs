@@ -208,3 +208,80 @@ test("a worktree behind main reports the behind count and is not rebased", () =>
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("a merged clean worktree three commits behind main stays removable", () => {
+  const dir = mkdtempSync(join(tmpdir(), "tito-worktree-"));
+  try {
+    const origin = join(dir, "origin.git");
+    const repo = initRepo(dir);
+    git(dir, ["init", "--bare", origin]);
+    git(repo, ["remote", "add", "origin", origin]);
+    git(repo, ["push", "-u", "origin", "main"]);
+    const wt = addWorktree(repo, dir, "feat/behind-merged", "wt-behind-merged");
+    writeFileSync(join(wt, "feature.txt"), "work\n");
+    git(wt, ["add", "feature.txt"]);
+    git(wt, ["commit", "-m", "Add feature"]);
+    git(wt, ["push", "-u", "origin", "feat/behind-merged"]);
+    git(repo, ["merge", "--ff-only", "feat/behind-merged"]);
+    for (const name of ["two.txt", "three.txt", "four.txt"]) {
+      writeFileSync(join(repo, name), `${name}\n`);
+      git(repo, ["add", name]);
+      git(repo, ["commit", "-m", name]);
+    }
+
+    const report = runCli(repo, ["worktree", "tidy", "--root", repo]);
+    assert.equal(report.status, 0, report.stderr);
+    assert.match(report.stdout, /branch: feat\/behind-merged/);
+    assert.match(report.stdout, /status: merged-clean/);
+    assert.match(report.stdout, /behind: 3/);
+    assert.match(report.stdout, /removable: yes/);
+    assert.equal(report.stdout.includes("removed:"), false);
+    assert.equal(existsSync(wt), true);
+    assert.match(
+      git(repo, ["show-ref", "--verify", "refs/heads/feat/behind-merged"]),
+      /refs\/heads\/feat\/behind-merged/,
+    );
+
+    const confirmed = runCli(repo, ["worktree", "tidy", "--confirm", "--root", repo]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    assert.match(confirmed.stdout, /status: merged-clean/);
+    assert.match(confirmed.stdout, /behind: 3/);
+    assert.match(confirmed.stdout, /removed: /);
+    assert.match(confirmed.stdout, /deleted-branch: feat\/behind-merged/);
+    assert.equal(existsSync(wt), false);
+    assert.equal(existsSync(join(repo, ".git")), true);
+    const local = spawnSync("git", ["show-ref", "--verify", "refs/heads/feat/behind-merged"], {
+      cwd: repo,
+      encoding: "utf8",
+    });
+    assert.notEqual(local.status, 0);
+    assert.match(
+      git(origin, ["show-ref", "--verify", "refs/heads/feat/behind-merged"]),
+      /refs\/heads\/feat\/behind-merged/,
+    );
+    assert.match(git(repo, ["show-ref", "--verify", "refs/heads/main"]), /refs\/heads\/main/);
+    assert.match(git(origin, ["show-ref", "--verify", "refs/heads/main"]), /refs\/heads\/main/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a worktree whose branch tip equals the base is fresh and kept", () => {
+  const dir = mkdtempSync(join(tmpdir(), "tito-worktree-"));
+  try {
+    const repo = initRepo(dir);
+    const wt = addWorktree(repo, dir, "feat/fresh", "wt-fresh");
+
+    const result = runCli(repo, ["worktree", "tidy", "--confirm", "--root", repo]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /branch: feat\/fresh/);
+    assert.match(result.stdout, /status: fresh/);
+    assert.match(result.stdout, /removable: no/);
+    assert.equal(result.stdout.includes("removed:"), false);
+    assert.equal(existsSync(wt), true);
+    assert.match(git(repo, ["show-ref", "--verify", "refs/heads/feat/fresh"]), /refs\/heads\/feat\/fresh/);
+    assert.match(git(repo, ["show-ref", "--verify", "refs/heads/main"]), /refs\/heads\/main/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
