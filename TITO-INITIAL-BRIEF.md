@@ -308,6 +308,7 @@ Planned commands:
 - `tito inspect`
 - `tito worktree tidy`
 - `tito worktree tidy --confirm`
+- `/tito-worktree-tidy` (chat entry for the same operation)
 - `tito adopt`
 - `tito apply`
 - `tito apply --dry-run`

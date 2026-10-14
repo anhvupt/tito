@@ -199,7 +199,7 @@ registered paths, `remove` drops one path, and `refresh` writes local branch plu
 the last 50 commit subjects, dates, and file paths (secrets like `.env` skipped;
 no diffs) for chat and CLI to share.
 
-`worktree tidy` reports each linked worktree as merged-clean, dirty, unmerged, behind, or missing. It removes a merged clean worktree and its local branch only with `--confirm`. It does not delete remote branches or rebase.
+`worktree tidy` (chat: `/tito-worktree-tidy`) reports each linked worktree as protected, merged-clean, dirty, unmerged, behind, fresh, or missing. It removes a merged clean worktree and its local branch only with `--confirm`. It does not delete remote branches or rebase.
 
 `retro` builds that week's report from local git and saves `retros/<week>.json`
 and `retros/<week>.md` under the admin root. Review-fix counts, docs-blank, and
