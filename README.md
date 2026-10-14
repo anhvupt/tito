@@ -182,6 +182,8 @@ node dist/cli.js admin list
 node dist/cli.js admin refresh
 node dist/cli.js admin remove --root /path/to/repo
 node dist/cli.js admin retro --week 2026-W40
+node dist/cli.js worktree tidy
+node dist/cli.js worktree tidy --confirm
 ```
 
 `inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is
@@ -199,6 +201,8 @@ this same command.
 registered paths, `remove` drops one path, and `refresh` writes local branch plus
 the last 50 commit subjects, dates, and file paths (secrets like `.env` skipped;
 no diffs) for chat and CLI to share.
+
+`worktree tidy` (chat: `/tito-worktree-tidy`) reports each linked worktree as protected, merged-clean, dirty, unmerged, behind, fresh, or missing. It removes a merged clean worktree and its local branch only with `--confirm`. It does not delete remote branches or rebase.
 
 `retro` builds that week's report from local git and saves `retros/<week>.json`
 and `retros/<week>.md` under the admin root. Review-fix counts, docs-blank, and
