@@ -49,6 +49,7 @@ import {
   saveRetro,
 } from "./core/retro.js";
 import { formatInitError } from "./core/terminal.js";
+import { WorktreeError, formatTidyReport, tidyWorktrees } from "./core/worktree.js";
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -67,6 +68,7 @@ Usage:
   tito admin remove --root <path> [--admin-root <path>]
   tito admin refresh [--admin-root <path>]
   tito admin retro [--week <YYYY-Www>] [--timezone <IANA>] [--json] [--admin-root <path>]
+  tito worktree tidy [--confirm] [--root <path>]
 
 Options:
   -h, --help     Show help
@@ -78,6 +80,7 @@ Commands:
   init           Install Tito files and specialist agents. Confirm before writing.
   upgrade        Install the latest Tito and replace Tito-owned files only.
   admin          Opt-in local repo index: add, list, remove, refresh, retro.
+  worktree       Report stale worktrees. Confirm before removing merged clean ones.
 `;
 
 function fail(message: string): void {
@@ -472,6 +475,46 @@ function runRetro(args: string[]): void {
   }
 }
 
+function runWorktree(args: string[]): void {
+  if (args.includes("-h") || args.includes("--help")) {
+    process.stdout.write(help);
+    return;
+  }
+  if (args[0] !== "tidy") {
+    fail("Unknown worktree command. Use tito worktree tidy.");
+    return;
+  }
+
+  let root = process.cwd();
+  let confirm = false;
+  try {
+    const { values } = parseArgs({
+      args: args.slice(1),
+      options: {
+        confirm: { type: "boolean" },
+        root: { type: "string" },
+      },
+      strict: true,
+      allowPositionals: false,
+    });
+    confirm = values.confirm === true;
+    if (values.root !== undefined) root = values.root;
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Invalid worktree arguments.");
+    return;
+  }
+
+  try {
+    process.stdout.write(formatTidyReport(tidyWorktrees({ root, confirm })));
+  } catch (error) {
+    if (error instanceof WorktreeError) {
+      fail(`${error.code}: ${error.message}`);
+      return;
+    }
+    throw error;
+  }
+}
+
 async function run(args: string[]): Promise<void> {
   if (args[0] === "inspect") {
     runInspect(args.slice(1));
@@ -489,6 +532,10 @@ async function run(args: string[]): Promise<void> {
   }
   if (args[0] === "admin") {
     runAdmin(args.slice(1));
+    return;
+  }
+  if (args[0] === "worktree") {
+    runWorktree(args.slice(1));
     return;
   }
 
