@@ -179,6 +179,7 @@ node dist/cli.js admin list
 node dist/cli.js admin refresh
 node dist/cli.js admin remove --root /path/to/repo
 node dist/cli.js admin retro --week 2026-W40
+node dist/cli.js guard test-first --base main --test test/example.test.mjs
 ```
 
 `inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is
@@ -200,6 +201,10 @@ no diffs) for chat and CLI to share.
 `retro` builds that week's report from local git and saves `retros/<week>.json`
 and `retros/<week>.md` under the admin root. Review-fix counts, docs-blank, and
 merge duration say unavailable until GitHub data is added.
+
+`guard test-first` checks a slice branch against `--base`. Commit 1 may change
+only the repeated `--test` files. Later commits may not change `test/**`,
+`*.test.*`, or `*.spec.*` files. A failure names the file and the commit.
 
 ## How work moves
 

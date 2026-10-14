@@ -1,3 +1,5 @@
+import { recommendModel } from "./models.js";
+
 export const BRANCH_TYPES = [
   "feat",
   "fix",
@@ -232,4 +234,138 @@ export function mergeDecision(input: {
 
 export function canApprovePullRequest(): false {
   return false;
+}
+
+const PROTECTED_PUSH_BRANCHES = new Set<string>(["main", "master", "dev", "develop"]);
+
+export type SliceRole = "implementer" | "sandbox" | "finisher";
+
+export type SliceCheckName = "guard" | "lint" | "tests" | "build" | "docs";
+
+export type SliceChecks = {
+  readonly guard: boolean;
+  readonly lint: boolean;
+  readonly tests: boolean;
+  readonly build: boolean;
+  readonly docs: boolean;
+};
+
+export type OpenPullRequestRequest = {
+  readonly head: string;
+  readonly base: string;
+  readonly title: string;
+  readonly body: string;
+  readonly readyForReview: true;
+};
+
+export type PullRequestAdapter = {
+  push(branch: string): void;
+  openPullRequest(request: OpenPullRequestRequest): { readonly url: string };
+};
+
+export type FinishSliceInput = {
+  readonly role: SliceRole;
+  readonly autoPullRequest?: boolean;
+  readonly branch: string;
+  readonly base: string;
+  readonly checks: SliceChecks;
+  readonly description: PullRequestDescriptionInput;
+  readonly catalog: readonly string[];
+  readonly adapter: PullRequestAdapter;
+};
+
+export type FinishSliceResult =
+  | {
+      readonly status: "opened";
+      readonly model: string;
+      readonly url: string;
+      readonly pushed: true;
+      readonly readyForReview: true;
+    }
+  | {
+      readonly status: "ask";
+      readonly reason: string;
+      readonly pushed: false;
+    }
+  | {
+      readonly status: "refused";
+      readonly reason: string;
+      readonly pushed: false;
+    }
+  | {
+      readonly status: "failed";
+      readonly reason: string;
+      readonly pushed: false;
+      readonly check?: SliceCheckName;
+    };
+
+const SLICE_CHECKS: readonly SliceCheckName[] = ["guard", "lint", "tests", "build", "docs"];
+
+export function finishSlice(input: FinishSliceInput): FinishSliceResult {
+  if (input.role !== "finisher") {
+    return {
+      status: "refused",
+      pushed: false,
+      reason: `The ${input.role} may not open a pull request.`,
+    };
+  }
+  if (PROTECTED_PUSH_BRANCHES.has(input.branch)) {
+    return {
+      status: "refused",
+      pushed: false,
+      reason: `Refusing to push ${input.branch}.`,
+    };
+  }
+  if (input.autoPullRequest !== true) {
+    return {
+      status: "ask",
+      pushed: false,
+      reason: "Tito asks before opening a pull request.",
+    };
+  }
+  for (const check of SLICE_CHECKS) {
+    if (input.checks[check] !== true) {
+      return {
+        status: "failed",
+        pushed: false,
+        check,
+        reason: `The ${check} check failed. Nothing was pushed.`,
+      };
+    }
+  }
+  const recommendation = recommendModel({
+    host: "cursor",
+    role: "finisher",
+    catalog: input.catalog,
+  });
+  if (recommendation.status !== "selected") {
+    return {
+      status: "ask",
+      pushed: false,
+      reason: recommendation.reason,
+    };
+  }
+  const body = pullRequestDescription(input.description);
+  if (body === null) {
+    return {
+      status: "failed",
+      pushed: false,
+      reason: "The pull request description is not a valid four-part description.",
+    };
+  }
+  input.adapter.push(input.branch);
+  const opened = input.adapter.openPullRequest({
+    head: input.branch,
+    base: input.base,
+    title: input.description.problem.trim(),
+    body,
+    readyForReview: true,
+  });
+  return {
+    status: "opened",
+    model: recommendation.model,
+    url: opened.url,
+    pushed: true,
+    readyForReview: true,
+  };
 }
