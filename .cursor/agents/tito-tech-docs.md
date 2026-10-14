@@ -3,7 +3,7 @@ name: tito-tech-docs
 description: >
   Technical documentation writer. Tito delegates this specialist only for: module finished; update technical documentation.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: inherit
+model: claude-sonnet-5-5-high
 readonly: false
 ---
 
