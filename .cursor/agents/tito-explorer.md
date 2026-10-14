@@ -3,7 +3,7 @@ name: tito-explorer
 description: >
   Repository scout. Tito delegates this specialist only for: where code lives; how behavior works.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: inherit
+model: cursor-grok-4.6-medium-fast
 readonly: true
 ---
 

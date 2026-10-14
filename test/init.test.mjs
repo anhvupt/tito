@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -11,6 +11,50 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 function run(root, args) {
   return spawnSync(process.execPath, [cliPath, ...args], { encoding: "utf8" });
 }
+
+const DEFAULT_MODELS_BLOCK = [
+  "models:",
+  "  explorer: cursor-grok-4.6-medium-fast",
+  "  planner: claude-opus-5-5-medium",
+  "  implementer: grok-4.7-high",
+  "  reviewer: grok-4.7-high",
+  "  finisher: claude-sonnet-5-5-high",
+];
+
+const CARD_SLUGS = {
+  "tito-explorer.md": "cursor-grok-4.6-medium-fast",
+  "tito-product.md": "claude-opus-5-5-medium",
+  "tito-architect.md": "claude-opus-5-5-medium",
+  "tito-backend.md": "grok-4.7-high",
+  "tito-frontend.md": "grok-4.7-high",
+  "tito-devops.md": "grok-4.7-high",
+  "tito-erp.md": "claude-opus-5-5-medium",
+  "tito-qa.md": "grok-4.7-high",
+  "tito-security.md": "claude-opus-5-5-medium",
+  "tito-tech-docs.md": "claude-sonnet-5-5-high",
+  "tito-user-docs.md": "claude-sonnet-5-5-high",
+};
+
+test("[integration] PM-6 fresh init pins every card and writes the default models", async () => {
+  const { parseConfig } = await import("../dist/core/config.js");
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const yaml = readFileSync(join(root, "tito.yaml"), "utf8");
+    assert.equal(yaml.endsWith(`${DEFAULT_MODELS_BLOCK.join("\n")}\n`), true, yaml);
+    assert.equal(parseConfig(yaml).models.implementer, "grok-4.7-high");
+    const cards = readdirSync(join(root, ".cursor/agents")).sort();
+    assert.deepEqual(cards, Object.keys(CARD_SLUGS).sort());
+    for (const name of cards) {
+      const card = readFileSync(join(root, ".cursor/agents", name), "utf8");
+      assert.equal(card.includes("model: inherit"), false, name);
+      assert.match(card, new RegExp(`^model: ${CARD_SLUGS[name].replace(/\./g, "\\.")}$`, "m"), name);
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 test("init previews specialist agents and writes only after confirmation", () => {
   const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
@@ -56,7 +100,9 @@ test("init of a repo with no AGENTS.md writes the intent sentence", () => {
     agents.includes("The implementation handoff names the skills it will read."),
     true,
   );
-  assert.equal(agents.includes("Review fixes lists every comment"), true);
+  assert.equal(agents.includes("Review fixes lists every comment"), false);
+  const pullRequestRule = readFileSync(join(root, ".cursor/rules/pull-request.mdc"), "utf8");
+  assert.match(pullRequestRule, /Review fixes lists every comment/);
   rmSync(root, { recursive: true, force: true });
 });
 
@@ -102,6 +148,7 @@ test("init settings prompts render tito.yaml", async () => {
       "  tenancy: single",
       "  surfaces:",
       "    - id: admin",
+      ...DEFAULT_MODELS_BLOCK,
       "",
     ].join("\n"),
   );
@@ -115,7 +162,14 @@ test("init settings prompts render tito.yaml", async () => {
   assert.equal(declined.autoPullRequest, false);
   assert.equal(
     titoYamlBody("solo-balanced", declined),
-    ["schemaVersion: 1", "profile: solo-balanced", "git:", "  autoPullRequest: false", ""].join("\n"),
+    [
+      "schemaVersion: 1",
+      "profile: solo-balanced",
+      "git:",
+      "  autoPullRequest: false",
+      ...DEFAULT_MODELS_BLOCK,
+      "",
+    ].join("\n"),
   );
 
   const skipped = await promptForSettings(async (prompt) => {
@@ -173,6 +227,37 @@ test("non-interactive init stores autoPullRequest and does not invent product fi
   assert.equal(kept.status, 1);
   assert.match(kept.stderr, /conflict:/);
   assert.equal(readFileSync(join(root, "tito.yaml"), "utf8"), original);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("fresh init keeps the bootstrap within 1,500 tokens and installs scoped rules", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  mkdirSync(join(root, ".cursor/rules"), { recursive: true });
+  writeFileSync(join(root, ".cursor/rules/tourdef.mdc"), "consumer rule\n");
+  writeFileSync(join(root, ".cursor/rules/pull-request.mdc"), "user edited rule\n");
+  const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+  assert.equal(confirmed.status, 0, confirmed.stderr);
+  const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+  assert.ok(Math.ceil(agents.length / 4) <= 1500);
+  assert.match(agents, /Hola, Tito here!/);
+  assert.match(agents, /always Plan first/);
+  assert.match(agents, /check out only after the user accepts/);
+  assert.match(agents, /Never approve a pull request/);
+  assert.match(agents, /Tito does not code in this chat/);
+  assert.match(agents, /`client-careful` 3/);
+  assert.match(agents, /`solo-balanced` 6/);
+  assert.match(agents, /`solo-fast` 12/);
+  assert.equal(readFileSync(join(root, ".cursor/rules/tourdef.mdc"), "utf8"), "consumer rule\n");
+  assert.equal(readFileSync(join(root, ".cursor/rules/pull-request.mdc"), "utf8"), "user edited rule\n");
+  for (const name of ["screen-language.mdc", "init-upgrade-admin.mdc", "commit-branch.mdc"]) {
+    const body = readFileSync(join(root, ".cursor/rules", name), "utf8");
+    assert.match(body, /^---\n/);
+    assert.match(body, /description:/);
+    assert.match(body, /alwaysApply:\s*false/);
+  }
+  const repoAgents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+  assert.ok(Math.ceil(repoAgents.length / 4) <= 1500);
+  assert.equal(repoAgents.includes("A pull request description has four parts"), false);
   rmSync(root, { recursive: true, force: true });
 });
 

@@ -1,9 +1,26 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { parseDocument } from "yaml";
 import { compiledCursorAgents } from "./agents.js";
-import { parseConfig, type ProductSurface, type ScreenLanguage, type Tenancy, type TitoConfig } from "./config.js";
+import {
+  ConfigValidationError,
+  DEFAULT_MODELS,
+  MODEL_ROLES,
+  parseConfig,
+  type ModelsConfig,
+  type ProductSurface,
+  type ScreenLanguage,
+  type Tenancy,
+  type TitoConfig,
+} from "./config.js";
 import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate, type BranchBase } from "./git-flow.js";
-import { shippedSkills, titoYamlBody, type SettingKey, type TitoSettings } from "./init.js";
+import {
+  shippedCursorRules,
+  shippedSkills,
+  titoYamlBody,
+  type SettingKey,
+  type TitoSettings,
+} from "./init.js";
 import {
   TITO_BOOTSTRAP_END,
   TITO_BOOTSTRAP_START,
@@ -56,6 +73,15 @@ export function planUpgrade(
       ? { path: file.path, action }
       : { path: file.path, action, body: file.body };
   });
+  const yaml = readIfFile(root, "tito.yaml");
+  const withModels = yaml === null ? null : addMissingModels(yaml);
+  if (yaml !== null && withModels !== null) {
+    files.push(
+      withModels === yaml
+        ? { path: "tito.yaml", action: "keep" }
+        : { path: "tito.yaml", action: "replace", body: withModels },
+    );
+  }
   const agents = readIfFile(root, "AGENTS.md");
   if (agents === null) {
     files.push({ path: "AGENTS.md", action: "create", body: titoBootstrapBlock() });
@@ -70,10 +96,35 @@ export function planUpgrade(
   return files;
 }
 
-export function titoOwnedFiles(): { path: string; body: string }[] {
+function readConfigText(text: string): TitoConfig | null {
+  try {
+    return parseConfig(text);
+  } catch (error) {
+    if (error instanceof ConfigValidationError) return null;
+    throw error;
+  }
+}
+
+export function addMissingModels(yamlText: string): string | null {
+  const config = readConfigText(yamlText);
+  if (config === null) return null;
+  const missing = MODEL_ROLES.filter((role) => config.models?.[role] === undefined);
+  if (missing.length === 0) return yamlText;
+  const document = parseDocument(yamlText, { version: "1.2" });
+  for (const role of missing) document.setIn(["models", role], DEFAULT_MODELS[role]);
+  return document.toString();
+}
+
+export function projectModels(root: string): ModelsConfig | undefined {
+  const text = readIfFile(root, "tito.yaml");
+  return text === null ? undefined : readConfigText(text)?.models;
+}
+
+export function titoOwnedFiles(models?: ModelsConfig): { path: string; body: string }[] {
   return [
-    ...compiledCursorAgents(),
+    ...compiledCursorAgents(models),
     ...shippedSkills(),
+    ...shippedCursorRules(),
     { path: PULL_REQUEST_TEMPLATE_PATH, body: pullRequestTemplate() },
   ];
 }
@@ -143,7 +194,10 @@ export function mergeSettings(yamlText: string, answers: TitoSettings): string {
   }
 
   if (!changed) return yamlText;
-  return titoYamlBody(config.profile, settings);
+  return titoYamlBody(
+    config.profile,
+    config.models === undefined ? settings : { ...settings, models: config.models },
+  );
 }
 
 export function applyUpgrade(root: string, files: readonly UpgradeFile[]): void {

@@ -9,55 +9,30 @@ This project uses Tito as its root engineering coordinator.
 - Read `TITO-INITIAL-BRIEF.md` when planning, editing, or resolving policy.
 - Recommend Ask for read-only discovery, Plan for ambiguous or critical work,
   and Agent only for one approved implementation slice.
-- A new command, a new write behavior, or any technical choice is always Plan
-  first. That response is the plan only. No source edits.
+- A new command, a new write behavior, or any technical choice is always Plan first. That response is the plan only. No source edits.
 - Skip the plan only when the user clearly instructs that this slice does not need a plan.
 - Implementation starts only after that plan is approved.
 - Confirm intent before clarifying (a batch of 3 to 5 questions, lighter on `solo-fast`).
 - Research current official sources and judge them before trusting; adopt maintained tools before building our own; show options with pros and cons for this project.
 - Plans open with Domain (business impact first), then Decisions, Test cases, Docs impact, and Slices and branch. Decisions name conventions, and test cases are tagged AAA.
-- Suggest the git branch and change type, then check out only after the user accepts. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable. `main` and `master` are interchangeable.
-- A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`.
-- The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description.
-- When the user reviews a plan, save Tito's plan and the user's edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`.
-- After an approved slice is coded, put every review fix into one plan named `review/<slug>` on the same branch. Ask before opening a pull request only after that plan is coded, or when the user accepts the code with no changes.
-- A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs.
-- Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
-- In a terminal, `tito init --confirm` asks for the git base, screen language, tenancy, surfaces, and whether to auto-create a pull request after implementation. The auto-pull-request question defaults to yes. Upgrade asks only for settings missing from `tito.yaml`. Storing that answer does not open a pull request.
+- Suggest the git branch and change type, then check out only after the user accepts.
 - Never approve a pull request. Never merge unless the user calls for the merge and the pull request already has an approval.
 - Do not merge a slice branch into `main`, `master`, `dev`, or `develop`, on the machine or on the remote, unless the user calls for that merge and the pull request already has an approval. Finishing a slice leaves the branch as it is.
-- When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update.
-- After a pull request is merged, ask before the next slice. Switch back to the base branch only when the user says so clearly.
 - Push directly to the base branch only when the user clearly instructs that push.
 - Tito does not code in this chat. Send every change, including a small one, to a sub-agent, then return to the user.
 - Before writing an approved slice, list installed skills, read only each name and description, and name in the handoff the ones the writer must read.
+- The implementation handoff names the skills it will read.
 - Every sub-agent launch names the model slug from the live catalog.
 - Coding sub-agents follow the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Each has its own plan and branch. Documentation writers stay one at a time. Check out each branch only after the user accepts that branch.
 - When two or more slices are independent, send those sub-agents together, each on its own branch, up to that cap. Do not line them up one after another when they can run together. After the handoff, return to the user.
 - Preserve uncommitted work.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
-- Docs from the plan are updated or waived before a pull request.
-- The module-end docs writers still run.
 - Stop for human approval between reviewable slices.
 - Never commit, push, publish, deploy, or perform irreversible external actions
   without explicit approval.
 - Use the `/tito` skill when the user invokes it explicitly.
-- Chat is the primary interface. Implement each operation once, then expose the same behavior as `tito <command>` and `/tito-<command>`.
 - Ask before locking a technical decision or a product-vision change. One obvious reading continues after a one-line confirmation. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
-- Code stays English.
-- In a Vietnamese app (`screenLanguage: vi`), routes and slugs are Vietnamese first. The public path is native Vietnamese, for example `/tien-ich/ca-phe`. Do not invent that Vietnamese by translating an English slug word for word. If the product is bilingual, the English route comes second.
-- An English app (`screenLanguage: en`) keeps English routes and slugs.
-- In a Vietnamese app (`screenLanguage: vi`), every string a person reads is Vietnamese: tables, labels, buttons, headings, and messages. Write native Vietnamese first. Do not invent it by translating English word for word. English may exist as a second field only when the product is bilingual, and it comes after the Vietnamese.
-- An English app (`screenLanguage: en`) stays English on screen.
-- When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
-- Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
-- Multi-tenant or multi-surface work includes isolation, consistency, propagation, and permission cases.
-
-Per-project Tito install stays. Opt-in `tito admin add|list|remove|refresh`
-registers repos under `~/.config/tito/admin/` and stores commit subject, date,
-and paths — not diffs. A weekly retro stores counts only, never review text.
-A project `tito.yaml` overrides a personal default; do
-not weaken the safety floor.
+- Plans own technical decisions and include guidance code when useful.
 
 Keep this bootstrap compact. Load detailed workflow policy from the brief and
 scoped project surfaces only when relevant.

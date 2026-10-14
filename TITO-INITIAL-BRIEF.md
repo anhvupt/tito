@@ -102,7 +102,7 @@ Apply policy in this order:
 
 A task may increase caution. It must not silently weaken the project safety floor.
 
-Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid. Optional `git.autoPullRequest` is a boolean. Missing it is valid.
+Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid. Optional `git.autoPullRequest` is a boolean. Missing it is valid. Optional `models` maps pipeline roles (`explorer`, `planner`, `implementer`, `reviewer`, `finisher`) to non-empty model slugs. Each specialist compiles to one role. Missing keys use the package defaults; empty or unknown keys fail validation. Init writes the full map; upgrade adds missing roles only.
 
 In a terminal, `tito init --confirm` asks for the git base (`dev`, `develop`, `main`, or `master`), screen language, tenancy, optional surface ids, and whether to auto-create a pull request after implementation. That question defaults to yes (`git.autoPullRequest`). Upgrade asks only for settings that are missing. A non-interactive init with `--profile` stores `git.autoPullRequest: true` and does not invent product fields. Storing the answer does not open a pull request.
 
@@ -205,7 +205,7 @@ Tito can guarantee limits on its own context, fan-out, and retries. It cannot gu
 
 Initial budgets:
 
-- Bootstrap context: maximum 800 estimated tokens
+- Bootstrap context: maximum 1,500 estimated tokens
 - Task packet: maximum 1,200 estimated tokens
 - Specialist card: maximum 400 estimated tokens
 - Domain context: maximum 2,000 estimated tokens
@@ -225,6 +225,10 @@ Tito uses progressive disclosure:
 A trivial task should not spawn another agent.
 
 ## Cost-aware model routing
+
+Each Tito specialist file under `.cursor/agents/` pins a concrete model slug in frontmatter. Cursor uses that slug when a launch names no model, so a sub-agent does not silently run on the coordinator's model. The slug comes from `tito.yaml` `models` for the specialist's role, with package defaults when a key is missing. `AGENTS.md` still requires every launch to name a model; the pinned card is the backstop.
+
+`inherit` is not a model choice. Tito never passes `inherit` when launching a sub-agent. The handoff names the resolved slug from `tito.yaml` for that role. When the role's model family is out of usage, Tito falls back to a Cursor-pool slug whose name starts with `composer-`, states that fallback in the output, and never substitutes the coordinator's model.
 
 Tito recommends a capability tier before choosing a specific model:
 
@@ -324,6 +328,9 @@ Planned commands:
 - `tito --help`
 - `tito init`
 - `tito inspect`
+- `tito worktree tidy`
+- `tito worktree tidy --confirm`
+- `/tito-worktree-tidy` (chat entry for the same operation)
 - `tito adopt`
 - `tito apply`
 - `tito apply --dry-run`
@@ -575,7 +582,7 @@ Before writing an approved slice, list installed skills in `.cursor/skills` and 
 
 For a single slice, the user may say "skip test discussion" or "skip docs", in the same spirit as skipping the plan.
 
-Tito suggests the source branch and change type before checkout. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable development bases. `main` and `master` are interchangeable production bases. A project may use any combination. Feature, fix, chores, refactor, and debug use the first existing base in that order when no default is set. A hot-fix uses `main` or `master` when that is the default, otherwise the existing `main`, then the existing `master`, then `main`. Checkout happens only after the user accepts. A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`. Examples: `feat: add commit message rule`, `fix: reject a duplicate surface id`, `chores: record the commit prefix rule`, and `hot-fix: stop a bad release build`. The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description. When the user reviews a plan, Tito saves the plan and the user's edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`. `accepted` means the user approved Tito's plan with no wording changes. `edited` means the user changed the plan's wording or decisions. `expanded` means the user added scope after the intent check. A `review.md` without that front matter counts as an unknown outcome. A plan index stores the plan name, Cursor plan path, and branch, and drops the entry when the Cursor plan file is gone. Reference a Linear issue when Linear is connected or the user asked for one. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Every implementation plan includes a Test-first commit section listing the exact test files and the expected failure of each. Commit 1 on the slice branch changes only those listed test files. Later commits touch no test file (`test/**`, `*.test.*`, `*.spec.*`). The guard checks the slice branch against its base. On failure it names the offending file and commit and stops the slice, with no retry. When `git.autoPullRequest` is true, that value is the standing approval for the finisher to push the slice branch and open one ready-for-review pull request after the guard, lint, tests, build, and docs gate all pass. The finisher uses the Sonnet model from role routing. The implementer and the sandbox never open a pull request. Tito never pushes to `main`, `master`, `dev`, or `develop`. A failed check stops the slice and reports the failure; nothing is pushed. When `git.autoPullRequest` is false or unset, Tito asks before opening a pull request, and only after that review plan is coded or the user accepts the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request and does not merge unless the user calls for the merge and an approval already exists. Do not merge a slice branch into `main`, `master`, `dev`, or `develop`, on the machine or on the remote, unless the user calls for that merge and the pull request already has an approval. Finishing a slice leaves the branch as it is. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when the user says so clearly. Tito pushes directly to the base branch only when the user clearly instructs that push.
+Tito suggests the source branch and change type before checkout. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable development bases. `main` and `master` are interchangeable production bases. A project may use any combination. Feature, fix, chores, refactor, and debug use the first existing base in that order when no default is set. A hot-fix uses `main` or `master` when that is the default, otherwise the existing `main`, then the existing `master`, then `main`. Checkout happens only after the user accepts. A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`. Examples: `feat: add commit message rule`, `fix: reject a duplicate surface id`, `chores: record the commit prefix rule`, and `hot-fix: stop a bad release build`. The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description. When the user reviews a plan, Tito saves the plan and the user's edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`. `accepted` means the user approved Tito's plan with no wording changes. `edited` means the user changed the plan's wording or decisions. `expanded` means the user added scope after the intent check. A `review.md` without that front matter counts as an unknown outcome. A plan index stores the plan name, Cursor plan path, and branch, and drops the entry when the Cursor plan file is gone. Reference a Linear issue when Linear is connected or the user asked for one. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Every implementation plan includes a Test-first commit section listing the exact test files and the expected failure of each. Commit 1 on the slice branch changes only those listed test files. Later commits touch no test file (`test/**`, `*.test.*`, `*.spec.*`). The guard checks the slice branch against its base. On failure it names the offending file and commit and stops the slice, with no retry. When `git.autoPullRequest` is true, that value is the standing approval for the finisher to push the slice branch and open one ready-for-review pull request after the guard, lint, tests, build, and docs gate all pass. The finisher uses the Sonnet model from role routing. The implementer and the sandbox never open a pull request. Tito never pushes to `main`, `master`, `dev`, or `develop`. A failed check stops the slice and reports the failure; nothing is pushed. When `git.autoPullRequest` is false or unset, Tito asks before opening a pull request, and only after that review plan is coded or the user accepts the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request and does not merge unless the user calls for the merge and an approval already exists. Do not merge a slice branch into `main`, `master`, `dev`, or `develop`, on the machine or on the remote, unless the user calls for that merge and the pull request already has an approval. Finishing a slice leaves the branch as it is. After a pull request is merged, Tito first runs `tito worktree tidy` report-only, then asks before the next slice. Tito switches back to the base branch only when the user says so clearly. Tito pushes directly to the base branch only when the user clearly instructs that push.
 
 A named slice that the user explicitly marks as not needing a plan may use:
 
@@ -735,22 +742,7 @@ For Bugbot review, use `.cursor/BUGBOT.md`. Do not assume ordinary Cursor projec
 
 ### Implementation handoff
 
-Before Agent mode, Tito must provide:
-
-```text
-Goal:
-Approved slice:
-Business reason:
-Relevant contracts:
-Files likely affected:
-Files forbidden:
-Acceptance criteria:
-Diff budget:
-Tests required:
-Browser verification:
-Risk escalation conditions:
-Stop condition:
-```
+Before a sub-agent writes an approved slice, Tito builds a handoff that contains the spec file path, the target files, the forbidden files, the stop condition, the test-first commit rule, and the skill names the writer must read. Commit 1 changes test files only and those tests fail. Later commits touch no test file. The handoff includes no chat history. It stays within 1,200 estimated tokens. When no installed skill matches, the handoff says none match.
 
 ### Review handoff
 

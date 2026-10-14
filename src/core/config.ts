@@ -8,7 +8,17 @@ import {
 } from "./profiles.js";
 
 export const CONFIG_SCHEMA_VERSION = 1;
-const FIELDS = new Set(["schemaVersion", "profile", "git", "product"]);
+const FIELDS = new Set(["schemaVersion", "profile", "git", "product", "models"]);
+export const MODEL_ROLES = ["explorer", "planner", "implementer", "reviewer", "finisher"] as const;
+export type ModelRole = (typeof MODEL_ROLES)[number];
+export type ModelsConfig = { readonly [role in ModelRole]?: string };
+export const DEFAULT_MODELS = Object.freeze({
+  explorer: "cursor-grok-4.6-medium-fast",
+  planner: "claude-opus-5-5-medium",
+  implementer: "grok-4.7-high",
+  reviewer: "grok-4.7-high",
+  finisher: "claude-sonnet-5-5-high",
+} as const satisfies Record<ModelRole, string>);
 export const SCREEN_LANGUAGES = ["vi", "en"] as const;
 export const TENANCY_VALUES = ["single", "multi"] as const;
 const PRODUCT_FIELDS = new Set(["screenLanguage", "tenancy", "surfaces"]);
@@ -54,7 +64,12 @@ export type TitoConfig = {
   readonly profile: ActiveRiskProfileId;
   readonly git?: GitConfig;
   readonly product?: ProductConfig;
+  readonly models?: ModelsConfig;
 };
+
+export function resolveModels(models?: ModelsConfig): Record<ModelRole, string> {
+  return { ...DEFAULT_MODELS, ...models };
+}
 
 export class ConfigValidationError extends Error {
   readonly issues: readonly ConfigIssue[];
@@ -317,6 +332,49 @@ function readProduct(node: unknown): { readonly product?: ProductConfig; readonl
   return product ? { product, issues } : { issues };
 }
 
+function isModelRole(value: string): value is ModelRole {
+  return (MODEL_ROLES as readonly string[]).includes(value);
+}
+
+function readModels(node: unknown): { readonly models?: ModelsConfig; readonly issues: readonly ConfigIssue[] } {
+  if (!isMap(node)) {
+    return { issues: [issue("unknown-field", 'Field "models" must be a mapping.', "models")] };
+  }
+  const issues: ConfigIssue[] = [];
+  const seen = new Set<string>();
+  const models: { [role in ModelRole]?: string } = {};
+  for (const item of node.items) {
+    const key = mappingKey(item.key);
+    if (key === null) {
+      issues.push(issue("unknown-field", "Mapping keys must be strings.", "models"));
+      continue;
+    }
+    if (seen.has(key)) {
+      issues.push(issue("duplicate-key", `Duplicate key "${key}".`, `models.${key}`));
+      continue;
+    }
+    seen.add(key);
+    if (!isModelRole(key)) {
+      issues.push(issue("unknown-field", `Unknown field "models.${key}".`, `models.${key}`));
+      continue;
+    }
+    const value = isScalar(item.value) ? item.value.value : NON_SCALAR;
+    if (typeof value !== "string" || value.trim().length === 0) {
+      issues.push(
+        issue(
+          "unknown-field",
+          `Field "models.${key}" must be a non-empty model slug.`,
+          `models.${key}`,
+        ),
+      );
+      continue;
+    }
+    models[key] = value.trim();
+  }
+  if (issues.length > 0) return { issues };
+  return Object.keys(models).length > 0 ? { models, issues } : { issues };
+}
+
 function profileIssue(value: unknown): ConfigIssue | null {
   if (typeof value !== "string") {
     return issue("unknown-profile", "Profile must be a string.", "profile");
@@ -376,6 +434,7 @@ export function parseConfig(text: string): TitoConfig {
   const values = new Map<string, unknown>();
   let git: GitConfig | undefined;
   let product: ProductConfig | undefined;
+  let models: ModelsConfig | undefined;
   for (const item of document.contents.items) {
     const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
     if (key === null) {
@@ -402,6 +461,12 @@ export function parseConfig(text: string): TitoConfig {
       const parsed = readProduct(item.value);
       issues.push(...parsed.issues);
       if (parsed.product) product = parsed.product;
+      continue;
+    }
+    if (key === "models") {
+      const parsed = readModels(item.value);
+      issues.push(...parsed.issues);
+      if (parsed.models) models = parsed.models;
       continue;
     }
     values.set(key, isScalar(item.value) ? item.value.value : NON_SCALAR);
@@ -437,8 +502,10 @@ export function parseConfig(text: string): TitoConfig {
     profile: ActiveRiskProfileId;
     git?: GitConfig;
     product?: ProductConfig;
+    models?: ModelsConfig;
   } = { schemaVersion: CONFIG_SCHEMA_VERSION, profile };
   if (git) result.git = git;
   if (product) result.product = product;
+  if (models) result.models = models;
   return result;
 }

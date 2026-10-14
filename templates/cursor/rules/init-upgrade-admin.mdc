@@ -1,0 +1,15 @@
+---
+description: Tito init, upgrade, and the opt-in admin index.
+alwaysApply: false
+---
+
+- Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template.
+- In a terminal, `tito init --confirm` asks for the git base, screen language, tenancy, surfaces, and whether to auto-create a pull request after implementation. The auto-pull-request question defaults to yes. Upgrade asks only for settings missing from `tito.yaml`. Storing that answer does not open a pull request.
+- Chat is the primary interface. Implement each operation once, then expose the same behavior as `tito <command>` and `/tito-<command>`.
+- Multi-tenant or multi-surface work includes isolation, consistency, propagation, and permission cases.
+
+Per-project Tito install stays. Opt-in `tito admin add|list|remove|refresh`
+registers repos under `~/.config/tito/admin/` and stores commit subject, date,
+and paths — not diffs. A weekly retro stores counts only, never review text.
+A project `tito.yaml` overrides a personal default; do
+not weaken the safety floor.

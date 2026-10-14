@@ -3,9 +3,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compiledCursorAgents } from "./agents.js";
 import {
+  MODEL_ROLES,
   SCREEN_LANGUAGES,
   TENANCY_VALUES,
   isSurfaceId,
+  resolveModels,
+  type ModelsConfig,
   type ProductSurface,
   type ScreenLanguage,
   type Tenancy,
@@ -86,6 +89,7 @@ export type TitoSettings = {
   readonly tenancy?: Tenancy;
   readonly surfaces?: readonly ProductSurface[];
   readonly autoPullRequest?: boolean;
+  readonly models?: ModelsConfig;
 };
 
 async function askOneOf<T extends string>(
@@ -180,6 +184,8 @@ export function titoYamlBody(profile: string, settings: TitoSettings): string {
     for (const surface of settings.surfaces) productLines.push(`    - id: ${surface.id}`);
   }
   if (productLines.length > 0) lines.push("product:", ...productLines);
+  const models = resolveModels(settings.models);
+  lines.push("models:", ...MODEL_ROLES.map((role) => `  ${role}: ${models[role]}`));
   return `${lines.join("\n")}\n`;
 }
 
@@ -198,6 +204,18 @@ export function shippedSkills(): { path: string; body: string }[] {
     .map((entry) => ({
       path: `.cursor/skills/${entry.name}/SKILL.md`,
       body: readFileSync(join(root, entry.name, "SKILL.md"), "utf8"),
+    }));
+}
+
+export function shippedCursorRules(): { path: string; body: string }[] {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "../../templates/cursor/rules");
+  return readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".mdc"))
+    .map((entry) => entry.name)
+    .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
+    .map((name) => ({
+      path: `.cursor/rules/${name}`,
+      body: readFileSync(join(root, name), "utf8"),
     }));
 }
 
@@ -231,16 +249,18 @@ export function planInitialization(
   const adoption = planAdoption(report, profile);
   const files: InitFile[] = adoption.files.map((file) => {
     if (file.path === "AGENTS.md") return agentsBootstrap(report);
-    if (file.path === "tito.yaml" && file.action === "create" && settings !== undefined) {
+    if (file.path === "tito.yaml" && file.action === "create") {
       return {
         path: "tito.yaml" as const,
         action: "create" as const,
-        body: titoYamlBody(adoption.profile, settings),
+        body: titoYamlBody(adoption.profile, settings ?? {}),
       };
     }
     return file;
   });
-  const agents = compiledCursorAgents().map((agent) =>
+  const models =
+    report.titoYaml.status === "valid" ? report.titoYaml.config.models : settings?.models;
+  const agents = compiledCursorAgents(models).map((agent) =>
     exists(report.root, agent.path)
       ? { path: agent.path, action: "conflict" as const }
       : { path: agent.path, action: "create" as const, body: agent.body },
@@ -254,10 +274,15 @@ export function planInitialization(
   const pullRequest = exists(report.root, PULL_REQUEST_TEMPLATE_PATH)
     ? { path: PULL_REQUEST_TEMPLATE_PATH, action: "keep" as const }
     : { path: PULL_REQUEST_TEMPLATE_PATH, action: "create" as const, body: template };
+  const rules = shippedCursorRules().map((rule) =>
+    exists(report.root, rule.path)
+      ? { path: rule.path, action: "keep" as const }
+      : { path: rule.path, action: "create" as const, body: rule.body },
+  );
   return {
     root: adoption.root,
     profile: adoption.profile,
-    files: [...files, ...agents, ...skills, pullRequest],
+    files: [...files, ...agents, ...skills, pullRequest, ...rules],
   };
 }
 

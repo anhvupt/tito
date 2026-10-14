@@ -108,7 +108,9 @@ The first `init` prints the plan and writes nothing. In a terminal, omitting
 `--profile` asks you to choose `client-careful`, `solo-balanced`, or
 `solo-fast`. A script or piped command must still pass `--profile`.
 `--confirm` creates the missing `tito.yaml`, specialist agents, and `/tito`
-skills. If `AGENTS.md` already exists, Tito appends its bootstrap and leaves
+skills. It also installs Tito's scoped rules under `.cursor/rules/`
+(pull-request, screen-language, init-upgrade-admin, and commit-branch). If
+`AGENTS.md` already exists, Tito appends its bootstrap and leaves
 the existing guidance in place. It refuses to overwrite a Tito file that is
 already there. In a terminal, `tito init --confirm` then asks for the git base
 (`dev`, `develop`, `main`, or `master`), screen language (`vi` or `en`),
@@ -131,7 +133,8 @@ npx tito upgrade --confirm
 ```
 
 `--confirm` installs the latest `@anhvupt/tito` and replaces Tito-owned
-agents, skills, and the Tito section of `AGENTS.md`. Consumer rules, consumer
+agents, skills, those Tito-owned scoped rules, and the Tito section of
+`AGENTS.md`. Consumer rules, consumer
 agents, and other project skills stay untouched. In a terminal, `tito upgrade --confirm` asks only for settings missing from `tito.yaml`: git base, screen language, tenancy, surfaces, and auto-create pull request. Enter on that last question still stores yes. It does not change a value that is already present, and it does not change the profile. A non-interactive upgrade does not ask. If `tito.yaml` is missing, it skips those questions.
 
 Tito is installed in each project. It is not a required global command.
@@ -180,6 +183,8 @@ node dist/cli.js admin refresh
 node dist/cli.js admin remove --root /path/to/repo
 node dist/cli.js admin retro --week 2026-W40
 node dist/cli.js guard test-first --base main --test test/example.test.mjs
+node dist/cli.js worktree tidy
+node dist/cli.js worktree tidy --confirm
 ```
 
 `inspect` reads `tito.yaml` when it exists and checks whether `AGENTS.md` is
@@ -197,6 +202,8 @@ this same command.
 registered paths, `remove` drops one path, and `refresh` writes local branch plus
 the last 50 commit subjects, dates, and file paths (secrets like `.env` skipped;
 no diffs) for chat and CLI to share.
+
+`worktree tidy` (chat: `/tito-worktree-tidy`) reports each linked worktree as protected, merged-clean, dirty, unmerged, behind, fresh, or missing. It removes a merged clean worktree and its local branch only with `--confirm`. It does not delete remote branches or rebase.
 
 `retro` builds that week's report from local git and saves `retros/<week>.json`
 and `retros/<week>.md` under the admin root. Review-fix counts, docs-blank, and
@@ -244,6 +251,17 @@ product:
   tenancy: single
   surfaces:
     - id: admin
+```
+
+Optional `models` maps pipeline roles to Cursor model slugs. Each Tito specialist card compiles to one role: explorer, planner, implementer, reviewer, or finisher. Missing keys fall back to the defaults below. Empty or unknown keys are rejected. `tito init` writes the full block; `tito upgrade` adds missing roles without changing values you already set, and rewrites Tito-owned specialist cards so pinned slugs stay current.
+
+```yaml
+models:
+  explorer: cursor-grok-4.6-medium-fast
+  planner: claude-opus-5-5-medium
+  implementer: grok-4.7-high
+  reviewer: grok-4.7-high
+  finisher: claude-sonnet-5-5-high
 ```
 
 - Code stays English.

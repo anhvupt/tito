@@ -1,3 +1,5 @@
+import type { ModelRole } from "./config.js";
+
 export const SPECIALIST_IDS = [
   "explorer",
   "product-analyst",
@@ -55,7 +57,7 @@ export type SpecialistManifest = {
   readonly role: string;
   readonly model: {
     readonly tier: ModelTier;
-    readonly preferred: "inherit";
+    readonly role: ModelRole;
     readonly fallbackPolicy: "ask-user";
   };
   readonly triggers: readonly string[];
@@ -68,6 +70,20 @@ export type SpecialistManifest = {
 type ManifestSeed = Omit<SpecialistManifest, "id" | "handoffs" | "model" | "version"> & {
   readonly tier: ModelTier;
 };
+
+export const SPECIALIST_MODEL_ROLES = Object.freeze({
+  explorer: "explorer",
+  "product-analyst": "planner",
+  architect: "planner",
+  "backend-engineer": "implementer",
+  "frontend-engineer": "implementer",
+  "devops-engineer": "implementer",
+  "erp-specialist": "planner",
+  "qa-reviewer": "reviewer",
+  "security-reviewer": "planner",
+  "tech-docs-writer": "finisher",
+  "user-docs-writer": "finisher",
+} as const satisfies Record<SpecialistId, ModelRole>);
 
 const phase = Object.freeze({
   discovery: ["discovery"],
@@ -97,7 +113,7 @@ function manifest(id: SpecialistId, seed: ManifestSeed): SpecialistManifest {
     role: seed.role,
     model: Object.freeze({
       tier: seed.tier,
-      preferred: "inherit",
+      role: SPECIALIST_MODEL_ROLES[id],
       fallbackPolicy: "ask-user",
     }),
     triggers: Object.freeze([...seed.triggers]),
