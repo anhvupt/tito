@@ -257,6 +257,23 @@ version), and core plus reasoning use `claude-opus-` (highest version). If a
 family is unavailable in the live catalog, Tito asks instead of substituting a
 different family.
 
+Pipeline roles on Cursor resolve from that same catalog:
+
+| Role | Cursor family |
+| --- | --- |
+| explorer | Grok (`grok-`, then `cursor-grok-`, highest) |
+| planner | Opus (`claude-opus-`, highest) |
+| test writer | Grok, highest slug without `-fast` |
+| implementer | Grok, highest slug without `-fast` |
+| finisher (docs and PR) | Sonnet (`claude-sonnet-`, highest) |
+| sandbox | Grok (`grok-`, then `cursor-grok-`, highest) |
+
+Within a family, Tito prefers a slug that does not contain `-fast`. A `-fast`
+slug is used only when it is the only match in that family, and the
+recommendation flags it. Sonnet is a Cursor family for the finisher. If that
+family is missing, Tito asks and does not substitute another model. Existing
+task classes keep the routing above.
+
 Model recommendation output:
 
 - Task
@@ -267,6 +284,7 @@ Model recommendation output:
 - Reason
 - Cheaper alternative
 - Escalation condition
+- Fast flag, when the only family match is a `-fast` slug
 
 ## Existing-project adoption
 
