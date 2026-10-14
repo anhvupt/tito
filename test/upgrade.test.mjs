@@ -17,6 +17,7 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   mkdirSync(join(root, ".cursor/skills/tito"), { recursive: true });
   mkdirSync(join(root, ".cursor/skills/project-skill"), { recursive: true });
   writeFileSync(join(root, ".cursor/rules/tourdef.mdc"), "consumer rule\n");
+  writeFileSync(join(root, ".cursor/rules/pull-request.mdc"), "old layout\n");
   writeFileSync(join(root, ".cursor/agents/elado-ui.md"), "consumer agent\n");
   writeFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "consumer skill\n");
   writeFileSync(join(root, ".cursor/agents/tito-frontend.md"), "old tito agent\n");
@@ -49,7 +50,41 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
     agents.split("The implementation handoff names the skills it will read.").length - 1,
     1,
   );
-  assert.equal(agents.split("Review fixes lists every comment").length - 1, 1);
+  assert.equal(agents.split("Review fixes lists every comment").length - 1, 0);
+  const pullRequestRule = readFileSync(join(root, ".cursor/rules/pull-request.mdc"), "utf8");
+  assert.equal(pullRequestRule.includes("old layout"), false);
+  assert.match(pullRequestRule, /^---\n/);
+  assert.match(pullRequestRule, /description:/);
+  assert.match(pullRequestRule, /globs:/);
+  assert.match(pullRequestRule, /alwaysApply:\s*false/);
+  assert.match(pullRequestRule, /Review fixes lists every comment/);
+  assert.match(pullRequestRule, /A pull request description has four parts/);
+  for (const name of ["screen-language.mdc", "init-upgrade-admin.mdc", "commit-branch.mdc"]) {
+    const body = readFileSync(join(root, ".cursor/rules", name), "utf8");
+    assert.match(body, /^---\n/);
+    assert.match(body, /description:/);
+    assert.match(body, /alwaysApply:\s*false/);
+  }
+  assert.match(
+    readFileSync(join(root, ".cursor/rules/screen-language.mdc"), "utf8"),
+    /screenLanguage: vi/,
+  );
+  assert.match(
+    readFileSync(join(root, ".cursor/rules/screen-language.mdc"), "utf8"),
+    /timestamps in UTC/,
+  );
+  assert.match(
+    readFileSync(join(root, ".cursor/rules/init-upgrade-admin.mdc"), "utf8"),
+    /tito init --confirm/,
+  );
+  assert.match(
+    readFileSync(join(root, ".cursor/rules/init-upgrade-admin.mdc"), "utf8"),
+    /tito admin add/,
+  );
+  assert.match(
+    readFileSync(join(root, ".cursor/rules/commit-branch.mdc"), "utf8"),
+    /A commit subject is/,
+  );
   assert.equal(agents.includes("Old Tito text."), false);
   assert.match(readFileSync(join(root, ".cursor/agents/tito-frontend.md"), "utf8"), /name: tito-frontend/);
   assert.match(readFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "utf8"), /name: tito/);

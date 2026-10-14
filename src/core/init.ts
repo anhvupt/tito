@@ -201,6 +201,18 @@ export function shippedSkills(): { path: string; body: string }[] {
     }));
 }
 
+export function shippedCursorRules(): { path: string; body: string }[] {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "../../templates/cursor/rules");
+  return readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".mdc"))
+    .map((entry) => entry.name)
+    .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
+    .map((name) => ({
+      path: `.cursor/rules/${name}`,
+      body: readFileSync(join(root, name), "utf8"),
+    }));
+}
+
 function agentsBootstrap(report: InspectionReport): InitFile {
   if (report.agentsMd === "absent") {
     return { path: "AGENTS.md", action: "create", body: titoBootstrapBlock() };
@@ -254,10 +266,15 @@ export function planInitialization(
   const pullRequest = exists(report.root, PULL_REQUEST_TEMPLATE_PATH)
     ? { path: PULL_REQUEST_TEMPLATE_PATH, action: "keep" as const }
     : { path: PULL_REQUEST_TEMPLATE_PATH, action: "create" as const, body: template };
+  const rules = shippedCursorRules().map((rule) =>
+    exists(report.root, rule.path)
+      ? { path: rule.path, action: "keep" as const }
+      : { path: rule.path, action: "create" as const, body: rule.body },
+  );
   return {
     root: adoption.root,
     profile: adoption.profile,
-    files: [...files, ...agents, ...skills, pullRequest],
+    files: [...files, ...agents, ...skills, pullRequest, ...rules],
   };
 }
 

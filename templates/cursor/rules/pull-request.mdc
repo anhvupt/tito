@@ -1,0 +1,13 @@
+---
+description: Pull request descriptions, review-fix plans, and feedback files.
+globs: .github/pull_request_template.md,.tito/feedback/**/*.md
+alwaysApply: false
+---
+
+- When the user reviews a plan, save Tito's plan and the user's edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`.
+- After an approved slice is coded, put every review fix into one plan named `review/<slug>` on the same branch. Ask before opening a pull request only after that plan is coded, or when the user accepts the code with no changes.
+- A pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs.
+- When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update.
+- After a pull request is merged, ask before the next slice. Switch back to the base branch only when the user says so clearly.
+- Docs from the plan are updated or waived before a pull request.
+- The module-end docs writers still run.
