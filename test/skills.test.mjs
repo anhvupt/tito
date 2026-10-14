@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -67,6 +67,24 @@ test("T2 [unit] Tito's own skill is not a pick", () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("[unit] the installed tito skill uses small and medium decision authority", () => {
+  for (const path of [
+    "../.cursor/skills/tito/SKILL.md",
+    "../templates/cursor/skills/tito/SKILL.md",
+  ]) {
+    const skill = readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+    assert.equal(skill.includes("3 to 5 clarifying questions"), false);
+    assert.equal(skill.includes("Decided:"), true);
+    assert.equal(skill.includes("clarifying batch"), false);
+  }
+  const brief = readFileSync(
+    fileURLToPath(new URL("../TITO-INITIAL-BRIEF.md", import.meta.url)),
+    "utf8",
+  );
+  assert.equal(brief.includes("ask before locking a technical decision"), false);
+  assert.match(brief, /Plan mode should use the Reasoning tier by default when technical decisions/);
 });
 
 test("a missing skill directory returns no cards", () => {
