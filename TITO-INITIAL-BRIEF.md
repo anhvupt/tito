@@ -483,8 +483,9 @@ For every task, Tito should recommend one of:
      removes implementation ambiguity;
    - define acceptance criteria, tests, migration or rollback needs, risks,
      forbidden changes, and stop conditions for every slice;
-   - ask before locking a technical decision or a product-vision change, then
-     record the user's answer.
+   - decide small and medium choices and report them on a `Decided:` line;
+     ask before locking a large decision or a product-vision change
+     (`client-careful` also asks for medium ones), then record the user's answer.
 
    Discover restates the goal and what is out of scope, confirms that reading, then clarifies as the workflow below describes. One obvious reading still continues, after a one-line confirmation. Do not hand an unresolved choice to the implementation agent. The implementation agent follows the approved decisions and stops for re-planning if repository evidence invalidates them; it does not silently redesign the slice.
 
