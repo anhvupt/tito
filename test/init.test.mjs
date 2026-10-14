@@ -243,3 +243,41 @@ test("[unit] WP-7 shipped skill lists principles, plan sections, and code order"
   const codeAt = skill.indexOf("the code", failingAt);
   assert.ok(specAt >= 0 && failingAt > specAt && codeAt > failingAt);
 });
+
+test("[unit] fresh init states small and medium decision authority", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+    assert.match(agents, /decides small and medium/);
+    assert.match(agents, /`client-careful` still asks for medium/);
+    assert.match(agents, /Questions are only for large decisions/);
+    assert.match(agents, /locking a large decision/);
+    assert.match(agents, /premium-model fan-out/);
+    assert.match(agents, /`Decided:`/);
+    assert.equal(agents.includes("3 to 5"), false);
+    assert.ok(Math.ceil(agents.length / 4) <= 1500);
+    const repoAgents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+    assert.match(repoAgents, /decides small and medium/);
+    assert.match(repoAgents, /`Decided:`/);
+    assert.ok(Math.ceil(repoAgents.length / 4) <= 1500);
+
+    const brief = readFileSync(join(repoRoot, "TITO-INITIAL-BRIEF.md"), "utf8");
+    const start = brief.indexOf("**Discover** is `DISCOVERY`");
+    const end = brief.indexOf("**Plan** is one approval");
+    assert.ok(start >= 0 && end > start);
+    const discover = brief.slice(start, end);
+    assert.match(discover, /Tito decides, then reports/);
+    assert.match(discover, /naming, file placement/);
+    assert.match(discover, /Tito asks, and stops/);
+    assert.match(discover, /safety floor/);
+    assert.match(discover, /`client-careful` still asks for medium decisions/);
+    assert.match(discover, /`solo-balanced` and `solo-fast` decide small and medium/);
+    assert.match(discover, /locking a large decision/);
+    assert.match(discover, /`Decided:`/);
+    assert.equal(discover.includes("3 to 5"), false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
