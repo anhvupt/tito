@@ -108,7 +108,9 @@ The first `init` prints the plan and writes nothing. In a terminal, omitting
 `--profile` asks you to choose `client-careful`, `solo-balanced`, or
 `solo-fast`. A script or piped command must still pass `--profile`.
 `--confirm` creates the missing `tito.yaml`, specialist agents, and `/tito`
-skills. If `AGENTS.md` already exists, Tito appends its bootstrap and leaves
+skills. It also installs Tito's scoped rules under `.cursor/rules/`
+(pull-request, screen-language, init-upgrade-admin, and commit-branch). If
+`AGENTS.md` already exists, Tito appends its bootstrap and leaves
 the existing guidance in place. It refuses to overwrite a Tito file that is
 already there. In a terminal, `tito init --confirm` then asks for the git base
 (`dev`, `develop`, `main`, or `master`), screen language (`vi` or `en`),
@@ -131,7 +133,8 @@ npx tito upgrade --confirm
 ```
 
 `--confirm` installs the latest `@anhvupt/tito` and replaces Tito-owned
-agents, skills, and the Tito section of `AGENTS.md`. Consumer rules, consumer
+agents, skills, those Tito-owned scoped rules, and the Tito section of
+`AGENTS.md`. Consumer rules, consumer
 agents, and other project skills stay untouched. In a terminal, `tito upgrade --confirm` asks only for settings missing from `tito.yaml`: git base, screen language, tenancy, surfaces, and auto-create pull request. Enter on that last question still stores yes. It does not change a value that is already present, and it does not change the profile. A non-interactive upgrade does not ask. If `tito.yaml` is missing, it skips those questions.
 
 Tito is installed in each project. It is not a required global command.
