@@ -95,6 +95,8 @@ test("init of a repo with no AGENTS.md writes the intent sentence", () => {
   assert.equal(confirmed.status, 0, confirmed.stderr);
   const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
   assert.equal(agents.includes("Confirm intent before clarifying"), true);
+  assert.match(agents, /show the test cases/);
+  assert.match(agents, /Agent mode does not approve it/);
   assert.equal(agents.includes("Finishing a slice leaves the branch as it is."), true);
   assert.equal(
     agents.includes("The implementation handoff names the skills it will read."),

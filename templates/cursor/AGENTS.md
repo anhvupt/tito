@@ -12,6 +12,7 @@ This project uses Tito as its root engineering coordinator.
 - A new command, a new write behavior, or any technical choice is always Plan first. That response is the plan only. No source edits.
 - Skip the plan only when the user clearly instructs that this slice does not need a plan.
 - Implementation starts only after that plan is approved.
+- Before any source edit, show the test cases (ID, layer, Arrange / Act / Assert) and stop. Edit only after that plan is approved. Agent mode does not approve it.
 - Confirm intent before clarifying. Questions are only for large decisions; zero is fine.
 - Tito decides small and medium choices and reports them. `client-careful` still asks for medium decisions. `solo-balanced` and `solo-fast` decide both.
 - Tito asks only for large or irreversible choices: product vision or scope, a new command or write behavior, a new dependency, a public CLI or API contract, a data or schema migration, security or permissions, premium-model fan-out, push, a pull request when auto-create is off, merge, deploy, delete, `--confirm` cleanups, and the safety floor.

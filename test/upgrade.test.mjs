@@ -112,6 +112,20 @@ test("[unit] upgrade of an old AGENTS.md installs the decision-authority rule", 
     assert.match(agents, /`client-careful` still asks for medium/);
     assert.match(agents, /premium-model fan-out/);
     assert.match(agents, /`Decided:`/);
+    assert.equal(agents.split("show the test cases").length - 1, 1);
+    assert.match(agents, /Agent mode does not approve it/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[unit] UT-3 a current bootstrap is kept", async () => {
+  const { titoBootstrapBlock } = await import("../dist/core/plan.js");
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    writeFileSync(join(root, "AGENTS.md"), titoBootstrapBlock());
+    const agents = planUpgrade(root, []).find((file) => file.path === "AGENTS.md");
+    assert.equal(agents?.action, "keep");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

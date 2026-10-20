@@ -434,7 +434,7 @@ Tito must complement Cursor rather than duplicate it.
 
 Tito is chat-first. Users choose how Tito participates:
 
-- **Implicit:** install a compact `AGENTS.md` bootstrap so ordinary Cursor chat follows Tito's coordination policy by default.
+- **Implicit:** install a compact `AGENTS.md` bootstrap so ordinary Cursor chat follows Tito's coordination policy by default. Ordinary chat shows the test cases (ID, layer, Arrange / Act / Assert) and stops before any source edit.
 - **Explicit:** install the `/tito` skill and invoke it when Tito coordination is wanted.
 - **Combined:** use the bootstrap by default and retain `/tito` as an explicit workflow entry point.
 
