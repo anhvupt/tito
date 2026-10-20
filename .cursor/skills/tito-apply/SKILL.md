@@ -6,21 +6,7 @@ disable-model-invocation: true
 
 # Tito apply
 
-Chat adapter for `tito apply --dry-run`. Show the existing planner's stdout. Do not write a plan by hand and do not create or edit project files.
-Start the chat response exactly with `Hola, Tito here!`, then show the command's stdout unchanged. The greeting is not part of the command output.
+Chat adapter for `npx tito apply --dry-run`. Show the command stdout unchanged.
+Start the chat response exactly with `Hola, Tito here!`
 
-## Run
-
-The user must name `client-careful`, `solo-balanced`, or `solo-fast`. If they do not, ask which profile to use and stop. Do not choose one.
-
-From the project root:
-
-```sh
-node dist/cli.js apply --dry-run --profile <id>
-```
-
-If `dist/cli.js` is missing, run `npm run build`, then run the apply command again. Add `--root <path>` only when the user names another directory. Do not omit `--dry-run`.
-
-## Report
-
-Show stdout unchanged. A nonzero exit and stderr are the result. Do not commit.
+The user must name `client-careful`, `solo-balanced`, or `solo-fast`. If they do not, ask which profile to use and stop. Do not omit `--dry-run`. Do not write project files.

@@ -1,2 +1,8 @@
 schemaVersion: 1
 profile: solo-balanced
+models:
+  explorer: cursor-grok-4.6-medium-fast
+  planner: claude-opus-5-5-medium
+  implementer: grok-4.7-high
+  reviewer: grok-4.7-high
+  finisher: composer-2.5

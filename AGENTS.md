@@ -1,3 +1,4 @@
+<!-- tito:bootstrap start -->
 # Tito bootstrap
 
 This project uses Tito as its root engineering coordinator.
@@ -39,3 +40,4 @@ This project uses Tito as its root engineering coordinator.
 
 Keep this bootstrap compact. Load detailed workflow policy from the brief and
 scoped project surfaces only when relevant.
+<!-- tito:bootstrap end -->

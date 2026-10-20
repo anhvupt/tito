@@ -6,25 +6,7 @@ disable-model-invocation: true
 
 # Tito inspect
 
-Chat adapter for `tito inspect`. Run the existing inspector and show its output. Do not reimplement inspection by reading files yourself.
-Start the chat response exactly with `Hola, Tito here!`, then show the command's stdout unchanged. The greeting is not part of the command output.
+Chat adapter for `npx tito inspect`. Run that command and show its stdout unchanged.
+Start the chat response exactly with `Hola, Tito here!` The greeting is not part of the command output.
 
-## Run
-
-From the project root:
-
-```sh
-node dist/cli.js inspect
-```
-
-If `dist/cli.js` is missing, run `npm run build`, then run the inspect command again. Add `--root <path>` only when the user names another directory.
-
-## Report
-
-Show the command's stdout unchanged. The CLI report is the result:
-
-- `root`
-- `tito.yaml` as `absent`, `valid profile=<id>`, or `invalid` with issue codes
-- `AGENTS.md` as `present` or `absent`
-
-If the command exits nonzero, show stderr as the inspection error. Do not create, edit, or delete project files. Do not commit.
+Add `--root <path>` only when the user names another directory. Do not reimplement inspection by reading files yourself. Do not write project files.
