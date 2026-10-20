@@ -217,7 +217,7 @@ test("[unit] PM-4 models map parses role slugs and exports the defaults", async 
     planner: "claude-opus-5-5-medium",
     implementer: "grok-4.7-high",
     reviewer: "grok-4.7-high",
-    finisher: "claude-sonnet-5-5-high",
+    finisher: "composer-2.5",
   });
   assert.deepEqual(
     parseConfig("schemaVersion: 1\nprofile: solo-balanced\nmodels:\n  implementer: gpt-5.3-codex\n"),

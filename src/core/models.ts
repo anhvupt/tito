@@ -87,6 +87,12 @@ const SONNET_HIGHEST: SelectorRule = {
   pick: "highest",
 };
 
+const COMPOSER_25: SelectorRule = {
+  family: "Composer",
+  matchGroups: [(slug) => slug === "composer-2.5"],
+  pick: "highest",
+};
+
 function rulesFor(host: ModelHost, taskClass: ModelClass): SelectorRule {
   if (host === "cursor") {
     if (taskClass === "explore" || taskClass === "docs" || taskClass === "ordinary") {
@@ -139,7 +145,7 @@ function rulesForRole(role: PipelineRole): Selection {
       };
     case "finisher":
       return {
-        rule: SONNET_HIGHEST,
+        rule: COMPOSER_25,
         tier: "Scout",
         escalation: CLASS_ESCALATION.docs,
       };
