@@ -170,26 +170,27 @@ test("MOD-9 explorer flags a fast Grok slug when it is the only match", () => {
   }
 });
 
-test("MOD-10 finisher asks when Sonnet is missing, then selects it", () => {
+test("MOD-10 finisher asks without composer-2.5, then selects that exact slug", () => {
   const missing = recommendModel({
     host: "cursor",
     role: "finisher",
-    catalog: ["grok-4.7-high", "claude-opus-5-5-medium"],
+    catalog: ["claude-sonnet-5-5-high", "composer-2.5-fast"],
   });
 
   assert.equal(missing.status, "ask");
   if (missing.status === "ask") {
-    assert.equal(missing.family, "Sonnet");
+    assert.equal(missing.family, "Composer");
   }
 
   const selected = recommendModel({
     host: "cursor",
     role: "finisher",
-    catalog: ["grok-4.7-high", "claude-opus-5-5-medium", "claude-sonnet-5-5-high"],
+    catalog: ["claude-sonnet-5-5-high", "composer-2.5-fast", "composer-2.5"],
   });
 
   assert.equal(selected.status, "selected");
   if (selected.status === "selected") {
-    assert.equal(selected.model, "claude-sonnet-5-5-high");
+    assert.equal(selected.model, "composer-2.5");
+    assert.equal(selected.fast, undefined);
   }
 });

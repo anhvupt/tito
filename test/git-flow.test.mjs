@@ -206,6 +206,8 @@ const FINISHER_CATALOG = [
   "grok-4.7-high",
   "claude-sonnet-4-6",
   "claude-sonnet-5-5-high",
+  "composer-2.5-fast",
+  "composer-2.5",
   "cursor-grok-4.6-medium-fast",
 ];
 
@@ -270,7 +272,7 @@ test("[unit] the finisher opens one ready-for-review pull request when every che
     adapter,
   });
   assert.equal(result.status, "opened");
-  assert.equal(result.model, "claude-sonnet-5-5-high");
+  assert.equal(result.model, "composer-2.5");
   assert.equal(result.pushed, true);
   assert.equal(result.readyForReview, true);
   assert.equal(result.url, "https://example.test/pr/1");
@@ -374,7 +376,7 @@ test("[unit] pushing a base branch is refused", async () => {
   }
 });
 
-test("[unit] a missing Sonnet finisher asks and pushes nothing", async () => {
+test("[unit] a missing Composer finisher asks and pushes nothing", async () => {
   const { calls, adapter } = recordingAdapter();
   const result = await finish({
     role: "finisher",

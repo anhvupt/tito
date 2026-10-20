@@ -17,7 +17,7 @@ export const DEFAULT_MODELS = Object.freeze({
   planner: "claude-opus-5-5-medium",
   implementer: "grok-4.7-high",
   reviewer: "grok-4.7-high",
-  finisher: "claude-sonnet-5-5-high",
+  finisher: "composer-2.5",
 } as const satisfies Record<ModelRole, string>);
 export const SCREEN_LANGUAGES = ["vi", "en"] as const;
 export const TENANCY_VALUES = ["single", "multi"] as const;

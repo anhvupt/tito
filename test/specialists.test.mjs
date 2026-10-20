@@ -193,7 +193,7 @@ const DEFAULT_SLUGS = {
   planner: "claude-opus-5-5-medium",
   implementer: "grok-4.7-high",
   reviewer: "grok-4.7-high",
-  finisher: "claude-sonnet-5-5-high",
+  finisher: "composer-2.5",
 };
 
 function cardModel(card) {

@@ -269,14 +269,14 @@ Pipeline roles on Cursor resolve from that same catalog:
 | planner | Opus (`claude-opus-`, highest) |
 | test writer | Grok, highest slug without `-fast` |
 | implementer | Grok, highest slug without `-fast` |
-| finisher (docs and PR) | Sonnet (`claude-sonnet-`, highest) |
+| finisher (docs and PR) | Composer (exact slug `composer-2.5`) |
 | sandbox | Grok (`grok-`, then `cursor-grok-`, highest) |
 
 Within a family, Tito prefers a slug that does not contain `-fast`. A `-fast`
 slug is used only when it is the only match in that family, and the
-recommendation flags it. Sonnet is a Cursor family for the finisher. If that
-family is missing, Tito asks and does not substitute another model. Existing
-task classes keep the routing above.
+recommendation flags it. The Cursor finisher is the exact slug `composer-2.5`.
+If that slug is missing, Tito asks and does not fall back to a `-fast` slug or
+another family. Existing task classes keep the routing above.
 
 Model recommendation output:
 

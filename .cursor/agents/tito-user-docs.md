@@ -3,7 +3,7 @@ name: tito-user-docs
 description: >
   User documentation writer. Tito delegates this specialist only for: module finished; update user documentation.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: claude-sonnet-5-5-high
+model: composer-2.5
 readonly: false
 ---
 

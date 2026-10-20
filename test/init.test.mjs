@@ -18,7 +18,7 @@ const DEFAULT_MODELS_BLOCK = [
   "  planner: claude-opus-5-5-medium",
   "  implementer: grok-4.7-high",
   "  reviewer: grok-4.7-high",
-  "  finisher: claude-sonnet-5-5-high",
+  "  finisher: composer-2.5",
 ];
 
 const CARD_SLUGS = {
@@ -31,8 +31,8 @@ const CARD_SLUGS = {
   "tito-erp.md": "claude-opus-5-5-medium",
   "tito-qa.md": "grok-4.7-high",
   "tito-security.md": "claude-opus-5-5-medium",
-  "tito-tech-docs.md": "claude-sonnet-5-5-high",
-  "tito-user-docs.md": "claude-sonnet-5-5-high",
+  "tito-tech-docs.md": "composer-2.5",
+  "tito-user-docs.md": "composer-2.5",
 };
 
 test("[integration] PM-6 fresh init pins every card and writes the default models", async () => {
