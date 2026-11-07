@@ -666,7 +666,7 @@ Use each surface for one purpose:
 - `.agents/skills/*/SKILL.md` or `.cursor/skills/`: reusable workflows.
 - `.cursor/agents/*.md`: project-owned specialists.
 - `.cursor/BUGBOT.md`: Bugbot-specific review instructions.
-- Hooks: `tito hook before-shell` (machine-only, fail-open, no chat skill).
+- Hooks: init/upgrade add `tito hook before-shell` in `.cursor/hooks.json`; delete Tito's entry.
 - Project documentation: requirements, architecture, domain truth, and decisions.
 
 Do not duplicate instructions.

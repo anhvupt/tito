@@ -239,6 +239,54 @@ export function shippedCursorRules(): { path: string; body: string }[] {
     }));
 }
 
+export const CURSOR_HOOKS_PATH = ".cursor/hooks.json";
+
+export function shippedCursorHooks(): string {
+  return readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../../templates/cursor/hooks.json"),
+    "utf8",
+  );
+}
+
+function hasTitoHook(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasTitoHook);
+  if (value === null || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    (typeof record.command === "string" && record.command.includes("tito hook")) ||
+    Object.values(record).some(hasTitoHook)
+  );
+}
+
+export function planCursorHooks(root: string): InitFile {
+  if (!exists(root, CURSOR_HOOKS_PATH)) {
+    return { path: CURSOR_HOOKS_PATH, action: "create", body: shippedCursorHooks() };
+  }
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(root, CURSOR_HOOKS_PATH), "utf8"));
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error();
+    if (hasTitoHook(parsed)) return { path: CURSOR_HOOKS_PATH, action: "keep" };
+    const body = parsed as Record<string, unknown>;
+    const hooks =
+      body.hooks !== null && typeof body.hooks === "object" && !Array.isArray(body.hooks)
+        ? { ...(body.hooks as Record<string, unknown>) }
+        : {};
+    const current = hooks.beforeShellExecution;
+    const list = Array.isArray(current) ? [...current] : [];
+    list.push(
+      (JSON.parse(shippedCursorHooks()) as { hooks: { beforeShellExecution: unknown[] } }).hooks
+        .beforeShellExecution[0],
+    );
+    return {
+      path: CURSOR_HOOKS_PATH,
+      action: "append",
+      body: `${JSON.stringify({ ...body, hooks: { ...hooks, beforeShellExecution: list } }, null, 2)}\n`,
+    };
+  } catch {
+    return { path: CURSOR_HOOKS_PATH, action: "conflict" };
+  }
+}
+
 function agentsBootstrap(report: InspectionReport): InitFile {
   if (report.agentsMd === "absent") {
     return { path: "AGENTS.md", action: "create", body: titoBootstrapBlock() };
@@ -302,7 +350,7 @@ export function planInitialization(
   return {
     root: adoption.root,
     profile: adoption.profile,
-    files: [...files, ...agents, ...skills, pullRequest, ...rules],
+    files: [...files, ...agents, ...skills, pullRequest, ...rules, planCursorHooks(report.root)],
   };
 }
 
@@ -329,6 +377,10 @@ export function applyInitialization(plan: ReturnType<typeof planInitialization>)
     for (const file of plan.files) {
       if (file.action === "append") {
         const absolute = join(plan.root, file.path);
+        if (file.path === CURSOR_HOOKS_PATH) {
+          writeFileSync(absolute, file.body, "utf8");
+          continue;
+        }
         const current = readFileSync(absolute, "utf8");
         const separator = current.endsWith("\n") ? "\n" : "\n\n";
         writeFileSync(absolute, `${current}${separator}${file.body}`, "utf8");

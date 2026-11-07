@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "node dist/cli.js hook before-shell",
+        "matcher": "\\b(git|gh|npm)\\b",
+        "timeout": 10
+      }
+    ]
+  }
+}

@@ -145,6 +145,8 @@ agents, skills, those Tito-owned scoped rules, and the Tito section of
 `AGENTS.md`, which includes the stop that shows the test cases before any source edit. Consumer rules, consumer
 agents, and other project skills stay untouched. In a terminal, `tito upgrade --confirm` asks only for settings missing from `tito.yaml`: git base, screen language, tenancy, surfaces, auto-create pull request, and auto-merge. Enter on the auto-create question still stores yes. Enter on the auto-merge question stores no. It does not change a value that is already present, and it does not change the profile. A non-interactive upgrade does not ask. If `tito.yaml` is missing, it skips those questions.
 
+`tito init` and `tito upgrade` install Tito's shell-guard hook in `.cursor/hooks.json`. A missing file is created with Tito's `beforeShellExecution` entry. A valid file without a `tito hook` command gets that entry appended; every other key and hook stays. An existing Tito entry is left unchanged. Remove the guard by deleting Tito's entry, or the file if it only has that entry. Invalid JSON is a conflict: `init --confirm` refuses and writes nothing.
+
 Tito is installed in each project. It is not a required global command.
 An opt-in local admin index (`tito admin add|list|remove|refresh`) can register
 repos under `~/.config/tito/admin/` and store recent commit subjects, dates, and
