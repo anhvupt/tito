@@ -259,6 +259,76 @@ export function shippedCursorRules(): { path: string; body: string }[] {
     }));
 }
 
+export const CURSOR_HOOKS_PATH = ".cursor/hooks.json";
+
+export function shippedCursorHooks(): string {
+  return readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../../templates/cursor/hooks.json"),
+    "utf8",
+  );
+}
+
+function hookCommandHas(value: unknown, needle: string): boolean {
+  if (Array.isArray(value)) return value.some((item) => hookCommandHas(item, needle));
+  if (value === null || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    (typeof record.command === "string" && record.command.includes(needle)) ||
+    Object.values(record).some((item) => hookCommandHas(item, needle))
+  );
+}
+
+function shippedHookEntries(): { event: string; entry: unknown; needle: string }[] {
+  const shipped = JSON.parse(shippedCursorHooks()) as { hooks?: Record<string, unknown> };
+  const rows: { event: string; entry: unknown; needle: string }[] = [];
+  for (const [event, list] of Object.entries(shipped.hooks ?? {})) {
+    if (!Array.isArray(list)) continue;
+    for (const entry of list) {
+      const command =
+        entry !== null && typeof entry === "object"
+          ? (entry as { command?: unknown }).command
+          : undefined;
+      if (typeof command !== "string") continue;
+      const at = command.indexOf("tito hook ");
+      if (at < 0) continue;
+      rows.push({ event, entry, needle: command.slice(at) });
+    }
+  }
+  return rows;
+}
+
+export function planCursorHooks(root: string): InitFile {
+  if (!exists(root, CURSOR_HOOKS_PATH)) {
+    return { path: CURSOR_HOOKS_PATH, action: "create", body: shippedCursorHooks() };
+  }
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(root, CURSOR_HOOKS_PATH), "utf8"));
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error();
+    const body = parsed as Record<string, unknown>;
+    const hooks =
+      body.hooks !== null && typeof body.hooks === "object" && !Array.isArray(body.hooks)
+        ? { ...(body.hooks as Record<string, unknown>) }
+        : {};
+    let changed = false;
+    for (const { event, entry, needle } of shippedHookEntries()) {
+      if (hookCommandHas(body, needle)) continue;
+      const current = hooks[event];
+      const list = Array.isArray(current) ? [...current] : [];
+      list.push(entry);
+      hooks[event] = list;
+      changed = true;
+    }
+    if (!changed) return { path: CURSOR_HOOKS_PATH, action: "keep" };
+    return {
+      path: CURSOR_HOOKS_PATH,
+      action: "append",
+      body: `${JSON.stringify({ ...body, hooks }, null, 2)}\n`,
+    };
+  } catch {
+    return { path: CURSOR_HOOKS_PATH, action: "conflict" };
+  }
+}
+
 function agentsBootstrap(report: InspectionReport): InitFile {
   if (report.agentsMd === "absent") {
     return { path: "AGENTS.md", action: "create", body: titoBootstrapBlock() };
@@ -322,7 +392,7 @@ export function planInitialization(
   return {
     root: adoption.root,
     profile: adoption.profile,
-    files: [...files, ...agents, ...skills, pullRequest, ...rules],
+    files: [...files, ...agents, ...skills, pullRequest, ...rules, planCursorHooks(report.root)],
   };
 }
 
@@ -349,6 +419,10 @@ export function applyInitialization(plan: ReturnType<typeof planInitialization>)
     for (const file of plan.files) {
       if (file.action === "append") {
         const absolute = join(plan.root, file.path);
+        if (file.path === CURSOR_HOOKS_PATH) {
+          writeFileSync(absolute, file.body, "utf8");
+          continue;
+        }
         const current = readFileSync(absolute, "utf8");
         const separator = current.endsWith("\n") ? "\n" : "\n\n";
         writeFileSync(absolute, `${current}${separator}${file.body}`, "utf8");

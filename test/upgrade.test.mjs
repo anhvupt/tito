@@ -478,3 +478,93 @@ test("[integration] BT-3 upgrade creates missing topic rules and replaces an edi
   }
 });
 
+const TITO_SHELL_HOOK = {
+  command: "npx --no-install tito hook before-shell",
+  matcher: "\\b(git|gh|npm)\\b",
+  timeout: 10,
+};
+
+const TITO_MCP_HOOK = {
+  command: "npx --no-install tito hook before-mcp",
+  timeout: 10,
+};
+
+function titoHooksJson() {
+  return `${JSON.stringify(
+    {
+      version: 1,
+      hooks: {
+        beforeShellExecution: [TITO_SHELL_HOOK],
+        beforeMCPExecution: [TITO_MCP_HOOK],
+      },
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+test("[integration] H19 upgrade keeps existing Tito hook entries and leaves bytes unchanged", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const existing =
+      '{ "version": 1, "hooks": { "beforeShellExecution": [{ "command": "npx --no-install tito hook before-shell", "timeout": 99 }], "beforeMCPExecution": [{ "command": "npx --no-install tito hook before-mcp", "timeout": 10 }] } }\n';
+    mkdirSync(join(root, ".cursor"), { recursive: true });
+    writeFileSync(join(root, ".cursor/hooks.json"), existing);
+    const result = upgradeFilesOnly(root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /\.cursor\/hooks\.json: keep/);
+    assert.equal(readFileSync(join(root, ".cursor/hooks.json"), "utf8"), existing);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] MCP-12 upgrade appends the MCP entry when only the shell entry exists", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const userEdit = { command: "user-edit-hook" };
+    mkdirSync(join(root, ".cursor"), { recursive: true });
+    writeFileSync(
+      join(root, ".cursor/hooks.json"),
+      `${JSON.stringify(
+        {
+          version: 1,
+          extra: "keep-me",
+          hooks: {
+            afterFileEdit: [userEdit],
+            beforeShellExecution: [
+              { command: "npx --no-install tito hook before-shell", timeout: 99 },
+            ],
+          },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    const result = upgradeFilesOnly(root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /\.cursor\/hooks\.json: append/);
+    const parsed = JSON.parse(readFileSync(join(root, ".cursor/hooks.json"), "utf8"));
+    assert.equal(parsed.extra, "keep-me");
+    assert.deepEqual(parsed.hooks.afterFileEdit, [userEdit]);
+    assert.deepEqual(parsed.hooks.beforeShellExecution, [
+      { command: "npx --no-install tito hook before-shell", timeout: 99 },
+    ]);
+    assert.deepEqual(parsed.hooks.beforeMCPExecution.at(-1), TITO_MCP_HOOK);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] H21 upgrade --confirm creates .cursor/hooks.json when missing", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const result = upgradeFilesOnly(root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /\.cursor\/hooks\.json: create/);
+    assert.equal(readFileSync(join(root, ".cursor/hooks.json"), "utf8"), titoHooksJson());
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+

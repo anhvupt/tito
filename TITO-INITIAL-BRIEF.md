@@ -197,12 +197,10 @@ Planned commands:
 - `tito --help`
 - `tito init`
 - `tito inspect`
-- `tito worktree tidy`
-- `tito worktree tidy --confirm`
-- `/tito-worktree-tidy` (chat entry for the same operation)
+- `tito worktree tidy` [`--confirm`] (chat: `/tito-worktree-tidy`)
 - `tito adopt`
-- `tito apply`
-- `tito apply --dry-run`
+- `tito apply` `--dry-run`
+- `tito hook before-shell` / `tito hook before-mcp` (cloud agents skip)
 - `tito check`
 - `tito doctor`
 - `tito models list`
@@ -211,7 +209,7 @@ Planned commands:
 - `tito cost report`
 - `tito benchmark`
 
-Inspection must be read-only. Mutation commands must show a plan and handle conflicts safely.
+Inspection must be read-only. Mutations show a plan and handle conflicts safely.
 
 ## Technical architecture
 

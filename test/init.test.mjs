@@ -461,3 +461,131 @@ test("[integration] BT-3 init creates the five topic rules and leaves tourdef un
   }
 });
 
+const TITO_SHELL_HOOK = {
+  command: "npx --no-install tito hook before-shell",
+  matcher: "\\b(git|gh|npm)\\b",
+  timeout: 10,
+};
+
+const TITO_MCP_HOOK = {
+  command: "npx --no-install tito hook before-mcp",
+  timeout: 10,
+};
+
+function titoHooksJson() {
+  return `${JSON.stringify(
+    {
+      version: 1,
+      hooks: {
+        beforeShellExecution: [TITO_SHELL_HOOK],
+        beforeMCPExecution: [TITO_MCP_HOOK],
+      },
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+function writeHooks(root, body) {
+  mkdirSync(join(root, ".cursor"), { recursive: true });
+  writeFileSync(join(root, ".cursor/hooks.json"), body);
+}
+
+test("[integration] H17 fresh init writes Tito's .cursor/hooks.json", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    assert.equal(readFileSync(join(root, ".cursor/hooks.json"), "utf8"), titoHooksJson());
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] H18 init keeps a user afterFileEdit entry and appends Tito's hook", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const userEntry = { command: "user-edit-hook", matcher: "*.ts" };
+    writeHooks(
+      root,
+      `${JSON.stringify(
+        { version: 1, extra: "keep-me", hooks: { afterFileEdit: [userEntry] } },
+        null,
+        2,
+      )}\n`,
+    );
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const parsed = JSON.parse(readFileSync(join(root, ".cursor/hooks.json"), "utf8"));
+    assert.equal(parsed.extra, "keep-me");
+    assert.deepEqual(parsed.hooks.afterFileEdit, [userEntry]);
+    assert.deepEqual(parsed.hooks.beforeShellExecution.at(-1), TITO_SHELL_HOOK);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] H19 init keeps existing Tito hook entries and leaves bytes unchanged", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const existing =
+      '{ "version": 1, "hooks": { "beforeShellExecution": [{ "command": "npx --no-install tito hook before-shell", "timeout": 99 }], "beforeMCPExecution": [{ "command": "npx --no-install tito hook before-mcp", "timeout": 10 }] } }\n';
+    writeHooks(root, existing);
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    assert.match(confirmed.stdout, /\.cursor\/hooks\.json: keep/);
+    assert.equal(readFileSync(join(root, ".cursor/hooks.json"), "utf8"), existing);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] MCP-11 fresh init writes both Tito hook entries", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const parsed = JSON.parse(readFileSync(join(root, ".cursor/hooks.json"), "utf8"));
+    assert.deepEqual(parsed.hooks.beforeShellExecution, [TITO_SHELL_HOOK]);
+    assert.deepEqual(parsed.hooks.beforeMCPExecution, [TITO_MCP_HOOK]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] H20 invalid hooks.json is a conflict and writes nothing", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const invalid = "{ not-json\n";
+    writeHooks(root, invalid);
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 1);
+    assert.match(confirmed.stderr, /conflict/);
+    assert.equal(readFileSync(join(root, ".cursor/hooks.json"), "utf8"), invalid);
+    assert.equal(readdirSync(root).sort().join(","), ".cursor");
+    assert.deepEqual(readdirSync(join(root, ".cursor")), ["hooks.json"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] H22 init without --confirm prints hooks.json create or append and writes nothing", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const preview = run(root, ["init", "--profile", "solo-balanced", "--root", root]);
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.match(preview.stdout, /\.cursor\/hooks\.json: create/);
+    assert.equal(readdirSync(root).length, 0);
+
+    const userBody = `${JSON.stringify({ version: 1, hooks: { afterFileEdit: [{ command: "user" }] } }, null, 2)}\n`;
+    writeHooks(root, userBody);
+    const appendPreview = run(root, ["init", "--profile", "solo-balanced", "--root", root]);
+    assert.equal(appendPreview.status, 0, appendPreview.stderr);
+    assert.match(appendPreview.stdout, /\.cursor\/hooks\.json: append/);
+    assert.equal(readFileSync(join(root, ".cursor/hooks.json"), "utf8"), userBody);
+    assert.deepEqual(readdirSync(root), [".cursor"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+

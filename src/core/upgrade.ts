@@ -15,6 +15,7 @@ import {
 } from "./config.js";
 import { PULL_REQUEST_TEMPLATE_PATH, pullRequestTemplate, type BranchBase } from "./git-flow.js";
 import {
+  planCursorHooks,
   shippedCursorRules,
   shippedSkills,
   titoYamlBody,
@@ -29,7 +30,7 @@ import {
 
 export type UpgradeFile = {
   readonly path: string;
-  readonly action: "create" | "replace" | "keep";
+  readonly action: "create" | "replace" | "keep" | "append" | "conflict";
   readonly body?: string;
 };
 
@@ -93,6 +94,12 @@ export function planUpgrade(
         : { path: "AGENTS.md", action: "replace", body: next },
     );
   }
+  const hooks = planCursorHooks(root);
+  files.push(
+    hooks.action === "create" || hooks.action === "append"
+      ? { path: hooks.path, action: hooks.action, body: hooks.body }
+      : { path: hooks.path, action: hooks.action },
+  );
   return files;
 }
 

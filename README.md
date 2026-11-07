@@ -145,6 +145,8 @@ agents, skills, those Tito-owned scoped rules, and the Tito section of
 `AGENTS.md`, which includes the stop that shows the test cases before any source edit. Consumer rules, consumer
 agents, and other project skills stay untouched. In a terminal, `tito upgrade --confirm` asks only for settings missing from `tito.yaml`: git base, screen language, tenancy, surfaces, auto-create pull request, and auto-merge. Enter on the auto-create question still stores yes. Enter on the auto-merge question stores no. It does not change a value that is already present, and it does not change the profile. A non-interactive upgrade does not ask. If `tito.yaml` is missing, it skips those questions.
 
+`tito init` and `tito upgrade` install Tito's shell and MCP guard hooks in `.cursor/hooks.json`. A missing file is created with both Tito entries. A valid file gets each missing `tito hook` entry appended; other keys stay. An existing Tito entry is left unchanged. Cloud agents do not run beforeMCPExecution. Remove a guard by deleting Tito's entry, or the file if it only has those entries. Invalid JSON is a conflict: `init --confirm` refuses and writes nothing.
+
 Tito is installed in each project. It is not a required global command.
 An opt-in local admin index (`tito admin add|list|remove|refresh`) can register
 repos under `~/.config/tito/admin/` and store recent commit subjects, dates, and
@@ -191,6 +193,8 @@ node dist/cli.js admin refresh
 node dist/cli.js admin remove --root /path/to/repo
 node dist/cli.js admin retro --week 2026-W40
 node dist/cli.js guard test-first --base main --test test/example.test.mjs
+node dist/cli.js hook before-shell
+node dist/cli.js hook before-mcp
 node dist/cli.js worktree tidy
 node dist/cli.js worktree tidy --confirm
 ```
@@ -220,6 +224,14 @@ merge duration say unavailable until GitHub data is added.
 `guard test-first` checks a slice branch against `--base`. Commit 1 may change
 only the repeated `--test` files. Later commits may not change `test/**`,
 `*.test.*`, or `*.spec.*` files. A failure names the file and the commit.
+
+`hook before-shell` is machine-only (no chat skill). It reads Cursor
+beforeShellExecution JSON on stdin and writes `{permission: allow|ask|deny}` to
+stdout, then exits 0. Invalid input fails open with allow. It asks before
+base-branch pushes and merges, force-pushes, `gh pr merge` (unless
+`git.autoMerge` is true), and `npm publish`. It denies `gh pr review --approve`.
+`hook before-mcp` is the same contract for beforeMCPExecution; cloud agents do
+not run that hook.
 
 ## How work moves
 
