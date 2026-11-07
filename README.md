@@ -63,6 +63,7 @@ mode decides whether it may change anything:
 | DevOps engineer | Plan | Change infrastructure, with approval |
 | Tech docs writer | — | Update technical documentation |
 | User docs writer | — | Update user documentation |
+| Cleanup specialist | — | Remove leftover files |
 
 Several read-only specialists may work together. Coding sub-agents follow the
 profile cap: `client-careful` 3, `solo-balanced` 6, and `solo-fast` 12. Each
@@ -260,8 +261,8 @@ Optional `models` maps pipeline roles to Cursor model slugs. Each Tito specialis
 ```yaml
 models:
   explorer: cursor-grok-4.6-medium-fast
-  planner: claude-opus-5-5-medium
-  implementer: grok-4.7-high
+  planner: grok-4.7-high
+  implementer: cursor-grok-4.6-high
   reviewer: grok-4.7-high
   finisher: composer-2.5
 ```

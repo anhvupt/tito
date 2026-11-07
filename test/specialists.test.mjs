@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compiledCursorAgents, compileCursorAgent } from "../dist/core/agents.js";
+import { compiledCursorAgents, compileCursorAgent, cursorAgentPath } from "../dist/core/agents.js";
 import {
   DelegationError,
   documentationHandoff,
+  READ_ONLY_SPECIALIST_IDS,
   SPECIALISTS,
+  WRITER_SPECIALIST_IDS,
   validateDelegation,
 } from "../dist/core/specialists.js";
 
@@ -182,6 +184,7 @@ const ROLE_OF = {
   "qa-reviewer": "reviewer",
   "tech-docs-writer": "finisher",
   "user-docs-writer": "finisher",
+  cleaner: "finisher",
   architect: "planner",
   "product-analyst": "planner",
   "security-reviewer": "planner",
@@ -190,8 +193,8 @@ const ROLE_OF = {
 
 const DEFAULT_SLUGS = {
   explorer: "cursor-grok-4.6-medium-fast",
-  planner: "claude-opus-5-5-medium",
-  implementer: "grok-4.7-high",
+  planner: "grok-4.7-high",
+  implementer: "cursor-grok-4.6-high",
   reviewer: "grok-4.7-high",
   finisher: "composer-2.5",
 };
@@ -236,4 +239,47 @@ test("[unit] WP-6 product analyst returns Domain and at most one suggestion", ()
   assert.match(card, /Domain/);
   assert.match(card, /business impact/);
   assert.match(card, /at most one optional/);
+});
+
+test("[unit] MD-2 compileCursorAgent pins implementer and planner slugs", () => {
+  for (const id of ["backend-engineer", "frontend-engineer", "devops-engineer"]) {
+    assert.equal(cardModel(compileCursorAgent(id)), "cursor-grok-4.6-high", id);
+  }
+  for (const id of ["architect", "product-analyst", "erp-specialist", "security-reviewer"]) {
+    assert.equal(cardModel(compileCursorAgent(id)), "grok-4.7-high", id);
+  }
+});
+
+test("[unit] CL-1 SPECIALISTS.cleaner is a Scout finisher with a compiled card", () => {
+  const manifest = SPECIALISTS.cleaner;
+  assert.equal(manifest.id, "cleaner");
+  assert.equal(manifest.model.role, "finisher");
+  assert.equal(manifest.model.tier, "Scout");
+  assert.deepEqual(
+    manifest.modes.map((mode) => [mode.id, mode.capability]),
+    [["implement", "write-files"]],
+  );
+  assert.equal(WRITER_SPECIALIST_IDS.includes("cleaner"), true);
+  assert.equal(READ_ONLY_SPECIALIST_IDS.includes("cleaner"), false);
+  assert.equal(cursorAgentPath("cleaner"), ".cursor/agents/tito-cleaner.md");
+  const card = compileCursorAgent("cleaner");
+  assert.equal(cardModel(card), "composer-2.5");
+  assert.match(card, /^name: tito-cleaner$/m);
+});
+
+test("[unit] CL-2 validateDelegation can run cleaner as a writer; two documentation writers still reject", () => {
+  const result = validateDelegation(
+    [activation("cleaner", "implement", "Remove leftover files")],
+    "implementation",
+  );
+  assert.equal(result.mutator?.specialistId, "cleaner");
+  assert.equal(result.mutator?.capability, "write-files");
+  rejects(
+    [
+      activation("tech-docs-writer", "update"),
+      activation("user-docs-writer", "update"),
+    ],
+    "implementation",
+    "multiple-mutators",
+  );
 });

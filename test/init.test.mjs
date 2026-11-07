@@ -15,24 +15,25 @@ function run(root, args) {
 const DEFAULT_MODELS_BLOCK = [
   "models:",
   "  explorer: cursor-grok-4.6-medium-fast",
-  "  planner: claude-opus-5-5-medium",
-  "  implementer: grok-4.7-high",
+  "  planner: grok-4.7-high",
+  "  implementer: cursor-grok-4.6-high",
   "  reviewer: grok-4.7-high",
   "  finisher: composer-2.5",
 ];
 
 const CARD_SLUGS = {
   "tito-explorer.md": "cursor-grok-4.6-medium-fast",
-  "tito-product.md": "claude-opus-5-5-medium",
-  "tito-architect.md": "claude-opus-5-5-medium",
-  "tito-backend.md": "grok-4.7-high",
-  "tito-frontend.md": "grok-4.7-high",
-  "tito-devops.md": "grok-4.7-high",
-  "tito-erp.md": "claude-opus-5-5-medium",
+  "tito-product.md": "grok-4.7-high",
+  "tito-architect.md": "grok-4.7-high",
+  "tito-backend.md": "cursor-grok-4.6-high",
+  "tito-frontend.md": "cursor-grok-4.6-high",
+  "tito-devops.md": "cursor-grok-4.6-high",
+  "tito-erp.md": "grok-4.7-high",
   "tito-qa.md": "grok-4.7-high",
-  "tito-security.md": "claude-opus-5-5-medium",
+  "tito-security.md": "grok-4.7-high",
   "tito-tech-docs.md": "composer-2.5",
   "tito-user-docs.md": "composer-2.5",
+  "tito-cleaner.md": "composer-2.5",
 };
 
 test("[integration] PM-6 fresh init pins every card and writes the default models", async () => {
@@ -43,7 +44,7 @@ test("[integration] PM-6 fresh init pins every card and writes the default model
     assert.equal(confirmed.status, 0, confirmed.stderr);
     const yaml = readFileSync(join(root, "tito.yaml"), "utf8");
     assert.equal(yaml.endsWith(`${DEFAULT_MODELS_BLOCK.join("\n")}\n`), true, yaml);
-    assert.equal(parseConfig(yaml).models.implementer, "grok-4.7-high");
+    assert.equal(parseConfig(yaml).models.implementer, "cursor-grok-4.6-high");
     const cards = readdirSync(join(root, ".cursor/agents")).sort();
     assert.deepEqual(cards, Object.keys(CARD_SLUGS).sort());
     for (const name of cards) {

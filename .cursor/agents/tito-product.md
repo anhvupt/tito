@@ -3,7 +3,7 @@ name: tito-product
 description: >
   Requirements analyst. Tito delegates this specialist only for: clarify requirements; define acceptance.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: claude-opus-5-5-medium
+model: grok-4.7-high
 readonly: true
 ---
 

@@ -165,8 +165,8 @@ test("non-TTY upgrade does not require settings answers", { timeout: 5000 }, () 
 
 const DEFAULT_MODELS = {
   explorer: "cursor-grok-4.6-medium-fast",
-  planner: "claude-opus-5-5-medium",
-  implementer: "grok-4.7-high",
+  planner: "grok-4.7-high",
+  implementer: "cursor-grok-4.6-high",
   reviewer: "grok-4.7-high",
   finisher: "composer-2.5",
 };

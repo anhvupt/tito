@@ -14,8 +14,8 @@ export type ModelRole = (typeof MODEL_ROLES)[number];
 export type ModelsConfig = { readonly [role in ModelRole]?: string };
 export const DEFAULT_MODELS = Object.freeze({
   explorer: "cursor-grok-4.6-medium-fast",
-  planner: "claude-opus-5-5-medium",
-  implementer: "grok-4.7-high",
+  planner: "grok-4.7-high",
+  implementer: "cursor-grok-4.6-high",
   reviewer: "grok-4.7-high",
   finisher: "composer-2.5",
 } as const satisfies Record<ModelRole, string>);

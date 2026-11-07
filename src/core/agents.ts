@@ -13,6 +13,7 @@ const AGENT_FILE_NAMES = {
   "security-reviewer": "tito-security.md",
   "tech-docs-writer": "tito-tech-docs.md",
   "user-docs-writer": "tito-user-docs.md",
+  cleaner: "tito-cleaner.md",
 } as const satisfies Record<SpecialistId, string>;
 
 export function cursorAgentPath(id: SpecialistId): string {

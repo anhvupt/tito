@@ -12,6 +12,7 @@ export const SPECIALIST_IDS = [
   "security-reviewer",
   "tech-docs-writer",
   "user-docs-writer",
+  "cleaner",
 ] as const;
 
 export const WRITER_SPECIALIST_IDS = [
@@ -20,6 +21,7 @@ export const WRITER_SPECIALIST_IDS = [
   "devops-engineer",
   "tech-docs-writer",
   "user-docs-writer",
+  "cleaner",
 ] as const;
 
 export const READ_ONLY_SPECIALIST_IDS = [
@@ -83,6 +85,7 @@ export const SPECIALIST_MODEL_ROLES = Object.freeze({
   "security-reviewer": "planner",
   "tech-docs-writer": "finisher",
   "user-docs-writer": "finisher",
+  cleaner: "finisher",
 } as const satisfies Record<SpecialistId, ModelRole>);
 
 const phase = Object.freeze({
@@ -238,6 +241,15 @@ export const SPECIALISTS = Object.freeze({
     modes: [specialistMode("update", "write-files", phase.implementation)],
     stopCondition:
       "Apply the plan's Docs impact (update named docs, or record a waiver) before a pull request. The module-end pass still covers larger docs. Stop after that docs work matches the plan.",
+  }),
+  cleaner: manifest("cleaner", {
+    tier: "Scout",
+    role: "Cleanup specialist",
+    triggers: ["leftover files", "unused local artifacts", "dead code cleanup"],
+    knowledge: [knowledge("cleanup-safety", "always")],
+    modes: [specialistMode("implement", "write-files", phase.implementation)],
+    stopCondition:
+      "Stop after the approved cleanup slice is verified. Do not delete remote branches, production data, secrets, or the main checkout. Do not rebase.",
   }),
 } as const satisfies Record<SpecialistId, SpecialistManifest>);
 
