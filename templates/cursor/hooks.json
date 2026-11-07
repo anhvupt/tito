@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "npx --no-install tito hook before-shell",
+        "matcher": "\\b(git|gh|npm)\\b",
+        "timeout": 10
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "npx --no-install tito hook before-mcp",
+        "timeout": 10
+      }
+    ]
+  }
+}
