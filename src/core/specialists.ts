@@ -13,6 +13,7 @@ export const SPECIALIST_IDS = [
   "tech-docs-writer",
   "user-docs-writer",
   "cleaner",
+  "startup",
 ] as const;
 
 export const WRITER_SPECIALIST_IDS = [
@@ -22,6 +23,7 @@ export const WRITER_SPECIALIST_IDS = [
   "tech-docs-writer",
   "user-docs-writer",
   "cleaner",
+  "startup",
 ] as const;
 
 export const READ_ONLY_SPECIALIST_IDS = [
@@ -86,6 +88,7 @@ export const SPECIALIST_MODEL_ROLES = Object.freeze({
   "tech-docs-writer": "finisher",
   "user-docs-writer": "finisher",
   cleaner: "finisher",
+  startup: "finisher",
 } as const satisfies Record<SpecialistId, ModelRole>);
 
 const phase = Object.freeze({
@@ -250,6 +253,17 @@ export const SPECIALISTS = Object.freeze({
     modes: [specialistMode("implement", "write-files", phase.implementation)],
     stopCondition:
       "Stop after the approved cleanup slice is verified. Do not delete remote branches, production data, secrets, or the main checkout. Do not rebase.",
+  }),
+  startup: manifest("startup", {
+    tier: "Scout",
+    role: "Local startup",
+    triggers: ["local infra", "start apps", "pending migrations"],
+    knowledge: [knowledge("local-startup", "task")],
+    modes: [
+      specialistMode("start", "write-infrastructure", phase.implementation, ["human-approval"]),
+    ],
+    stopCondition:
+      "Stop after missing local processes are started. Ask before applying pending migrations. Local only. Do not migrate remote or production databases. Do not docker compose down -v. Do not drop data.",
   }),
 } as const satisfies Record<SpecialistId, SpecialistManifest>);
 

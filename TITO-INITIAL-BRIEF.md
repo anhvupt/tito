@@ -80,6 +80,7 @@ Tito may delegate to:
 - Tech docs writer
 - User docs writer
 - Cleanup specialist
+- Local startup
 - Project-owned agents
 
 Only specialists relevant to the task should be loaded. Tito remains the root coordinator and is never delegated to as a specialist.

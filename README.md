@@ -64,6 +64,7 @@ mode decides whether it may change anything:
 | Tech docs writer | — | Update technical documentation |
 | User docs writer | — | Update user documentation |
 | Cleanup specialist | — | Remove leftover files |
+| Local startup | — | Start missing local processes; ask before pending migrations |
 
 Several read-only specialists may work together. Coding sub-agents follow the
 profile cap: `client-careful` 3, `solo-balanced` 6, and `solo-fast` 12. Each
@@ -94,6 +95,7 @@ core and exposed through both chat and the CLI:
 - `/tito` is the open-ended coordinator.
 - `/tito-inspect` and `tito inspect` produce the same repository report.
 - `/tito-apply` and `tito apply --dry-run` produce the same adoption plan.
+- `/tito-local-startup` brings this repo's local stack up.
 
 Tito-coordinated chat responses begin with `Hola, Tito here!` so you can see
 that the coordinator is active. The greeting is not added to CLI or

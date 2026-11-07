@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { compiledCursorAgents, compileCursorAgent, cursorAgentPath } from "../dist/core/agents.js";
 import {
   DelegationError,
@@ -185,6 +187,7 @@ const ROLE_OF = {
   "tech-docs-writer": "finisher",
   "user-docs-writer": "finisher",
   cleaner: "finisher",
+  startup: "finisher",
   architect: "planner",
   "product-analyst": "advisor",
   "security-reviewer": "planner",
@@ -292,4 +295,46 @@ test("[unit] CL-2 validateDelegation can run cleaner as a writer; two documentat
     "implementation",
     "multiple-mutators",
   );
+});
+
+test("[unit] SU-1 SPECIALISTS.startup is Scout finisher, mode start write-infrastructure with human-approval; compiled card model composer-2.5; Math.ceil(card.length/4) <= 400", () => {
+  const manifest = SPECIALISTS.startup;
+  assert.equal(manifest.id, "startup");
+  assert.equal(manifest.model.role, "finisher");
+  assert.equal(manifest.model.tier, "Scout");
+  assert.equal(manifest.role, "Local startup");
+  assert.deepEqual(manifest.triggers, ["local infra", "start apps", "pending migrations"]);
+  assert.deepEqual(manifest.knowledge, [{ id: "local-startup", load: "task" }]);
+  assert.deepEqual(
+    manifest.modes.map((mode) => [mode.id, mode.capability, mode.gates, [...mode.phases]]),
+    [["start", "write-infrastructure", ["human-approval"], ["implementation"]]],
+  );
+  assert.equal(WRITER_SPECIALIST_IDS.includes("startup"), true);
+  assert.equal(READ_ONLY_SPECIALIST_IDS.includes("startup"), false);
+  assert.equal(cursorAgentPath("startup"), ".cursor/agents/tito-startup.md");
+  const card = compileCursorAgent("startup");
+  assert.equal(cardModel(card), "composer-2.5");
+  assert.match(card, /^name: tito-startup$/m);
+  assert.ok(Math.ceil(card.length / 4) <= 400, `${card.length} chars`);
+});
+
+test("[unit] SU-2 shipped skill has name tito-local-startup, disable-model-invocation: true, and tells the agent to ask before migrate", () => {
+  const skill = readFileSync(
+    fileURLToPath(new URL("../templates/cursor/skills/tito-local-startup/SKILL.md", import.meta.url)),
+    "utf8",
+  );
+  assert.match(skill, /^name: tito-local-startup$/m);
+  assert.match(skill, /^disable-model-invocation: true$/m);
+  assert.match(skill, /ask before/i);
+  assert.match(skill, /migrat/i);
+});
+
+test("[unit] SU-4 validateDelegation can activate startup:start in implementation", () => {
+  const result = validateDelegation(
+    [activation("startup", "start", "Start missing local processes")],
+    "implementation",
+  );
+  assert.equal(result.mutator?.specialistId, "startup");
+  assert.equal(result.mutator?.modeId, "start");
+  assert.equal(result.mutator?.capability, "write-infrastructure");
 });
