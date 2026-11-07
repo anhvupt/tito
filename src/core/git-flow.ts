@@ -218,18 +218,24 @@ export function pullRequestDescription(input: PullRequestDescriptionInput): stri
 
 export function mergeDecision(input: {
   userAskedToMerge: boolean;
-  hasApproval: boolean;
+  autoMerge?: boolean;
+  profile?: string;
+  touchesEscalation?: boolean;
 }): { readonly allowed: boolean; readonly reason: string } {
-  if (!input.userAskedToMerge) {
-    return { allowed: false, reason: "Wait for the user to call for the merge." };
+  if (input.userAskedToMerge) {
+    return { allowed: true, reason: "The user called for the merge." };
   }
-  if (!input.hasApproval) {
-    return { allowed: false, reason: "The pull request has no approval." };
+  if (
+    input.autoMerge === true &&
+    input.profile !== "client-careful" &&
+    input.touchesEscalation !== true
+  ) {
+    return {
+      allowed: true,
+      reason: "git.autoMerge is the standing merge call.",
+    };
   }
-  return {
-    allowed: true,
-    reason: "The user called for the merge and the pull request has an approval.",
-  };
+  return { allowed: false, reason: "Wait for the user to call for the merge." };
 }
 
 export function canApprovePullRequest(): false {

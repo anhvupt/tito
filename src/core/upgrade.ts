@@ -144,6 +144,7 @@ export function missingSettings(config: TitoConfig): SettingKey[] {
   if (config.product?.tenancy === undefined) missing.push("tenancy");
   if (config.product?.surfaces === undefined) missing.push("surfaces");
   if (config.git?.autoPullRequest === undefined) missing.push("autoPullRequest");
+  if (config.git?.autoMerge === undefined) missing.push("autoMerge");
   return missing;
 }
 
@@ -155,6 +156,7 @@ export function mergeSettings(yamlText: string, answers: TitoSettings): string {
     tenancy?: Tenancy;
     surfaces?: readonly ProductSurface[];
     autoPullRequest?: boolean;
+    autoMerge?: boolean;
   } = {};
   let changed = false;
 
@@ -169,6 +171,13 @@ export function mergeSettings(yamlText: string, answers: TitoSettings): string {
   if (existingAuto !== undefined) settings.autoPullRequest = existingAuto;
   else if (answers.autoPullRequest !== undefined) {
     settings.autoPullRequest = answers.autoPullRequest;
+    changed = true;
+  }
+
+  const existingMerge = config.git?.autoMerge;
+  if (existingMerge !== undefined) settings.autoMerge = existingMerge;
+  else if (answers.autoMerge !== undefined) {
+    settings.autoMerge = answers.autoMerge;
     changed = true;
   }
 

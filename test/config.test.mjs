@@ -174,6 +174,37 @@ test("parses git.autoPullRequest and still accepts defaultBase alone", () => {
   assert.equal(unknownKey[0].path, "git.remote");
 });
 
+test("[unit] M1 git.autoMerge true parses valid with value true", () => {
+  assert.deepEqual(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\ngit:\n  autoMerge: true\n"),
+    { schemaVersion: 1, profile: "solo-balanced", git: { autoMerge: true } },
+  );
+  assert.equal(
+    parseConfig("schemaVersion: 1\nprofile: solo-balanced\ngit:\n  autoMerge: true\n").git.autoMerge,
+    true,
+  );
+});
+
+test('[unit] M2 git.autoMerge "yes" is a validation error naming git.autoMerge', () => {
+  const issues = issueCodes(
+    'schemaVersion: 1\nprofile: solo-balanced\ngit:\n  autoMerge: "yes"\n',
+  );
+  assert.deepEqual(
+    issues.map((item) => item.code),
+    ["unknown-field"],
+  );
+  assert.equal(issues[0].path, "git.autoMerge");
+  assert.match(issues[0].message, /git\.autoMerge/);
+  assert.match(issues[0].message, /must be a boolean/);
+});
+
+test("[unit] M3 no git block is valid and autoMerge is undefined", () => {
+  const config = parseConfig("schemaVersion: 1\nprofile: solo-balanced\n");
+  assert.deepEqual(config, { schemaVersion: 1, profile: "solo-balanced" });
+  assert.equal(config.git, undefined);
+  assert.equal(config.git?.autoMerge, undefined);
+});
+
 test("parses optional product.screenLanguage and rejects other product fields", () => {
   const vietnamese = parseConfig(
     "schemaVersion: 1\nprofile: solo-balanced\nproduct:\n  screenLanguage: vi\n",
