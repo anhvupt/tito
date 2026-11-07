@@ -93,16 +93,7 @@ Docs named in the plan's Docs impact are updated, or the user waives them, befor
 
 ## Configuration layers
 
-Apply policy in this order:
-
-1. Core safety floor
-2. Project risk profile
-3. Domain packs
-4. Technology packs
-5. Project-owned rules and documentation
-6. Current task instructions
-
-A task may increase caution. It must not silently weaken the project safety floor.
+Apply policy in this order: core safety floor, project risk profile, domain packs, technology packs, project-owned rules and documentation, current task instructions. A task may increase caution. It must not silently weaken the project safety floor.
 
 Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid. Optional `git.autoPullRequest` is a boolean. Missing it is valid. Optional `git.autoMerge` is a boolean. Missing it is off. Optional `models` maps pipeline roles (`explorer`, `planner`, `advisor`, `implementer`, `reviewer`, `finisher`) to non-empty model slugs. Each specialist compiles to one role. Missing keys use the package defaults; empty or unknown keys fail validation. Init writes the full map; upgrade adds missing roles only.
 
@@ -189,44 +180,15 @@ Future profile for teams of approximately 2–5 people.
 
 ## Mandatory escalation
 
-Regardless of profile, escalate to careful handling for:
-
-- Authentication and authorization
-- Payments
-- Secrets
-- Production data
-- Destructive database changes
-- Privacy-sensitive information
-- Public infrastructure
-- Irreversible external actions
-- Accounting and financial invariants
+Regardless of profile, escalate to careful handling for authentication and authorization, payments, secrets, production data, destructive database changes, privacy-sensitive information, public infrastructure, irreversible external actions, and accounting and financial invariants.
 
 ## Token-efficiency contract
 
 Tito can guarantee limits on its own context, fan-out, and retries. It cannot guarantee total model usage where the underlying platform does not expose or control it.
 
-Initial budgets:
+Initial budgets: bootstrap context 1,500 estimated tokens; task packet 1,200; specialist card 400; domain context 2,000. Ordinary task: one agent by default. Reviewed implementation: maximum two agents by default. Retry: maximum one per agent without approval.
 
-- Bootstrap context: maximum 1,500 estimated tokens
-- Task packet: maximum 1,200 estimated tokens
-- Specialist card: maximum 400 estimated tokens
-- Domain context: maximum 2,000 estimated tokens
-- Ordinary task: one agent by default
-- Reviewed implementation: maximum two agents by default
-- Retry: maximum one per agent without approval
-
-Tito uses progressive disclosure:
-
-- Load a compact bootstrap globally.
-- Load the project profile once.
-- Load only relevant domain and stack fragments.
-- Read project documentation on demand.
-- Never preload every specialist.
-- Never duplicate the same rules across multiple instruction surfaces.
-
-A trivial task should not spawn another agent.
-`test/budgets.test.mjs` checks the load paths, including the description catalog Cursor shows on every turn.
-A path over budget carries a ceiling that may only go down.
+Progressive disclosure: load a compact bootstrap globally, the project profile once, and only relevant domain and stack fragments. Read project documentation on demand. Never preload every specialist. Never duplicate the same rules across instruction surfaces. A trivial task should not spawn another agent. `test/budgets.test.mjs` checks the load paths, including the description catalog Cursor shows on every turn. A path over budget carries a ceiling that may only go down.
 
 ## Cost-aware model routing
 
@@ -234,65 +196,15 @@ Each Tito specialist file under `.cursor/agents/` pins a concrete model slug in 
 
 `inherit` is not a model choice. Tito never passes `inherit` when launching a sub-agent. The handoff names the resolved slug from `tito.yaml` for that role. When the role's model family is out of usage, Tito falls back to a Cursor-pool slug whose name starts with `composer-`, states that fallback in the output, and never substitutes the coordinator's model.
 
-Tito recommends a capability tier before choosing a specific model:
+Tiers: Scout (search, exploration, classification, routine summaries); Standard (bounded implementation, tests, ordinary reviews); Reasoning (architecture, ambiguity, accounting, security, concurrency); Specialist (visual work, large context, research, or model-specific strengths). Plan mode should use the Reasoning tier by default when technical decisions, architecture, ambiguity, migrations, security, or multiple slices are involved. An obvious bounded plan may use Standard. Respect an explicit user model choice.
 
-- Scout: search, exploration, classification, routine summaries
-- Standard: bounded implementation, tests, ordinary reviews
-- Reasoning: architecture, ambiguity, accounting, security, concurrency
-- Specialist: visual work, large context, research, or model-specific strengths
+Start with the least expensive tier likely to succeed. Escalate only after uncertainty, failure, or increased risk. Avoid parallel premium-tier models by default; independent slices still run together, each on its own branch, up to the profile cap. Never silently substitute a materially more expensive model. Avoid hardcoded pricing assumptions. Label token and cost estimates as estimates.
 
-Plan mode should use the Reasoning tier by default when technical decisions,
-architecture, ambiguity, migrations, security, or multiple slices are involved.
-An obvious bounded plan may use Standard. Respect an explicit user model choice.
+Host and class routing stays deterministic and catalog-resolved. On Cursor, explore, docs, and ordinary work prefer Grok (first `grok-`, then `cursor-grok-`, highest version). Cursor core prefers Codex (a slug that contains `codex`, otherwise `composer-`, highest version). Cursor reasoning uses `claude-opus-` (highest version). On Claude, explore and docs use `claude-sonnet-` (lowest version), ordinary uses `claude-sonnet-` (highest version), and core plus reasoning use `claude-opus-` (highest version). If a family is unavailable in the live catalog, Tito asks instead of substituting a different family.
 
-Tito should:
+Pipeline roles on Cursor resolve from that same catalog: explorer Grok (`grok-`, then `cursor-grok-`, highest); planner Opus (`claude-opus-`, highest); test writer and implementer Grok, highest slug without `-fast`; finisher exact `composer-2.5`; sandbox Grok (`grok-`, then `cursor-grok-`, highest). Within a family, Tito prefers a slug that does not contain `-fast`. A `-fast` slug is used only when it is the only match in that family, and the recommendation flags it. If `composer-2.5` is missing, Tito asks and does not fall back to a `-fast` slug or another family. Existing task classes keep the routing above.
 
-- Start with the least expensive tier likely to succeed.
-- Escalate only after uncertainty, failure, or increased risk.
-- Respect explicit user model choices.
-- Avoid parallel premium-tier models by default. Independent slices still run together, each on its own branch, up to the profile cap.
-- Never silently substitute a materially more expensive model.
-- Avoid hardcoded pricing assumptions.
-- Clearly label token and cost estimates as estimates.
-
-Host and class routing stays deterministic and catalog-resolved. On Cursor,
-explore, docs, and ordinary work prefer Grok (first `grok-`, then
-`cursor-grok-`, highest version). Cursor core work prefers Codex (a slug that
-contains `codex`, otherwise `composer-`, highest version). Cursor reasoning
-uses `claude-opus-` (highest version). On Claude, explore and docs use
-`claude-sonnet-` (lowest version), ordinary uses `claude-sonnet-` (highest
-version), and core plus reasoning use `claude-opus-` (highest version). If a
-family is unavailable in the live catalog, Tito asks instead of substituting a
-different family.
-
-Pipeline roles on Cursor resolve from that same catalog:
-
-| Role | Cursor family |
-| --- | --- |
-| explorer | Grok (`grok-`, then `cursor-grok-`, highest) |
-| planner | Opus (`claude-opus-`, highest) |
-| test writer | Grok, highest slug without `-fast` |
-| implementer | Grok, highest slug without `-fast` |
-| finisher (docs and PR) | Composer (exact slug `composer-2.5`) |
-| sandbox | Grok (`grok-`, then `cursor-grok-`, highest) |
-
-Within a family, Tito prefers a slug that does not contain `-fast`. A `-fast`
-slug is used only when it is the only match in that family, and the
-recommendation flags it. The Cursor finisher is the exact slug `composer-2.5`.
-If that slug is missing, Tito asks and does not fall back to a `-fast` slug or
-another family. Existing task classes keep the routing above.
-
-Model recommendation output:
-
-- Task
-- Risk
-- Recommended tier
-- Recommended model
-- Relative cost
-- Reason
-- Cheaper alternative
-- Escalation condition
-- Fast flag, when the only family match is a `-fast` slug
+Recommendation output: Task, Risk, Recommended tier, Recommended model, Relative cost, Reason, Cheaper alternative, Escalation condition, and Fast flag when the only family match is a `-fast` slug.
 
 ## Existing-project adoption
 
@@ -520,26 +432,7 @@ For every task, Tito should recommend one of:
 
    Sometimes add one short joke after `Hola, Tito here!`. The joke does not replace the answer. Skip it when the user is blocked, when the news is bad, and in CLI or machine-readable output.
 
-For multi-slice work, Tito represents the approved work as a dependency-aware
-work plan. Read-only, implementation, and review slices name their explicit
-prerequisites. The graph determines readiness; the lifecycle remains the
-authority for human approval and implementation state.
-
-- Independent read-only slices may be ready together.
-- Multiple implementation slices may be ready candidates. Tito does not
-  select one silently. When two or more are independent, Tito sends those
-  sub-agents together, each on its own branch, up to the profile cap, and
-  does not line them up one after another. Active coding slices stay within
-  the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12.
-  Documentation writers stay one at a time. Check out each branch only after
-  the user accepts that branch.
-- A review slice may start when its implementation reaches
-  `READY_FOR_REVIEW`.
-- In `client-careful`, implementation dependents wait for
-  `APPROVED_FOR_COMMIT`. In `solo-balanced` and `solo-fast`, ordinary
-  dependents may proceed at `READY_FOR_REVIEW`.
-- Independent-review requirements always raise the prerequisite threshold to
-  `APPROVED_FOR_COMMIT`.
+For multi-slice work, Tito represents the approved work as a dependency-aware work plan. Read-only, implementation, and review slices name their explicit prerequisites. The graph determines readiness; the lifecycle remains the authority for human approval and implementation state. Independent read-only slices may be ready together. Multiple implementation slices may be ready candidates; Tito does not select one silently. When two or more are independent, Tito sends those sub-agents together, each on its own branch, up to the profile cap, and does not line them up one after another. Active coding slices stay within the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Documentation writers stay one at a time. Check out each branch only after the user accepts that branch. A review slice may start when its implementation reaches `READY_FOR_REVIEW`. In `client-careful`, implementation dependents wait for `APPROVED_FOR_COMMIT`. In `solo-balanced` and `solo-fast`, ordinary dependents may proceed at `READY_FOR_REVIEW`. Independent-review requirements always raise the prerequisite threshold to `APPROVED_FOR_COMMIT`.
 
 3. **Agent mode**
 
@@ -603,102 +496,21 @@ A named slice that the user explicitly marks as not needing a plan may use:
 
 ### Cursor lifecycle
 
-Tito maintains its own durable lifecycle:
+Tito maintains its own durable lifecycle: `DISCOVERY`, `PLANNED`, `APPROVED`, `IMPLEMENTING`, `READY_FOR_REVIEW`, `APPROVED_FOR_COMMIT`, `DONE`. `DISCOVERY` is the intent check, then clarify. `PLANNED` means the plan has all five sections: Domain, Decisions, Test cases, Docs impact, and Slices and branch.
 
-- `DISCOVERY`
-- `PLANNED`
-- `APPROVED`
-- `IMPLEMENTING`
-- `READY_FOR_REVIEW`
-- `APPROVED_FOR_COMMIT`
-- `DONE`
-
-`DISCOVERY` is the intent check, then clarify. `PLANNED` means the plan has all five sections: Domain, Decisions, Test cases, Docs impact, and Slices and branch.
-
-Do not infer lifecycle state from Cursor's UI.
-
-Do not depend on:
-
-- the currently selected IDE mode;
-- whether a Plan Build button was clicked;
-- private Cursor storage;
-- undocumented tool payloads;
-- transcript internals;
-- Cursor UI DOM.
-
-Mode transitions require an explicit user action or supported CLI/SDK invocation.
-
-Persist compact handoff artifacts when context must survive a mode change. Do not assume conversation context automatically transfers between modes.
+Do not infer lifecycle state from Cursor's UI, selected IDE mode, Plan Build, private Cursor storage, undocumented tool payloads, transcript internals, or Cursor UI DOM. Mode transitions require an explicit user action or supported CLI/SDK invocation. Persist compact handoff artifacts when context must survive a mode change. Do not assume conversation context automatically transfers between modes.
 
 ### Browser routing
 
-Use the least expensive browser capability sufficient for verification:
-
-- Static page or documentation: search or fetch.
-- One simple navigation or screenshot: direct browser action.
-- Multi-step form: browser specialist.
-- Authenticated workflow: browser specialist.
-- Console or network debugging: browser specialist.
-- Visual iteration: browser specialist.
-- Isolated full end-to-end workflow: cloud/computer-use agent when explicitly appropriate.
-
-Interactive browser testing belongs in Agent mode.
-
-Tito should specify the required outcome instead of depending on internal browser tool names.
-
-Example browser verification packet:
-
-Verify:
-
-- the user can complete the changed workflow;
-- validation appears for invalid input;
-- success navigation is correct;
-- no browser console errors occur;
-- no failed relevant network requests occur;
-- capture screenshots of materially changed UI states.
-
-Warn before using shared, sensitive, or production credentials. Never perform production mutations during verification without explicit approval.
+Use the least expensive browser capability sufficient for verification: search or fetch for a static page or documentation; a direct browser action for one simple navigation or screenshot; a browser specialist for a multi-step form, authenticated workflow, console or network debugging, or visual iteration; a cloud/computer-use agent for an isolated full end-to-end workflow when explicitly appropriate. Interactive browser testing belongs in Agent mode. Specify the required outcome instead of internal browser tool names. Verify the changed workflow, invalid-input validation, success navigation, no console errors, no failed relevant network requests, and screenshots of materially changed UI. Warn before using shared, sensitive, or production credentials. Never perform production mutations during verification without explicit approval.
 
 ### Cursor project surfaces
 
-Use each surface for one purpose:
-
-- `AGENTS.md`: compact, always-relevant Tito bootstrap.
-- `.cursor/rules/*.mdc`: scoped architecture or file-specific invariants.
-- `.agents/skills/*/SKILL.md` or `.cursor/skills/`: reusable workflows.
-- `.cursor/agents/*.md`: project-owned specialists.
-- `.cursor/BUGBOT.md`: Bugbot-specific review instructions.
-- Project documentation: requirements, architecture, domain truth, and decisions.
-
-Do not duplicate the same instructions across these surfaces.
-
-Keep globally loaded instructions small. Load scoped rules, skills, domain knowledge, and project documentation only when relevant.
+Use each surface for one purpose: `AGENTS.md` for the compact always-relevant Tito bootstrap; `.cursor/rules/*.mdc` for scoped architecture or file-specific invariants; `.agents/skills/*/SKILL.md` or `.cursor/skills/` for reusable workflows; `.cursor/agents/*.md` for project-owned specialists; `.cursor/BUGBOT.md` for Bugbot-specific review instructions; project documentation for requirements, architecture, domain truth, and decisions. Do not duplicate the same instructions across these surfaces. Keep globally loaded instructions small. Load scoped rules, skills, domain knowledge, and project documentation only when relevant.
 
 ### Subagent policy
 
-Default solo behavior:
-
-- one root Tito coordinator;
-- one active code writer;
-- relevant read-only specialists or reviewers, each with a named purpose;
-- no additional writer.
-
-Good subagent uses:
-
-- repository exploration;
-- independent verification;
-- domain analysis;
-- security review;
-- browser workflows;
-- bounded research.
-
-Avoid:
-
-- redundant agents answering the same question;
-- multiple writers editing the same area;
-- premium-model fan-out without approval;
-- delegating trivial work;
-- recursive coordinator creation.
+Default solo behavior: one root Tito coordinator, one active code writer, relevant read-only specialists or reviewers each with a named purpose, and no additional writer. Good subagent uses: repository exploration, independent verification, domain analysis, security review, browser workflows, and bounded research. Avoid redundant agents answering the same question, multiple writers editing the same area, premium-model fan-out without approval, delegating trivial work, and recursive coordinator creation.
 
 Every delegation must state:
 
@@ -717,39 +529,13 @@ Stop condition:
 
 ### Worktree policy
 
-Do not use a worktree for every small sequential change.
-
-Use a worktree for:
-
-- risky experiments;
-- competing implementation attempts;
-- long-running isolated work;
-- explicitly approved parallel writers;
-- work that should not affect the current checkout.
+Do not use a worktree for every small sequential change. Use a worktree for risky experiments, competing implementation attempts, long-running isolated work, explicitly approved parallel writers, and work that should not affect the current checkout.
 
 Client-careful mode allows 3 writers. Each writer has its own plan, branch, and review size. Active writers plus unreviewed slices stay within that cap. `solo-balanced` allows 6 writers and `solo-fast` allows 12. Tito does not code in the coordinator chat. Every change, including a small one, goes to a sub-agent, and Tito returns to the user. When two or more slices are independent, Tito sends those sub-agents together, each on its own branch, up to that cap, and does not line them up one after another. Documentation writers stay one at a time. Check out each branch only after the user accepts that branch.
 
 ### Review routing
 
-For ordinary small changes:
-
-- focused automated tests;
-- Cursor Agent Review where useful;
-- human line-by-line review.
-
-For complex behavior:
-
-- independent reviewer;
-- deeper Agent Review;
-- focused integration tests.
-
-For authentication, permissions, payments, secrets, infrastructure, or sensitive data:
-
-- security review;
-- adversarial verification;
-- human approval.
-
-For Bugbot review, use `.cursor/BUGBOT.md`. Do not assume ordinary Cursor project rules automatically govern Bugbot.
+For ordinary small changes: focused automated tests, Cursor Agent Review where useful, and human line-by-line review. For complex behavior: independent reviewer, deeper Agent Review, and focused integration tests. For authentication, permissions, payments, secrets, infrastructure, or sensitive data: security review, adversarial verification, and human approval. For Bugbot review, use `.cursor/BUGBOT.md`. Do not assume ordinary Cursor project rules automatically govern Bugbot.
 
 ### Implementation handoff
 

@@ -1,0 +1,12 @@
+---
+description: Pull when choosing a model tier, a tito.yaml role slug, inherit handling, composer- fallback, or a missing family.
+alwaysApply: false
+---
+
+Each `.cursor/agents/` specialist pins a concrete model slug from `tito.yaml` `models` for its role (`explorer`, `planner`, `advisor`, `implementer`, `reviewer`, `finisher`), with package defaults when a key is missing. Every launch still names a model; the pinned card is the backstop.
+
+`inherit` is not a model choice. Never pass `inherit`. The handoff names the resolved slug for that role. When the role's family is out of usage, fall back to a Cursor-pool slug starting with `composer-`, state that fallback, and never substitute the coordinator's model.
+
+Tiers: Scout (search, exploration, classification, routine summaries); Standard (bounded implementation, tests, ordinary reviews); Reasoning (architecture, ambiguity, accounting, security, concurrency); Specialist (visual work, large context, research, or model-specific strengths). Plan mode uses Reasoning by default when technical decisions, architecture, ambiguity, migrations, security, or multiple slices are involved. An obvious bounded plan may use Standard. Respect an explicit user model choice.
+
+If a family is unavailable in the live catalog, ask instead of substituting a different family. Prefer a slug without `-fast`. Use `-fast` only when it is the only family match, and flag it. Cursor roles: explorer Grok (`grok-`, then `cursor-grok-`, highest); planner Opus (`claude-opus-`, highest); test writer and implementer Grok, highest without `-fast`; finisher exact `composer-2.5`; sandbox Grok (`grok-`, then `cursor-grok-`, highest). If `composer-2.5` is missing, ask; do not fall back to `-fast` or another family.
