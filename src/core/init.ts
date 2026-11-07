@@ -219,12 +219,32 @@ function exists(root: string, path: string): boolean {
 
 export function shippedSkills(): { path: string; body: string }[] {
   const root = join(dirname(fileURLToPath(import.meta.url)), "../../templates/cursor/skills");
-  return readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => ({
+  const files: { path: string; body: string }[] = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    files.push({
       path: `.cursor/skills/${entry.name}/SKILL.md`,
       body: readFileSync(join(root, entry.name, "SKILL.md"), "utf8"),
-    }));
+    });
+    const referencesRoot = join(root, entry.name, "references");
+    let names: string[] = [];
+    try {
+      if (!statSync(referencesRoot).isDirectory()) continue;
+      names = readdirSync(referencesRoot, { withFileTypes: true })
+        .filter((item) => item.isFile() && item.name.endsWith(".md"))
+        .map((item) => item.name)
+        .sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      files.push({
+        path: `.cursor/skills/${entry.name}/references/${name}`,
+        body: readFileSync(join(referencesRoot, name), "utf8"),
+      });
+    }
+  }
+  return files;
 }
 
 export function shippedCursorRules(): { path: string; body: string }[] {

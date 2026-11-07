@@ -354,7 +354,7 @@ test("fresh init keeps the bootstrap within 1,500 tokens and installs scoped rul
   rmSync(root, { recursive: true, force: true });
 });
 
-test("[unit] WP-7 shipped skill lists principles, plan sections, and code order", () => {
+test("[unit] WP-7 skill does not require principle headings; AGENTS.md still adopts maintained tools", () => {
   const skill = readFileSync(
     fileURLToPath(new URL("../templates/cursor/skills/tito/SKILL.md", import.meta.url)),
     "utf8",
@@ -381,12 +381,10 @@ test("[unit] WP-7 shipped skill lists principles, plan sections, and code order"
     "Clarify, domain, document, test, then code",
     "It depends, so show it",
   ]) {
-    assert.equal(skill.includes(name), true, name);
+    assert.equal(skill.includes(name), false, name);
   }
-  const specAt = skill.indexOf("spec doc");
-  const failingAt = skill.indexOf("failing tests");
-  const codeAt = skill.indexOf("the code", failingAt);
-  assert.ok(specAt >= 0 && failingAt > specAt && codeAt > failingAt);
+  const agents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+  assert.equal(agents.includes("adopt maintained tools"), true);
 });
 
 test("[unit] fresh init states small and medium decision authority", () => {
@@ -409,19 +407,16 @@ test("[unit] fresh init states small and medium decision authority", () => {
     assert.ok(Math.ceil(repoAgents.length / 4) <= 1500);
 
     const brief = readFileSync(join(repoRoot, "TITO-INITIAL-BRIEF.md"), "utf8");
-    const start = brief.indexOf("**Discover** is `DISCOVERY`");
-    const end = brief.indexOf("**Plan** is one approval");
-    assert.ok(start >= 0 && end > start);
-    const discover = brief.slice(start, end);
-    assert.match(discover, /Tito decides, then reports/);
-    assert.match(discover, /naming, file placement/);
-    assert.match(discover, /Tito asks, and stops/);
-    assert.match(discover, /safety floor/);
-    assert.match(discover, /`client-careful` still asks for medium decisions/);
-    assert.match(discover, /`solo-balanced` and `solo-fast` decide small and medium/);
-    assert.match(discover, /locking a large decision/);
-    assert.match(discover, /`Decided:`/);
-    assert.equal(discover.includes("3 to 5"), false);
+    assert.equal(brief.includes("Tito decides, then reports"), false);
+    assert.equal(brief.includes("naming, file placement"), false);
+    assert.match(brief, /Rule: \.cursor\/rules\/lifecycle\.mdc/);
+    const lifecycle = readFileSync(join(repoRoot, ".cursor/rules/lifecycle.mdc"), "utf8");
+    assert.match(lifecycle, /Tito decides, then reports/);
+    assert.match(lifecycle, /naming, file placement/);
+    assert.match(lifecycle, /Asks, and stops/);
+    assert.match(lifecycle, /safety floor/);
+    assert.match(lifecycle, /`Decided:`/);
+    assert.equal(lifecycle.includes("3 to 5"), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
