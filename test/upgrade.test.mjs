@@ -239,6 +239,46 @@ test("[integration] PM-8 upgrade keeps an existing models value and pins it", as
   }
 });
 
+test("[integration] M6 upgrade missing autoMerge asks only that and keeps other settings", async () => {
+  const { missingSettings, mergeSettings } = await import("../dist/core/upgrade.js");
+  const { parseConfig } = await import("../dist/core/config.js");
+  const { promptForSettings } = await import("../dist/core/init.js");
+  const text = [
+    "schemaVersion: 1",
+    "profile: solo-balanced",
+    "git:",
+    "  defaultBase: develop",
+    "  autoPullRequest: true",
+    "product:",
+    "  screenLanguage: vi",
+    "  tenancy: single",
+    "  surfaces:",
+    "    - id: admin",
+    "",
+  ].join("\n");
+  const missing = missingSettings(parseConfig(text));
+  assert.deepEqual(missing, ["autoMerge"]);
+  const prompts = [];
+  const answers = await promptForSettings(async (prompt) => {
+    prompts.push(prompt);
+    return "n";
+  }, missing);
+  assert.deepEqual(prompts, ["Auto-merge a slice pull request after checks pass? [y/N] "]);
+  assert.equal(answers.autoMerge, false);
+  const merged = mergeSettings(text, answers);
+  const next = parseConfig(merged);
+  assert.equal(next.git.autoMerge, false);
+  assert.equal(next.git.autoPullRequest, true);
+  assert.equal(next.git.defaultBase, "develop");
+  assert.equal(next.product.screenLanguage, "vi");
+  assert.equal(next.product.tenancy, "single");
+  assert.deepEqual(
+    next.product.surfaces.map((surface) => surface.id),
+    ["admin"],
+  );
+  assert.equal(next.profile, "solo-balanced");
+});
+
 test("[unit] PM-9 settings merge keeps models and fills missing roles", async () => {
   const { mergeSettings } = await import("../dist/core/upgrade.js");
   const { parseConfig } = await import("../dist/core/config.js");

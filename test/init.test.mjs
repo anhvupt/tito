@@ -136,7 +136,7 @@ test("profile prompt accepts a menu number or a profile id", async () => {
 test("init settings prompts render tito.yaml", async () => {
   const { INIT_SETTING_KEYS, promptForSettings, titoYamlBody } = await import("../dist/core/init.js");
   const prompts = [];
-  const replies = ["develop", "vi", "single", "admin", ""];
+  const replies = ["develop", "vi", "single", "admin", "", ""];
   let index = 0;
   const answers = await promptForSettings(async (prompt) => {
     prompts.push(prompt);
@@ -144,7 +144,7 @@ test("init settings prompts render tito.yaml", async () => {
     index += 1;
     return reply ?? "";
   }, INIT_SETTING_KEYS);
-  assert.equal(prompts.length, 5);
+  assert.equal(prompts.length, 6);
   assert.match(prompts[0], /dev/);
   assert.match(prompts[0], /develop/);
   assert.match(prompts[0], /main/);
@@ -155,7 +155,9 @@ test("init settings prompts render tito.yaml", async () => {
   assert.match(prompts[2], /multi/);
   assert.match(prompts[3], /comma-separated ids/);
   assert.equal(prompts[4], "Auto-create a pull request after implementation? [Y/n] ");
+  assert.equal(prompts[5], "Auto-merge a slice pull request after checks pass? [y/N] ");
   assert.equal(answers.autoPullRequest, true);
+  assert.equal(answers.autoMerge, false);
   assert.equal(
     titoYamlBody("solo-balanced", answers),
     [
@@ -164,6 +166,7 @@ test("init settings prompts render tito.yaml", async () => {
       "git:",
       "  defaultBase: develop",
       "  autoPullRequest: true",
+      "  autoMerge: false",
       "product:",
       "  screenLanguage: vi",
       "  tenancy: single",
@@ -203,6 +206,7 @@ test("init settings prompts render tito.yaml", async () => {
   assert.equal("surfaces" in skipped, false);
   assert.equal(titoYamlBody("solo-fast", skipped).includes("surfaces"), false);
   assert.equal(skipped.autoPullRequest, true);
+  assert.equal(skipped.autoMerge, false);
 });
 
 test("settings prompts repeat until the answer is allowed", async () => {
@@ -241,6 +245,7 @@ test("non-interactive init stores autoPullRequest and does not invent product fi
   assert.equal(yaml.includes("tenancy"), false);
   assert.equal(yaml.includes("surfaces"), false);
   assert.equal(yaml.includes("defaultBase"), false);
+  assert.match(yaml, /autoMerge: false/);
 
   const original = "schemaVersion: 1\nprofile: solo-balanced\n";
   writeFileSync(join(root, "tito.yaml"), original);
@@ -249,6 +254,73 @@ test("non-interactive init stores autoPullRequest and does not invent product fi
   assert.match(kept.stderr, /conflict:/);
   assert.equal(readFileSync(join(root, "tito.yaml"), "utf8"), original);
   rmSync(root, { recursive: true, force: true });
+});
+
+test("[integration] M4 interactive init answering no stores autoMerge false", async () => {
+  const { INIT_SETTING_KEYS, applyInitialization, planInitialization, promptForSettings } =
+    await import("../dist/core/init.js");
+  const { inspectRepository } = await import("../dist/core/inspect.js");
+  const { parseConfig } = await import("../dist/core/config.js");
+  const answers = await promptForSettings(async (prompt) => {
+    if (prompt.startsWith("Git base")) return "main";
+    if (prompt.startsWith("Screen language")) return "en";
+    if (prompt.startsWith("Tenancy")) return "single";
+    if (prompt.startsWith("Surfaces")) return "";
+    if (prompt.startsWith("Auto-create")) return "y";
+    if (prompt.startsWith("Auto-merge")) return "n";
+    return "n";
+  }, INIT_SETTING_KEYS);
+  assert.equal(answers.autoMerge, false);
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    applyInitialization(planInitialization(inspectRepository(root), "solo-balanced", answers));
+    const yaml = readFileSync(join(root, "tito.yaml"), "utf8");
+    assert.match(yaml, /autoMerge: false/);
+    assert.equal(parseConfig(yaml).git.autoMerge, false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] M5 non-interactive init with --profile stores autoMerge false and does not prompt", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const preview = run(root, ["init", "--profile", "solo-balanced", "--root", root]);
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.equal(preview.stdout.includes("Auto-merge a slice pull request"), false);
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    assert.equal(confirmed.stdout.includes("Auto-merge a slice pull request"), false);
+    const yaml = readFileSync(join(root, "tito.yaml"), "utf8");
+    assert.match(yaml, /autoMerge: false/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] M7 fresh init AGENTS.md has the new merge line and stays within 1,500 tokens", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+    assert.match(agents, /gh pr merge --squash/);
+    assert.equal(agents.includes("already has an approval"), false);
+    assert.ok(Math.ceil(agents.length / 4) <= 1500);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] M8 repo AGENTS.md and both tito SKILL.md copies omit already has an approval", () => {
+  for (const rel of [
+    "AGENTS.md",
+    ".cursor/skills/tito/SKILL.md",
+    "templates/cursor/skills/tito/SKILL.md",
+  ]) {
+    const body = readFileSync(join(repoRoot, rel), "utf8");
+    assert.equal(body.includes("already has an approval"), false, rel);
+  }
 });
 
 test("fresh init keeps the bootstrap within 1,500 tokens and installs scoped rules", () => {

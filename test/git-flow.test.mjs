@@ -197,9 +197,51 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
     null,
   );
   assert.equal(canApprovePullRequest(), false);
-  assert.equal(mergeDecision({ userAskedToMerge: true, hasApproval: false }).allowed, false);
-  assert.equal(mergeDecision({ userAskedToMerge: false, hasApproval: true }).allowed, false);
-  assert.equal(mergeDecision({ userAskedToMerge: true, hasApproval: true }).allowed, true);
+});
+
+test("[unit] M9 user merge call is allowed without an approval", () => {
+  assert.equal(mergeDecision({ userAskedToMerge: true }).allowed, true);
+});
+
+test("[unit] M10 no merge call and autoMerge false is not allowed", () => {
+  assert.equal(
+    mergeDecision({ userAskedToMerge: false, autoMerge: false }).allowed,
+    false,
+  );
+});
+
+test("[unit] M11 autoMerge true with solo-balanced is allowed", () => {
+  assert.equal(
+    mergeDecision({
+      userAskedToMerge: false,
+      autoMerge: true,
+      profile: "solo-balanced",
+    }).allowed,
+    true,
+  );
+});
+
+test("[unit] M12 autoMerge true with client-careful is not allowed", () => {
+  assert.equal(
+    mergeDecision({
+      userAskedToMerge: false,
+      autoMerge: true,
+      profile: "client-careful",
+    }).allowed,
+    false,
+  );
+});
+
+test("[unit] M13 autoMerge true with touchesEscalation is not allowed", () => {
+  assert.equal(
+    mergeDecision({
+      userAskedToMerge: false,
+      autoMerge: true,
+      profile: "solo-balanced",
+      touchesEscalation: true,
+    }).allowed,
+    false,
+  );
 });
 
 const FINISHER_CATALOG = [
