@@ -426,3 +426,43 @@ test("[unit] fresh init states small and medium decision authority", () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+const TOPIC_RULES = [
+  "lifecycle.mdc",
+  "risk-and-escalation.mdc",
+  "model-routing.mdc",
+  "delegation.mdc",
+  "context-budgets.mdc",
+];
+
+function assertTopicRuleFrontMatter(body, name) {
+  const match = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(body);
+  assert.ok(match, `${name} missing front matter`);
+  const front = match[1] ?? "";
+  assert.match(front, /^description: .+$/m);
+  assert.match(front, /^alwaysApply: false$/m);
+  assert.equal(front.includes("globs:"), false, `${name} must not set globs`);
+}
+
+test("[integration] BT-3 init creates the five topic rules and leaves tourdef unchanged", () => {
+  // Arrange
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  mkdirSync(join(root, ".cursor/rules"), { recursive: true });
+  writeFileSync(join(root, ".cursor/rules/tourdef.mdc"), "consumer rule\n");
+
+  try {
+    // Act
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+
+    // Assert
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    assert.equal(readFileSync(join(root, ".cursor/rules/tourdef.mdc"), "utf8"), "consumer rule\n");
+    for (const name of TOPIC_RULES) {
+      const body = readFileSync(join(root, ".cursor/rules", name), "utf8");
+      assertTopicRuleFrontMatter(body, name);
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+

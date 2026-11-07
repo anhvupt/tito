@@ -367,3 +367,51 @@ test("[integration] WP-8 upgrade replaces Tito surfaces and keeps outside text",
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+const TOPIC_RULES = [
+  "lifecycle.mdc",
+  "risk-and-escalation.mdc",
+  "model-routing.mdc",
+  "delegation.mdc",
+  "context-budgets.mdc",
+];
+
+function assertTopicRuleFrontMatter(body, name) {
+  const match = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(body);
+  assert.ok(match, `${name} missing front matter`);
+  const front = match[1] ?? "";
+  assert.match(front, /^description: .+$/m);
+  assert.match(front, /^alwaysApply: false$/m);
+  assert.equal(front.includes("globs:"), false, `${name} must not set globs`);
+}
+
+test("[integration] BT-3 upgrade creates missing topic rules and replaces an edited Tito rule", () => {
+  // Arrange
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  mkdirSync(join(root, ".cursor/rules"), { recursive: true });
+  writeFileSync(join(root, ".cursor/rules/tourdef.mdc"), "consumer rule\n");
+  writeFileSync(join(root, ".cursor/rules/commit-branch.mdc"), "edited tito rule\n");
+
+  try {
+    // Act
+    const result = spawnSync(
+      process.execPath,
+      [cliPath, "upgrade", "--confirm", "--files-only", "--root", root],
+      { encoding: "utf8" },
+    );
+
+    // Assert
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(readFileSync(join(root, ".cursor/rules/tourdef.mdc"), "utf8"), "consumer rule\n");
+    const replaced = readFileSync(join(root, ".cursor/rules/commit-branch.mdc"), "utf8");
+    assert.equal(replaced.includes("edited tito rule"), false);
+    assert.match(replaced, /A commit subject is/);
+    for (const name of TOPIC_RULES) {
+      const body = readFileSync(join(root, ".cursor/rules", name), "utf8");
+      assertTopicRuleFrontMatter(body, name);
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
