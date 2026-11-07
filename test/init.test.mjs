@@ -433,9 +433,20 @@ const TITO_SHELL_HOOK = {
   timeout: 10,
 };
 
+const TITO_MCP_HOOK = {
+  command: "npx --no-install tito hook before-mcp",
+  timeout: 10,
+};
+
 function titoHooksJson() {
   return `${JSON.stringify(
-    { version: 1, hooks: { beforeShellExecution: [TITO_SHELL_HOOK] } },
+    {
+      version: 1,
+      hooks: {
+        beforeShellExecution: [TITO_SHELL_HOOK],
+        beforeMCPExecution: [TITO_MCP_HOOK],
+      },
+    },
     null,
     2,
   )}\n`;
@@ -480,16 +491,29 @@ test("[integration] H18 init keeps a user afterFileEdit entry and appends Tito's
   }
 });
 
-test("[integration] H19 init keeps an existing Tito hook entry and leaves bytes unchanged", () => {
+test("[integration] H19 init keeps existing Tito hook entries and leaves bytes unchanged", () => {
   const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
   try {
     const existing =
-      '{ "version": 1, "hooks": { "beforeShellExecution": [{ "command": "npx --no-install tito hook before-shell", "timeout": 99 }] } }\n';
+      '{ "version": 1, "hooks": { "beforeShellExecution": [{ "command": "npx --no-install tito hook before-shell", "timeout": 99 }], "beforeMCPExecution": [{ "command": "npx --no-install tito hook before-mcp", "timeout": 10 }] } }\n';
     writeHooks(root, existing);
     const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
     assert.equal(confirmed.status, 0, confirmed.stderr);
     assert.match(confirmed.stdout, /\.cursor\/hooks\.json: keep/);
     assert.equal(readFileSync(join(root, ".cursor/hooks.json"), "utf8"), existing);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[integration] MCP-11 fresh init writes both Tito hook entries", () => {
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const confirmed = run(root, ["init", "--profile", "solo-balanced", "--root", root, "--confirm"]);
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const parsed = JSON.parse(readFileSync(join(root, ".cursor/hooks.json"), "utf8"));
+    assert.deepEqual(parsed.hooks.beforeShellExecution, [TITO_SHELL_HOOK]);
+    assert.deepEqual(parsed.hooks.beforeMCPExecution, [TITO_MCP_HOOK]);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
