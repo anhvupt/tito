@@ -26,10 +26,7 @@ export const BUDGETS = Object.freeze({
   card: 400,
 });
 
-export const CEILINGS: Readonly<Record<string, number>> = Object.freeze({
-  planning: 12192,
-  "tito-skill": 15433,
-});
+export const CEILINGS: Readonly<Record<string, number>> = Object.freeze({});
 
 const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 const FIELD = /^(description|alwaysApply|globs|disable-model-invocation):[ \t]*(.*)$/;
