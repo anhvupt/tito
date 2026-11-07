@@ -436,8 +436,6 @@ Rule: .cursor/rules/delegation.mdc
 Each Cursor surface has one purpose; do not duplicate the same instructions across them.
 Rule: .cursor/rules/context-budgets.mdc
 
-Hooks: init/upgrade add `tito hook before-shell` / `tito hook before-mcp` in `.cursor/hooks.json`; delete Tito's entry.
-
 ### Subagent policy
 
 Default solo behavior: one root Tito coordinator, one active code writer, relevant read-only specialists or reviewers each with a named purpose, and no additional writer. Good subagent uses: repository exploration, independent verification, domain analysis, security review, browser workflows, and bounded research. Avoid redundant agents answering the same question, multiple writers editing the same area, premium-model fan-out without approval, delegating trivial work, and recursive coordinator creation.

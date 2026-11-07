@@ -567,3 +567,4 @@ test("[integration] H21 upgrade --confirm creates .cursor/hooks.json when missin
     rmSync(root, { recursive: true, force: true });
   }
 });
+

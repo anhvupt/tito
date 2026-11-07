@@ -588,3 +588,4 @@ test("[integration] H22 init without --confirm prints hooks.json create or appen
     rmSync(root, { recursive: true, force: true });
   }
 });
+
