@@ -120,13 +120,16 @@ the existing guidance in place. It refuses to overwrite a Tito file that is
 already there. In a terminal, `tito init --confirm` then asks for the git base
 (`dev`, `develop`, `main`, or `master`), screen language (`vi` or `en`),
 tenancy (`single` or `multi`), optional comma-separated surface ids, and
-whether to auto-create a pull request after implementation. That question is
+whether to auto-create a pull request after implementation, and whether to
+auto-merge a slice pull request after checks pass. The auto-create question is
 `Auto-create a pull request after implementation? [Y/n]`. Enter, `y`, or `yes`
-stores yes. `n` or `no` stores no. Empty surface ids omit `product.surfaces`.
+stores yes. `n` or `no` stores no. The auto-merge question is
+`Auto-merge a slice pull request after checks pass? [y/N]`. Enter, `n`, or
+`no` stores no. `y` or `yes` stores yes. Empty surface ids omit `product.surfaces`.
 A non-interactive init with `--profile` does not ask; it stores
-`git.autoPullRequest: true` and does not invent the other product fields.
+`git.autoPullRequest: true` and `git.autoMerge: false` and does not invent the other product fields.
 Preview without `--confirm` does not ask and does not write. An existing
-`tito.yaml` is left unchanged. Storing the answer does not open a pull request.
+`tito.yaml` is left unchanged. Storing those answers does not open or merge a pull request.
 Errors on a terminal are red, and `NO_COLOR` turns that off.
 Open a new Cursor chat, then start with `/tito`.
 
@@ -140,7 +143,7 @@ npx tito upgrade --confirm
 `--confirm` installs the latest `@anhvupt/tito` and replaces Tito-owned
 agents, skills, those Tito-owned scoped rules, and the Tito section of
 `AGENTS.md`, which includes the stop that shows the test cases before any source edit. Consumer rules, consumer
-agents, and other project skills stay untouched. In a terminal, `tito upgrade --confirm` asks only for settings missing from `tito.yaml`: git base, screen language, tenancy, surfaces, and auto-create pull request. Enter on that last question still stores yes. It does not change a value that is already present, and it does not change the profile. A non-interactive upgrade does not ask. If `tito.yaml` is missing, it skips those questions.
+agents, and other project skills stay untouched. In a terminal, `tito upgrade --confirm` asks only for settings missing from `tito.yaml`: git base, screen language, tenancy, surfaces, auto-create pull request, and auto-merge. Enter on the auto-create question still stores yes. Enter on the auto-merge question stores no. It does not change a value that is already present, and it does not change the profile. A non-interactive upgrade does not ask. If `tito.yaml` is missing, it skips those questions.
 
 Tito is installed in each project. It is not a required global command.
 An opt-in local admin index (`tito admin add|list|remove|refresh`) can register
@@ -244,9 +247,12 @@ profile: client-careful
 git:
   defaultBase: develop
   autoPullRequest: true
+  autoMerge: false
 ```
 
 `git.autoPullRequest` is an optional boolean. Missing it is valid. A non-boolean value is rejected. Storing it does not open a pull request.
+
+`git.autoMerge` is an optional boolean. Missing it is valid and means off. A non-boolean value is rejected. `true` is the user's standing merge call. Storing it does not merge a pull request.
 
 `product.screenLanguage` is optional and accepts only `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Unknown product fields are rejected. `product.tenancy` is optional (`single` or `multi`). `product.surfaces` is an optional list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid.
 
@@ -278,7 +284,7 @@ models:
 - When `screenLanguage` is missing and the screen language is unclear, Tito asks once. One obvious reading continues without a question.
 - Globalized apps store timestamps in UTC and show them in the user's timezone. There is no switch to turn that off.
 
-A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`. Examples: `feat: add commit message rule`, `fix: reject a duplicate surface id`, `chores: record the commit prefix rule`, and `hot-fix: stop a bad release build`. The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito does not approve a pull request. Tito merges only when you call for the merge and the pull request already has an approval. Do not merge a slice branch into `main`, `master`, `dev`, or `develop`, on the machine or on the remote, unless the user calls for that merge and the pull request already has an approval. Finishing a slice leaves the branch as it is. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when you say so clearly. Tito pushes directly to the base branch only when you clearly instruct that push.
+A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`. Examples: `feat: add commit message rule`, `fix: reject a duplicate surface id`, `chores: record the commit prefix rule`, and `hot-fix: stop a bad release build`. The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito never approves a pull request. Tito merges a slice pull request into a base branch only via `gh pr merge --squash`, on your merge call or `git.autoMerge: true`, after the finisher re-runs the test-first guard, tests, build, and docs gate. An approval is not required. When auto-merge is on, Tito still waits when the profile is `client-careful` or the slice touches mandatory escalation (authentication, payments, secrets, migrations, production data, infrastructure). Finishing a slice leaves the branch as it is. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when you say so clearly. Tito pushes directly to the base branch only when you clearly instruct that push.
 
 ## Development
 

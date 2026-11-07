@@ -72,6 +72,8 @@ export const TENANCY_PROMPT = "Tenancy (single, multi): ";
 export const SURFACES_PROMPT = "Surfaces (comma-separated ids): ";
 export const AUTO_PULL_REQUEST_PROMPT =
   "Auto-create a pull request after implementation? [Y/n] ";
+export const AUTO_MERGE_PROMPT =
+  "Auto-merge a slice pull request after checks pass? [y/N] ";
 
 export const INIT_SETTING_KEYS = [
   "defaultBase",
@@ -79,6 +81,7 @@ export const INIT_SETTING_KEYS = [
   "tenancy",
   "surfaces",
   "autoPullRequest",
+  "autoMerge",
 ] as const;
 
 export type SettingKey = (typeof INIT_SETTING_KEYS)[number];
@@ -89,6 +92,7 @@ export type TitoSettings = {
   readonly tenancy?: Tenancy;
   readonly surfaces?: readonly ProductSurface[];
   readonly autoPullRequest?: boolean;
+  readonly autoMerge?: boolean;
   readonly models?: ModelsConfig;
 };
 
@@ -132,6 +136,14 @@ async function askAutoPullRequest(ask: (prompt: string) => Promise<string>): Pro
   }
 }
 
+async function askAutoMerge(ask: (prompt: string) => Promise<string>): Promise<boolean> {
+  for (;;) {
+    const answer = (await ask(AUTO_MERGE_PROMPT)).trim().toLowerCase();
+    if (answer === "y" || answer === "yes") return true;
+    if (answer === "" || answer === "n" || answer === "no") return false;
+  }
+}
+
 export async function promptForSettings(
   ask: (prompt: string) => Promise<string>,
   keys: readonly SettingKey[],
@@ -142,6 +154,7 @@ export async function promptForSettings(
     tenancy?: Tenancy;
     surfaces?: readonly ProductSurface[];
     autoPullRequest?: boolean;
+    autoMerge?: boolean;
   } = {};
   for (const key of keys) {
     if (key === "defaultBase") {
@@ -161,7 +174,11 @@ export async function promptForSettings(
       if (surfaces !== undefined) answers.surfaces = surfaces;
       continue;
     }
-    answers.autoPullRequest = await askAutoPullRequest(ask);
+    if (key === "autoPullRequest") {
+      answers.autoPullRequest = await askAutoPullRequest(ask);
+      continue;
+    }
+    answers.autoMerge = await askAutoMerge(ask);
   }
   return answers;
 }
@@ -172,6 +189,9 @@ export function titoYamlBody(profile: string, settings: TitoSettings): string {
   if (settings.defaultBase !== undefined) gitLines.push(`  defaultBase: ${settings.defaultBase}`);
   if (settings.autoPullRequest !== undefined) {
     gitLines.push(`  autoPullRequest: ${settings.autoPullRequest}`);
+  }
+  if (settings.autoMerge !== undefined) {
+    gitLines.push(`  autoMerge: ${settings.autoMerge}`);
   }
   if (gitLines.length > 0) lines.push("git:", ...gitLines);
   const productLines: string[] = [];

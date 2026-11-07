@@ -230,7 +230,7 @@ async function runInit(args: string[]): Promise<void> {
     const report = inspectRepository(root);
     const creatingYaml = report.titoYaml.status === "absent";
     let settings: TitoSettings | undefined;
-    if (creatingYaml && !input.isTTY) settings = { autoPullRequest: true };
+    if (creatingYaml && !input.isTTY) settings = { autoPullRequest: true, autoMerge: false };
     let plan = planInitialization(report, profile, settings);
     if (!confirm) {
       process.stdout.write(formatInitialization(plan));

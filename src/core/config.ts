@@ -43,6 +43,7 @@ export type ProductSurface = {
 export type GitConfig = {
   readonly defaultBase?: BranchBase;
   readonly autoPullRequest?: boolean;
+  readonly autoMerge?: boolean;
 };
 
 export type ProductConfig = {
@@ -117,10 +118,12 @@ export function isSurfaceId(value: string): boolean {
 function assembleGit(parts: {
   defaultBase: BranchBase | undefined;
   autoPullRequest: boolean | undefined;
+  autoMerge: boolean | undefined;
 }): GitConfig | undefined {
-  const git: { defaultBase?: BranchBase; autoPullRequest?: boolean } = {};
+  const git: { defaultBase?: BranchBase; autoPullRequest?: boolean; autoMerge?: boolean } = {};
   if (parts.defaultBase !== undefined) git.defaultBase = parts.defaultBase;
   if (parts.autoPullRequest !== undefined) git.autoPullRequest = parts.autoPullRequest;
+  if (parts.autoMerge !== undefined) git.autoMerge = parts.autoMerge;
   return Object.keys(git).length > 0 ? git : undefined;
 }
 
@@ -132,6 +135,7 @@ function readGit(node: unknown): { readonly git?: GitConfig; readonly issues: re
   const seen = new Set<string>();
   let defaultBase: BranchBase | undefined;
   let autoPullRequest: boolean | undefined = undefined;
+  let autoMerge: boolean | undefined = undefined;
   for (const item of node.items) {
     const key = isScalar(item.key) && typeof item.key.value === "string" ? item.key.value : null;
     if (key === null) {
@@ -167,10 +171,25 @@ function readGit(node: unknown): { readonly git?: GitConfig; readonly issues: re
       }
       continue;
     }
+    if (key === "autoMerge") {
+      const value = isScalar(item.value) ? item.value.value : NON_SCALAR;
+      if (typeof value !== "boolean") {
+        issues.push(
+          issue(
+            "unknown-field",
+            'Field "git.autoMerge" must be a boolean.',
+            "git.autoMerge",
+          ),
+        );
+      } else {
+        autoMerge = value;
+      }
+      continue;
+    }
     issues.push(issue("unknown-field", `Unknown field "git.${key}".`, `git.${key}`));
   }
   if (issues.length > 0) return { issues };
-  const git = assembleGit({ defaultBase, autoPullRequest });
+  const git = assembleGit({ defaultBase, autoPullRequest, autoMerge });
   return git ? { git, issues } : { issues };
 }
 
