@@ -335,7 +335,7 @@ Planned commands:
 - `tito worktree tidy` [`--confirm`] (chat: `/tito-worktree-tidy`)
 - `tito adopt`
 - `tito apply` `--dry-run`
-- `tito hook before-shell` (machine-only; no chat entry; fail-open)
+- `tito hook before-shell` / `tito hook before-mcp` (cloud agents skip)
 - `tito check`
 - `tito doctor`
 - `tito models list`
