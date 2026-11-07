@@ -211,10 +211,18 @@ test("parses optional product.screenLanguage and rejects other product fields", 
 
 test("[unit] PM-4 models map parses role slugs and exports the defaults", async () => {
   const { DEFAULT_MODELS, MODEL_ROLES } = await import("../dist/core/config.js");
-  assert.deepEqual([...MODEL_ROLES], ["explorer", "planner", "implementer", "reviewer", "finisher"]);
+  assert.deepEqual([...MODEL_ROLES], [
+    "explorer",
+    "planner",
+    "advisor",
+    "implementer",
+    "reviewer",
+    "finisher",
+  ]);
   assert.deepEqual(DEFAULT_MODELS, {
     explorer: "cursor-grok-4.6-medium-fast",
     planner: "grok-4.7-high",
+    advisor: "claude-opus-5-5-medium",
     implementer: "cursor-grok-4.6-high",
     reviewer: "grok-4.7-high",
     finisher: "composer-2.5",
@@ -229,6 +237,13 @@ test("[unit] MD-1 DEFAULT_MODELS.implementer is cursor-grok-4.6-high and planner
   const { DEFAULT_MODELS } = await import("../dist/core/config.js");
   assert.equal(DEFAULT_MODELS.implementer, "cursor-grok-4.6-high");
   assert.equal(DEFAULT_MODELS.planner, "grok-4.7-high");
+});
+
+test("[unit] AD-1 DEFAULT_MODELS.advisor is claude-opus-5-5-medium; planner is grok-4.7-high; MODEL_ROLES includes advisor", async () => {
+  const { DEFAULT_MODELS, MODEL_ROLES } = await import("../dist/core/config.js");
+  assert.equal(DEFAULT_MODELS.advisor, "claude-opus-5-5-medium");
+  assert.equal(DEFAULT_MODELS.planner, "grok-4.7-high");
+  assert.equal(MODEL_ROLES.includes("advisor"), true);
 });
 
 test("[unit] PM-5 an empty or unknown models entry names its path", () => {

@@ -3,7 +3,7 @@ name: tito-erp
 description: >
   ERP domain adviser. Tito delegates this specialist only for: ERP workflow; inventory procurement or accounting review.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: grok-4.7-high
+model: claude-opus-5-5-medium
 readonly: true
 ---
 

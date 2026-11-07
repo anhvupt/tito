@@ -16,6 +16,7 @@ const DEFAULT_MODELS_BLOCK = [
   "models:",
   "  explorer: cursor-grok-4.6-medium-fast",
   "  planner: grok-4.7-high",
+  "  advisor: claude-opus-5-5-medium",
   "  implementer: cursor-grok-4.6-high",
   "  reviewer: grok-4.7-high",
   "  finisher: composer-2.5",
@@ -23,12 +24,12 @@ const DEFAULT_MODELS_BLOCK = [
 
 const CARD_SLUGS = {
   "tito-explorer.md": "cursor-grok-4.6-medium-fast",
-  "tito-product.md": "grok-4.7-high",
+  "tito-product.md": "claude-opus-5-5-medium",
   "tito-architect.md": "grok-4.7-high",
   "tito-backend.md": "cursor-grok-4.6-high",
   "tito-frontend.md": "cursor-grok-4.6-high",
   "tito-devops.md": "cursor-grok-4.6-high",
-  "tito-erp.md": "grok-4.7-high",
+  "tito-erp.md": "claude-opus-5-5-medium",
   "tito-qa.md": "grok-4.7-high",
   "tito-security.md": "grok-4.7-high",
   "tito-tech-docs.md": "composer-2.5",

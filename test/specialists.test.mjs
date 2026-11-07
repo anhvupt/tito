@@ -186,14 +186,15 @@ const ROLE_OF = {
   "user-docs-writer": "finisher",
   cleaner: "finisher",
   architect: "planner",
-  "product-analyst": "planner",
+  "product-analyst": "advisor",
   "security-reviewer": "planner",
-  "erp-specialist": "planner",
+  "erp-specialist": "advisor",
 };
 
 const DEFAULT_SLUGS = {
   explorer: "cursor-grok-4.6-medium-fast",
   planner: "grok-4.7-high",
+  advisor: "claude-opus-5-5-medium",
   implementer: "cursor-grok-4.6-high",
   reviewer: "grok-4.7-high",
   finisher: "composer-2.5",
@@ -245,7 +246,16 @@ test("[unit] MD-2 compileCursorAgent pins implementer and planner slugs", () => 
   for (const id of ["backend-engineer", "frontend-engineer", "devops-engineer"]) {
     assert.equal(cardModel(compileCursorAgent(id)), "cursor-grok-4.6-high", id);
   }
-  for (const id of ["architect", "product-analyst", "erp-specialist", "security-reviewer"]) {
+  for (const id of ["architect", "security-reviewer"]) {
+    assert.equal(cardModel(compileCursorAgent(id)), "grok-4.7-high", id);
+  }
+});
+
+test("[unit] AD-2 compileCursorAgent product and erp pin claude-opus-5-5-medium; architect and security pin grok-4.7-high", () => {
+  for (const id of ["product-analyst", "erp-specialist"]) {
+    assert.equal(cardModel(compileCursorAgent(id)), "claude-opus-5-5-medium", id);
+  }
+  for (const id of ["architect", "security-reviewer"]) {
     assert.equal(cardModel(compileCursorAgent(id)), "grok-4.7-high", id);
   }
 });

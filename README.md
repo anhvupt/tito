@@ -256,12 +256,13 @@ product:
     - id: admin
 ```
 
-Optional `models` maps pipeline roles to Cursor model slugs. Each Tito specialist card compiles to one role: explorer, planner, implementer, reviewer, or finisher. Missing keys fall back to the defaults below. Empty or unknown keys are rejected. `tito init` writes the full block; `tito upgrade` adds missing roles without changing values you already set, and rewrites Tito-owned specialist cards so pinned slugs stay current.
+Optional `models` maps pipeline roles to Cursor model slugs. Each Tito specialist card compiles to one role: explorer, planner, advisor, implementer, reviewer, or finisher. Missing keys fall back to the defaults below. Empty or unknown keys are rejected. `tito init` writes the full block; `tito upgrade` adds missing roles without changing values you already set, and rewrites Tito-owned specialist cards so pinned slugs stay current.
 
 ```yaml
 models:
   explorer: cursor-grok-4.6-medium-fast
   planner: grok-4.7-high
+  advisor: claude-opus-5-5-medium
   implementer: cursor-grok-4.6-high
   reviewer: grok-4.7-high
   finisher: composer-2.5

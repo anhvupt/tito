@@ -75,12 +75,12 @@ type ManifestSeed = Omit<SpecialistManifest, "id" | "handoffs" | "model" | "vers
 
 export const SPECIALIST_MODEL_ROLES = Object.freeze({
   explorer: "explorer",
-  "product-analyst": "planner",
+  "product-analyst": "advisor",
   architect: "planner",
   "backend-engineer": "implementer",
   "frontend-engineer": "implementer",
   "devops-engineer": "implementer",
-  "erp-specialist": "planner",
+  "erp-specialist": "advisor",
   "qa-reviewer": "reviewer",
   "security-reviewer": "planner",
   "tech-docs-writer": "finisher",

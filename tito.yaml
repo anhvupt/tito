@@ -3,6 +3,7 @@ profile: solo-balanced
 models:
   explorer: cursor-grok-4.6-medium-fast
   planner: grok-4.7-high
+  advisor: claude-opus-5-5-medium
   implementer: cursor-grok-4.6-high
   reviewer: grok-4.7-high
   finisher: composer-2.5
