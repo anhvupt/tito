@@ -3,7 +3,7 @@ name: tito-security
 description: >
   Independent security reviewer. Tito delegates this specialist only for: security review; authorization or secrets review.
   You are not the root coordinator. Follow the assigned mode and stop condition.
-model: claude-opus-5-5-medium
+model: grok-4.7-high
 readonly: true
 ---
 

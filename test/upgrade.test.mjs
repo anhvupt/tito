@@ -165,8 +165,9 @@ test("non-TTY upgrade does not require settings answers", { timeout: 5000 }, () 
 
 const DEFAULT_MODELS = {
   explorer: "cursor-grok-4.6-medium-fast",
-  planner: "claude-opus-5-5-medium",
-  implementer: "grok-4.7-high",
+  planner: "grok-4.7-high",
+  advisor: "claude-opus-5-5-medium",
+  implementer: "cursor-grok-4.6-high",
   reviewer: "grok-4.7-high",
   finisher: "composer-2.5",
 };
@@ -245,6 +246,18 @@ test("[unit] PM-9 settings merge keeps models and fills missing roles", async ()
   const merged = parseConfig(mergeSettings(text, { autoPullRequest: true }));
   assert.equal(merged.git.autoPullRequest, true);
   assert.deepEqual(merged.models, { ...DEFAULT_MODELS, planner: "gpt-5.6-sol-high" });
+});
+
+test("[unit] AD-3 upgrade of a yaml that has planner but no advisor adds advisor and keeps planner", async () => {
+  const { addMissingModels } = await import("../dist/core/upgrade.js");
+  const { parseConfig } = await import("../dist/core/config.js");
+  const text =
+    "schemaVersion: 1\nprofile: solo-balanced\nmodels:\n  planner: gpt-5.6-sol-high\n";
+  const next = addMissingModels(text);
+  assert.notEqual(next, null);
+  const models = parseConfig(next).models;
+  assert.equal(models.advisor, "claude-opus-5-5-medium");
+  assert.equal(models.planner, "gpt-5.6-sol-high");
 });
 
 test("[integration] WP-8 upgrade replaces Tito surfaces and keeps outside text", () => {

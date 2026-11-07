@@ -9,13 +9,21 @@ import {
 
 export const CONFIG_SCHEMA_VERSION = 1;
 const FIELDS = new Set(["schemaVersion", "profile", "git", "product", "models"]);
-export const MODEL_ROLES = ["explorer", "planner", "implementer", "reviewer", "finisher"] as const;
+export const MODEL_ROLES = [
+  "explorer",
+  "planner",
+  "advisor",
+  "implementer",
+  "reviewer",
+  "finisher",
+] as const;
 export type ModelRole = (typeof MODEL_ROLES)[number];
 export type ModelsConfig = { readonly [role in ModelRole]?: string };
 export const DEFAULT_MODELS = Object.freeze({
   explorer: "cursor-grok-4.6-medium-fast",
-  planner: "claude-opus-5-5-medium",
-  implementer: "grok-4.7-high",
+  planner: "grok-4.7-high",
+  advisor: "claude-opus-5-5-medium",
+  implementer: "cursor-grok-4.6-high",
   reviewer: "grok-4.7-high",
   finisher: "composer-2.5",
 } as const satisfies Record<ModelRole, string>);
