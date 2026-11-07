@@ -78,6 +78,7 @@ test("[unit] the installed tito skill uses small and medium decision authority",
     assert.equal(skill.includes("3 to 5 clarifying questions"), false);
     assert.equal(skill.includes("Decided:"), true);
     assert.equal(skill.includes("clarifying batch"), false);
+    assert.equal(skill.includes("TITO-INITIAL-BRIEF"), false);
   }
   const brief = readFileSync(
     fileURLToPath(new URL("../TITO-INITIAL-BRIEF.md", import.meta.url)),

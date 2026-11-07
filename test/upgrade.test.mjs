@@ -330,7 +330,7 @@ test("[integration] WP-8 upgrade replaces Tito surfaces and keeps outside text",
     const skill = readFileSync(join(root, ".cursor/skills/tito/SKILL.md"), "utf8");
     const shippedSkill = owned.find((file) => file.path === ".cursor/skills/tito/SKILL.md");
     assert.equal(skill, shippedSkill.body);
-    assert.match(skill, /Research, then judge/);
+    assert.match(skill, /name: tito/);
     assert.equal(
       readFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "utf8"),
       "consumer skill\n",
@@ -384,6 +384,69 @@ function assertTopicRuleFrontMatter(body, name) {
   assert.match(front, /^alwaysApply: false$/m);
   assert.equal(front.includes("globs:"), false, `${name} must not set globs`);
 }
+
+test("[integration] SK-3 init ships references; upgrade replaces an edited one and backfills an old install", () => {
+  // Arrange
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  mkdirSync(join(root, ".cursor/skills/project-skill"), { recursive: true });
+  writeFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "consumer skill\n");
+
+  try {
+    // Act
+    const confirmed = spawnSync(
+      process.execPath,
+      [cliPath, "init", "--profile", "solo-balanced", "--root", root, "--confirm"],
+      { encoding: "utf8" },
+    );
+
+    // Assert
+    assert.equal(confirmed.status, 0, confirmed.stderr);
+    const executePath = join(root, ".cursor/skills/tito/references/execute.md");
+    const packetsPath = join(root, ".cursor/skills/tito/references/packets.md");
+    const execute = readFileSync(executePath, "utf8");
+    const packets = readFileSync(packetsPath, "utf8");
+    assert.ok(execute.length > 0);
+    assert.ok(packets.length > 0);
+    assert.equal(
+      readFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "utf8"),
+      "consumer skill\n",
+    );
+
+    writeFileSync(executePath, "edited reference\n");
+    const upgraded = spawnSync(
+      process.execPath,
+      [cliPath, "upgrade", "--confirm", "--files-only", "--root", root],
+      { encoding: "utf8" },
+    );
+    assert.equal(upgraded.status, 0, upgraded.stderr);
+    assert.equal(readFileSync(executePath, "utf8").includes("edited reference"), false);
+    assert.equal(readFileSync(executePath, "utf8"), execute);
+    assert.equal(
+      readFileSync(join(root, ".cursor/skills/project-skill/SKILL.md"), "utf8"),
+      "consumer skill\n",
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+
+  const oldRoot = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    mkdirSync(join(oldRoot, ".cursor/skills/tito"), { recursive: true });
+    writeFileSync(join(oldRoot, ".cursor/skills/tito/SKILL.md"), "old tito skill\n");
+    writeFileSync(join(oldRoot, "AGENTS.md"), "# Tito bootstrap\n\nOld Tito text.\n");
+
+    const backfill = spawnSync(
+      process.execPath,
+      [cliPath, "upgrade", "--confirm", "--files-only", "--root", oldRoot],
+      { encoding: "utf8" },
+    );
+    assert.equal(backfill.status, 0, backfill.stderr);
+    assert.ok(readFileSync(join(oldRoot, ".cursor/skills/tito/references/execute.md"), "utf8").length > 0);
+    assert.ok(readFileSync(join(oldRoot, ".cursor/skills/tito/references/packets.md"), "utf8").length > 0);
+  } finally {
+    rmSync(oldRoot, { recursive: true, force: true });
+  }
+});
 
 test("[integration] BT-3 upgrade creates missing topic rules and replaces an edited Tito rule", () => {
   // Arrange
