@@ -35,7 +35,24 @@ const CARD_SLUGS = {
   "tito-tech-docs.md": "composer-2.5",
   "tito-user-docs.md": "composer-2.5",
   "tito-cleaner.md": "composer-2.5",
+  "tito-startup.md": "composer-2.5",
 };
+
+test("[unit] SU-3 init plan creates .cursor/skills/tito-local-startup/SKILL.md and .cursor/agents/tito-startup.md", async () => {
+  const { planInitialization } = await import("../dist/core/init.js");
+  const { inspectRepository } = await import("../dist/core/inspect.js");
+  const root = mkdtempSync(join(repoRoot, ".tmp-tito-init-"));
+  try {
+    const plan = planInitialization(inspectRepository(root), "solo-balanced");
+    const created = plan.files
+      .filter((file) => file.action === "create")
+      .map((file) => file.path);
+    assert.equal(created.includes(".cursor/skills/tito-local-startup/SKILL.md"), true);
+    assert.equal(created.includes(".cursor/agents/tito-startup.md"), true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 test("[integration] PM-6 fresh init pins every card and writes the default models", async () => {
   const { parseConfig } = await import("../dist/core/config.js");
