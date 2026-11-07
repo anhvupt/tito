@@ -298,6 +298,10 @@ models:
 
 A commit subject is `<type>: <sentence>`. The type is the same token as the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`. Examples: `feat: add commit message rule`, `fix: reject a duplicate surface id`, `chores: record the commit prefix rule`, and `hot-fix: stop a bad release build`. The words after the colon are one finished sentence of at most 70 words. The type is not counted in those 70 words. The body is a separate description. When you review a plan, Tito saves that plan and your edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`. Tito indexes only the plan name. The plan body stays in Cursor's plan file. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Tito asks before opening a pull request only after that plan is coded, or when you accept the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. When the user comments on an open pull request, Tito updates that pull request's description in the same turn. Review fixes lists every comment, including the earlier ones. A thread reply does not replace that update. Init creates `.github/pull_request_template.md` from Tito's template when it is missing. Upgrade replaces that file with Tito's template. Tito never approves a pull request. Tito merges a slice pull request into a base branch only via `gh pr merge --squash`, on your merge call or `git.autoMerge: true`, after the finisher re-runs the test-first guard, tests, build, and docs gate. An approval is not required. When auto-merge is on, Tito still waits when the profile is `client-careful` or the slice touches mandatory escalation (authentication, payments, secrets, migrations, production data, infrastructure). Finishing a slice leaves the branch as it is. After a pull request is merged, Tito asks before the next slice. Tito switches back to the base branch only when you say so clearly. Tito pushes directly to the base branch only when you clearly instruct that push.
 
+## Cost
+
+Real token usage is measured only by the opt-in `npm run eval:usage` script; file-size budgets in `npm test` stay estimates.
+
 ## Development
 
 Requirements:
@@ -310,6 +314,8 @@ npm install
 npm run build
 npm test
 ```
+
+`npm run eval:usage` spends Cursor tokens. It needs `CURSOR_API_KEY` and Node.js 22.13 or newer. It is not part of `npm test`. Pass `--record` to write `evals/usage-baseline.json`.
 
 ## Acknowledgement
 
