@@ -248,14 +248,33 @@ export function shippedCursorHooks(): string {
   );
 }
 
-function hasTitoHook(value: unknown): boolean {
-  if (Array.isArray(value)) return value.some(hasTitoHook);
+function hookCommandHas(value: unknown, needle: string): boolean {
+  if (Array.isArray(value)) return value.some((item) => hookCommandHas(item, needle));
   if (value === null || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
   return (
-    (typeof record.command === "string" && record.command.includes("tito hook")) ||
-    Object.values(record).some(hasTitoHook)
+    (typeof record.command === "string" && record.command.includes(needle)) ||
+    Object.values(record).some((item) => hookCommandHas(item, needle))
   );
+}
+
+function shippedHookEntries(): { event: string; entry: unknown; needle: string }[] {
+  const shipped = JSON.parse(shippedCursorHooks()) as { hooks?: Record<string, unknown> };
+  const rows: { event: string; entry: unknown; needle: string }[] = [];
+  for (const [event, list] of Object.entries(shipped.hooks ?? {})) {
+    if (!Array.isArray(list)) continue;
+    for (const entry of list) {
+      const command =
+        entry !== null && typeof entry === "object"
+          ? (entry as { command?: unknown }).command
+          : undefined;
+      if (typeof command !== "string") continue;
+      const at = command.indexOf("tito hook ");
+      if (at < 0) continue;
+      rows.push({ event, entry, needle: command.slice(at) });
+    }
+  }
+  return rows;
 }
 
 export function planCursorHooks(root: string): InitFile {
@@ -265,22 +284,25 @@ export function planCursorHooks(root: string): InitFile {
   try {
     const parsed: unknown = JSON.parse(readFileSync(join(root, CURSOR_HOOKS_PATH), "utf8"));
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error();
-    if (hasTitoHook(parsed)) return { path: CURSOR_HOOKS_PATH, action: "keep" };
     const body = parsed as Record<string, unknown>;
     const hooks =
       body.hooks !== null && typeof body.hooks === "object" && !Array.isArray(body.hooks)
         ? { ...(body.hooks as Record<string, unknown>) }
         : {};
-    const current = hooks.beforeShellExecution;
-    const list = Array.isArray(current) ? [...current] : [];
-    list.push(
-      (JSON.parse(shippedCursorHooks()) as { hooks: { beforeShellExecution: unknown[] } }).hooks
-        .beforeShellExecution[0],
-    );
+    let changed = false;
+    for (const { event, entry, needle } of shippedHookEntries()) {
+      if (hookCommandHas(body, needle)) continue;
+      const current = hooks[event];
+      const list = Array.isArray(current) ? [...current] : [];
+      list.push(entry);
+      hooks[event] = list;
+      changed = true;
+    }
+    if (!changed) return { path: CURSOR_HOOKS_PATH, action: "keep" };
     return {
       path: CURSOR_HOOKS_PATH,
       action: "append",
-      body: `${JSON.stringify({ ...body, hooks: { ...hooks, beforeShellExecution: list } }, null, 2)}\n`,
+      body: `${JSON.stringify({ ...body, hooks }, null, 2)}\n`,
     };
   } catch {
     return { path: CURSOR_HOOKS_PATH, action: "conflict" };

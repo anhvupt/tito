@@ -56,7 +56,7 @@ import {
   guardTestFirst,
 } from "./core/test-first.js";
 import { WorktreeError, formatTidyReport, tidyWorktrees } from "./core/worktree.js";
-import { decideShell } from "./core/hooks.js";
+import { decideMcp, decideShell } from "./core/hooks.js";
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -77,6 +77,7 @@ Usage:
   tito admin retro [--week <YYYY-Www>] [--timezone <IANA>] [--json] [--admin-root <path>]
   tito guard test-first --base <ref> --test <file> [--root <path>]
   tito hook before-shell
+  tito hook before-mcp
   tito worktree tidy [--confirm] [--root <path>]
 
 Options:
@@ -90,7 +91,7 @@ Commands:
   upgrade        Install the latest Tito and replace Tito-owned files only.
   admin          Opt-in local repo index: add, list, remove, refresh, retro.
   guard          Check that commit 1 changes only the listed test files.
-  hook           Machine-only beforeShellExecution guard. Fail-open. No chat entry.
+  hook           Machine-only shell and MCP guards. Fail-open. No chat entry.
   worktree       Report stale worktrees. Confirm before removing merged clean ones.
 `;
 
@@ -572,8 +573,8 @@ function runHook(args: string[]): void {
     process.stdout.write(help);
     return;
   }
-  if (args[0] !== "before-shell") {
-    fail("Unknown hook. Use: tito hook before-shell");
+  if (args[0] !== "before-shell" && args[0] !== "before-mcp") {
+    fail("Unknown hook. Use: tito hook before-shell or tito hook before-mcp");
     return;
   }
   let raw: string;
@@ -599,13 +600,31 @@ function runHook(args: string[]): void {
     allowOpen("Hook stdin is not a JSON object.");
     return;
   }
-  const body = parsed as { command?: unknown; cwd?: unknown };
-  if (typeof body.command !== "string") {
-    allowOpen("Hook stdin is missing a command string.");
-    return;
-  }
-  const cwd = typeof body.cwd === "string" && body.cwd.length > 0 ? body.cwd : process.cwd();
   try {
+    if (args[0] === "before-mcp") {
+      const body = parsed as { tool_name?: unknown; tool_input?: unknown };
+      const toolInput =
+        typeof body.tool_input === "string"
+          ? body.tool_input
+          : body.tool_input === undefined
+            ? ""
+            : JSON.stringify(body.tool_input);
+      const cwd = process.cwd();
+      const verdict = decideMcp({
+        toolName: typeof body.tool_name === "string" ? body.tool_name : "",
+        toolInput,
+        currentBranch: currentBranch(cwd) ?? "",
+        autoMerge: autoMergeFromCwd(cwd),
+      });
+      process.stdout.write(`${JSON.stringify(verdict)}\n`);
+      return;
+    }
+    const body = parsed as { command?: unknown; cwd?: unknown };
+    if (typeof body.command !== "string") {
+      allowOpen("Hook stdin is missing a command string.");
+      return;
+    }
+    const cwd = typeof body.cwd === "string" && body.cwd.length > 0 ? body.cwd : process.cwd();
     const verdict = decideShell(body.command, currentBranch(cwd), autoMergeFromCwd(cwd));
     process.stdout.write(`${JSON.stringify(verdict)}\n`);
   } catch (error) {

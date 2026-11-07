@@ -7,6 +7,12 @@
         "matcher": "\\b(git|gh|npm)\\b",
         "timeout": 10
       }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "node dist/cli.js hook before-mcp",
+        "timeout": 10
+      }
     ]
   }
 }

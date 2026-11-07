@@ -232,3 +232,87 @@ export function decideShell(
   }
   return best;
 }
+
+const MCP_GUARDED = new Set([
+  "git_push",
+  "git_branch",
+  "merge_pull_request",
+  "create_pull_request_review",
+  "npm_publish",
+]);
+
+function parseMcpInput(raw: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function fieldString(body: Record<string, unknown>, key: string): string | undefined {
+  const value = body[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+function pushedRefs(body: Record<string, unknown>): string[] {
+  const names: string[] = [];
+  for (const key of ["branch", "ref", "dest", "target"]) {
+    const value = fieldString(body, key);
+    if (value !== undefined) names.push(value);
+  }
+  if (Array.isArray(body.refs)) {
+    for (const item of body.refs) if (typeof item === "string") names.push(item);
+  }
+  return names;
+}
+
+function decideGitPush(body: Record<string, unknown>, currentBranch: string): HookVerdict {
+  let best: HookVerdict = ALLOW;
+  const force =
+    body.force === true || body.forceWithLease === true || body.force_with_lease === true;
+  if (force) best = ask("Force-push requires confirmation.");
+  const dests = pushedRefs(body);
+  const hit = dests.find((name) => isBase(name));
+  if (hit !== undefined) {
+    const next = ask(`Push to base branch ${hit} requires confirmation.`);
+    if (rank(next) > rank(best)) best = next;
+  }
+  if (dests.length === 0 && isBase(currentBranch)) {
+    const next = ask(`Push from base branch ${currentBranch} requires confirmation.`);
+    if (rank(next) > rank(best)) best = next;
+  }
+  return best;
+}
+
+export function decideMcp(input: {
+  toolName: string;
+  toolInput: string;
+  currentBranch: string;
+  autoMerge: boolean;
+}): HookVerdict {
+  if (!MCP_GUARDED.has(input.toolName)) return ALLOW;
+  const body = parseMcpInput(input.toolInput);
+  if (body === null) return ask("Could not read MCP tool input.");
+  if (input.toolName === "npm_publish" || body.command === "npm publish") {
+    return ask("npm publish requires confirmation.");
+  }
+  if (input.toolName === "merge_pull_request") {
+    return input.autoMerge ? ALLOW : ask("Merging a pull request requires confirmation.");
+  }
+  if (input.toolName === "create_pull_request_review") {
+    const event = fieldString(body, "event") ?? fieldString(body, "state");
+    if (event !== undefined && event.toUpperCase() === "APPROVE") {
+      return deny("Tito never approves a pull request.");
+    }
+    return ALLOW;
+  }
+  if (input.toolName === "git_branch") {
+    if (fieldString(body, "action") === "merge" && isBase(input.currentBranch)) {
+      return ask(`Merge on base branch ${input.currentBranch} requires confirmation.`);
+    }
+    return ALLOW;
+  }
+  return decideGitPush(body, input.currentBranch);
+}
