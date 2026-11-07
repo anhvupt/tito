@@ -354,7 +354,7 @@ test("fresh init keeps the bootstrap within 1,500 tokens and installs scoped rul
   rmSync(root, { recursive: true, force: true });
 });
 
-test("[unit] WP-7 shipped skill lists principles, plan sections, and code order", () => {
+test("[unit] WP-7 skill does not require principle headings; AGENTS.md still adopts maintained tools", () => {
   const skill = readFileSync(
     fileURLToPath(new URL("../templates/cursor/skills/tito/SKILL.md", import.meta.url)),
     "utf8",
@@ -381,12 +381,10 @@ test("[unit] WP-7 shipped skill lists principles, plan sections, and code order"
     "Clarify, domain, document, test, then code",
     "It depends, so show it",
   ]) {
-    assert.equal(skill.includes(name), true, name);
+    assert.equal(skill.includes(name), false, name);
   }
-  const specAt = skill.indexOf("spec doc");
-  const failingAt = skill.indexOf("failing tests");
-  const codeAt = skill.indexOf("the code", failingAt);
-  assert.ok(specAt >= 0 && failingAt > specAt && codeAt > failingAt);
+  const agents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+  assert.equal(agents.includes("adopt maintained tools"), true);
 });
 
 test("[unit] fresh init states small and medium decision authority", () => {
