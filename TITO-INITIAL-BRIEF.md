@@ -223,6 +223,8 @@ Tito uses progressive disclosure:
 - Never duplicate the same rules across multiple instruction surfaces.
 
 A trivial task should not spawn another agent.
+`test/budgets.test.mjs` checks the load paths, including the description catalog Cursor shows on every turn.
+A path over budget carries a ceiling that may only go down.
 
 ## Cost-aware model routing
 
