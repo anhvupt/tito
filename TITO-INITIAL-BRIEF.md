@@ -30,7 +30,9 @@ Success is not measured by how many agents Tito launches. Success means better o
 2. Fixed floor, flexible tools. These are fixed: the safety floor, mandatory escalation, lifecycle stages, approval gates, git and pull request conventions, screen-language and UTC rules, and project conventions. Libraries, tools, patterns, and approaches are flexible and chosen per project. Research can change a flexible choice. It never weakens a fixed one.
 3. Adopt before building. Before writing a skill, rule, knowledge pack, or library, look for one that its owner maintains (for example the Angular team's best-practices rules, `llms.txt`, and Angular CLI MCP server at angular.dev/ai). Prefer official, then widely maintained community, then our own. Reference it; do not copy it into Tito or the project. Building our own needs a decision that says why.
 4. Business before tech. Every plan says who it helps and which workflow gets smoother. Offer at most one optional business suggestion, only when it clearly helps. Never add it to scope without asking; an accepted suggestion records `outcome: expanded`.
-5. Clarify, domain, document, test, then code. Discover asks only for large decisions; zero questions is fine. Tito decides small and medium choices and reports them on a `Decided:` line. Ask before locking a large decision. `client-careful` still asks for medium decisions. `solo-balanced` and `solo-fast` decide both. The plan opens with Domain. In Code, the agent writes the spec doc first, then the failing tests, then the code. Writing is not committing. The spec doc is waived when the slice changes no behavior.
+5. Clarify, domain, document, test, then code. Discover asks only for large decisions; the plan opens with Domain; in Code the agent writes the spec, then failing tests, then the code.
+Rule: .cursor/rules/lifecycle.mdc
+
 6. It depends, so show it. A large decision lists the options with pros and cons, then picks one for this project. Start from the risk profile: `client-careful` prefers proven tools, `solo-balanced` keeps a proven core and uses modern tools where they help the pace, `solo-fast` prefers modern and fast. When the choice depends on what the project is for (client work, commercial product, showcase, or experiment) and that is unclear, that is a large decision: ask during development, then record the answer in the plan. Reuse an answer already recorded in this project's plans instead of asking again. There is no new `tito.yaml` field for this.
 
 ## Primary user
@@ -87,22 +89,12 @@ Only specialists relevant to the task should be loaded. Tito remains the root co
 
 Backend, frontend, and DevOps engineers may write. `client-careful` may run 3 coding sub-agents, `solo-balanced` 6, and `solo-fast` 12. A mode owns that authority: frontend design is read-only, while frontend implementation writes files; DevOps planning is read-only, while DevOps implementation changes infrastructure only with human approval. Explorers, product analysts, architects, the ERP specialist, QA reviewers, and security reviewers stay read-only. Backend and frontend slices can run together inside the profile cap. Each slice keeps its own plan and branch. When two or more slices are independent, Tito sends those sub-agents together, each on its own branch, up to that cap, and does not line them up one after another. Check out each branch only after the user accepts that branch. Documentation writers stay one at a time. After the handoff, Tito returns to the user. The ERP specialist advises on workflow, inventory, procurement, permissions, and accounting; it does not edit files.
 
-Each specialist manifest indexes its role, model gate, triggers, knowledge references, handoffs, and modes. Role prompts stay lean and load knowledge progressively. If a requested model is unavailable, Tito asks which model to use instead of substituting one silently.
-
-Docs named in the plan's Docs impact are updated, or the user waives them, before Tito offers to open a pull request. After a finished module, Tito must still schedule the tech docs writer and then the user docs writer for larger docs, one at a time, before calling that module done, unless the user waives that handoff. Technical docs and user docs stay separate slices.
+Each specialist manifest indexes its role, model gate, triggers, knowledge references, handoffs, and modes. Role prompts stay lean and load knowledge progressively. Docs named in the plan's Docs impact are updated, or the user waives them, before Tito offers to open a pull request. After a finished module, Tito must still schedule the tech docs writer and then the user docs writer for larger docs, one at a time, before calling that module done, unless the user waives that handoff. Technical docs and user docs stay separate slices.
 
 ## Configuration layers
 
-Apply policy in this order:
-
-1. Core safety floor
-2. Project risk profile
-3. Domain packs
-4. Technology packs
-5. Project-owned rules and documentation
-6. Current task instructions
-
-A task may increase caution. It must not silently weaken the project safety floor.
+Policy layers from the safety floor outward; a task may increase caution but must not silently weaken the floor.
+Rule: .cursor/rules/lifecycle.mdc
 
 Optional `tito.yaml` field `product.screenLanguage` is `vi` or `en`. A missing product block is valid. A missing `screenLanguage` is valid. Optional `product.tenancy` is `single` or `multi`. Optional `product.surfaces` is a list of `{ id }` entries. Missing `tenancy` and missing `surfaces` stay valid. Optional `git.autoPullRequest` is a boolean. Missing it is valid. Optional `git.autoMerge` is a boolean. Missing it is off. Optional `models` maps pipeline roles (`explorer`, `planner`, `advisor`, `implementer`, `reviewer`, `finisher`) to non-empty model slugs. Each specialist compiles to one role. Missing keys use the package defaults; empty or unknown keys fail validation. Init writes the full map; upgrade adds missing roles only.
 
@@ -143,156 +135,29 @@ Tito discovers and uses these files. It does not move them into the npm package.
 
 ## Risk profiles
 
-### client-careful
-
-For client, offshore, financial, sensitive, or high-consequence projects.
-
-- One code-writing agent at a time.
-- Independent review required.
-- Prefer 100–200 authored changed lines.
-- Absolute maximum 300 authored lines without approval.
-- Maximum six authored files.
-- No stacked unreviewed changes.
-- Human approval after every slice.
-- Migrations require rollback plans.
-- No commit, merge, push, deployment, publication, or external write without approval.
-
-### solo-balanced
-
-For normal personal product development.
-
-- One code-writing agent at a time.
-- Human review at feature boundaries.
-- Independent review for security, data, migrations, and architecture.
-- Moderate diff limits.
-- Automation allowed when deterministic and reversible.
-
-### solo-fast
-
-For experiments and low-consequence personal products.
-
-- One code-writing agent at a time.
-- Agent self-review allowed.
-- Human review at milestones.
-- Faster implementation and refactoring.
-- Strict safety floor still applies.
-
-### small-team
-
-Future profile for teams of approximately 2–5 people.
-
-- Git-native ownership.
-- Checked-in project configuration.
-- Basic module ownership.
-- Explicit review responsibilities.
-- No enterprise control plane.
+Four profiles set review, diff, and automation posture: `client-careful`, `solo-balanced`, `solo-fast`, and future `small-team`.
+Rule: .cursor/rules/risk-and-escalation.mdc
 
 ## Mandatory escalation
 
-Regardless of profile, escalate to careful handling for:
-
-- Authentication and authorization
-- Payments
-- Secrets
-- Production data
-- Destructive database changes
-- Privacy-sensitive information
-- Public infrastructure
-- Irreversible external actions
-- Accounting and financial invariants
+Some change kinds always escalate to careful handling, regardless of profile.
+Rule: .cursor/rules/risk-and-escalation.mdc
 
 ## Token-efficiency contract
 
-Tito can guarantee limits on its own context, fan-out, and retries. It cannot guarantee total model usage where the underlying platform does not expose or control it.
-
-Initial budgets:
-
-- Bootstrap context: maximum 1,500 estimated tokens
-- Task packet: maximum 1,200 estimated tokens
-- Specialist card: maximum 400 estimated tokens
-- Domain context: maximum 2,000 estimated tokens
-- Ordinary task: one agent by default
-- Reviewed implementation: maximum two agents by default
-- Retry: maximum one per agent without approval
-
-Tito uses progressive disclosure:
-
-- Load a compact bootstrap globally.
-- Load the project profile once.
-- Load only relevant domain and stack fragments.
-- Read project documentation on demand.
-- Never preload every specialist.
-- Never duplicate the same rules across multiple instruction surfaces.
-
-A trivial task should not spawn another agent.
-`test/budgets.test.mjs` checks the load paths, including the description catalog Cursor shows on every turn.
-A path over budget carries a ceiling that may only go down.
+Tito caps its own context, fan-out, and retries. Surface placement and load-path checks live in the rule.
+Rule: .cursor/rules/context-budgets.mdc
 
 ## Cost-aware model routing
 
-Each Tito specialist file under `.cursor/agents/` pins a concrete model slug in frontmatter. Cursor uses that slug when a launch names no model, so a sub-agent does not silently run on the coordinator's model. The slug comes from `tito.yaml` `models` for the specialist's role, with package defaults when a key is missing. `AGENTS.md` still requires every launch to name a model; the pinned card is the backstop.
+Specialist cards pin a `tito.yaml` role slug; launches never pass `inherit`; Plan mode uses Reasoning when the work is ambiguous or high-risk; missing families are asked, not swapped.
+Rule: .cursor/rules/model-routing.mdc
 
-`inherit` is not a model choice. Tito never passes `inherit` when launching a sub-agent. The handoff names the resolved slug from `tito.yaml` for that role. When the role's model family is out of usage, Tito falls back to a Cursor-pool slug whose name starts with `composer-`, states that fallback in the output, and never substitutes the coordinator's model.
+Start with the least expensive tier likely to succeed. Escalate only after uncertainty, failure, or increased risk. Avoid parallel premium-tier models by default; independent slices still run together, each on its own branch, up to the profile cap. Never silently substitute a materially more expensive model. Avoid hardcoded pricing assumptions. Label token and cost estimates as estimates.
 
-Tito recommends a capability tier before choosing a specific model:
+Host and class routing stays deterministic and catalog-resolved. On Cursor, explore, docs, and ordinary work prefer Grok (first `grok-`, then `cursor-grok-`, highest version). Cursor core prefers Codex (a slug that contains `codex`, otherwise `composer-`, highest version). Cursor reasoning uses `claude-opus-` (highest version). On Claude, explore and docs use `claude-sonnet-` (lowest version), ordinary uses `claude-sonnet-` (highest version), and core plus reasoning use `claude-opus-` (highest version).
 
-- Scout: search, exploration, classification, routine summaries
-- Standard: bounded implementation, tests, ordinary reviews
-- Reasoning: architecture, ambiguity, accounting, security, concurrency
-- Specialist: visual work, large context, research, or model-specific strengths
-
-Plan mode should use the Reasoning tier by default when technical decisions,
-architecture, ambiguity, migrations, security, or multiple slices are involved.
-An obvious bounded plan may use Standard. Respect an explicit user model choice.
-
-Tito should:
-
-- Start with the least expensive tier likely to succeed.
-- Escalate only after uncertainty, failure, or increased risk.
-- Respect explicit user model choices.
-- Avoid parallel premium-tier models by default. Independent slices still run together, each on its own branch, up to the profile cap.
-- Never silently substitute a materially more expensive model.
-- Avoid hardcoded pricing assumptions.
-- Clearly label token and cost estimates as estimates.
-
-Host and class routing stays deterministic and catalog-resolved. On Cursor,
-explore, docs, and ordinary work prefer Grok (first `grok-`, then
-`cursor-grok-`, highest version). Cursor core work prefers Codex (a slug that
-contains `codex`, otherwise `composer-`, highest version). Cursor reasoning
-uses `claude-opus-` (highest version). On Claude, explore and docs use
-`claude-sonnet-` (lowest version), ordinary uses `claude-sonnet-` (highest
-version), and core plus reasoning use `claude-opus-` (highest version). If a
-family is unavailable in the live catalog, Tito asks instead of substituting a
-different family.
-
-Pipeline roles on Cursor resolve from that same catalog:
-
-| Role | Cursor family |
-| --- | --- |
-| explorer | Grok (`grok-`, then `cursor-grok-`, highest) |
-| planner | Opus (`claude-opus-`, highest) |
-| test writer | Grok, highest slug without `-fast` |
-| implementer | Grok, highest slug without `-fast` |
-| finisher (docs and PR) | Composer (exact slug `composer-2.5`) |
-| sandbox | Grok (`grok-`, then `cursor-grok-`, highest) |
-
-Within a family, Tito prefers a slug that does not contain `-fast`. A `-fast`
-slug is used only when it is the only match in that family, and the
-recommendation flags it. The Cursor finisher is the exact slug `composer-2.5`.
-If that slug is missing, Tito asks and does not fall back to a `-fast` slug or
-another family. Existing task classes keep the routing above.
-
-Model recommendation output:
-
-- Task
-- Risk
-- Recommended tier
-- Recommended model
-- Relative cost
-- Reason
-- Cheaper alternative
-- Escalation condition
-- Fast flag, when the only family match is a `-fast` slug
+Recommendation output: Task, Risk, Recommended tier, Recommended model, Relative cost, Reason, Cheaper alternative, Escalation condition, and Fast flag when the only family match is a `-fast` slug.
 
 ## Existing-project adoption
 
@@ -465,7 +330,7 @@ Chat and the CLI are interchangeable adapters over one core operation. Chat is t
 - A CLI command is incomplete until its `/tito-<command>` chat entry exists. A chat operation that inspects or changes the project is incomplete until the CLI exposes it.
 - `/tito` remains the open-ended coordinator. A command skill only runs that one operation.
 
-Optional `.cursor/agents/*.md` specialists may handle bounded delegated work. They do not become the root Tito coordinator and must follow the delegation and lifecycle policies in this brief.
+Optional `.cursor/agents/*.md` specialists may handle bounded delegated work. They do not become the root Tito coordinator and must follow the delegation and lifecycle rules.
 
 ### Cursor mode routing
 
@@ -514,30 +379,7 @@ For every task, Tito should recommend one of:
      ask before locking a large decision or a product-vision change
      (`client-careful` also asks for medium ones), then record the user's answer.
 
-   Discover restates the goal and what is out of scope, confirms that reading, then clarifies as the workflow below describes. One obvious reading still continues, after a one-line confirmation. Do not hand an unresolved choice to the implementation agent. The implementation agent follows the approved decisions and stops for re-planning if repository evidence invalidates them; it does not silently redesign the slice.
-
-   Sometimes add one short joke after `Hola, Tito here!`. The joke does not replace the answer. Skip it when the user is blocked, when the news is bad, and in CLI or machine-readable output.
-
-For multi-slice work, Tito represents the approved work as a dependency-aware
-work plan. Read-only, implementation, and review slices name their explicit
-prerequisites. The graph determines readiness; the lifecycle remains the
-authority for human approval and implementation state.
-
-- Independent read-only slices may be ready together.
-- Multiple implementation slices may be ready candidates. Tito does not
-  select one silently. When two or more are independent, Tito sends those
-  sub-agents together, each on its own branch, up to the profile cap, and
-  does not line them up one after another. Active coding slices stay within
-  the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12.
-  Documentation writers stay one at a time. Check out each branch only after
-  the user accepts that branch.
-- A review slice may start when its implementation reaches
-  `READY_FOR_REVIEW`.
-- In `client-careful`, implementation dependents wait for
-  `APPROVED_FOR_COMMIT`. In `solo-balanced` and `solo-fast`, ordinary
-  dependents may proceed at `READY_FOR_REVIEW`.
-- Independent-review requirements always raise the prerequisite threshold to
-  `APPROVED_FOR_COMMIT`.
+   Discover restates the goal and what is out of scope, confirms that reading, then clarifies. One obvious reading still continues, after a one-line confirmation. Do not hand an unresolved choice to the implementation agent. The implementation agent follows the approved decisions and stops for re-planning if repository evidence invalidates them; it does not silently redesign the slice.
 
 3. **Agent mode**
 
@@ -555,33 +397,8 @@ authority for human approval and implementation state.
 
    The agent must implement only that slice, verify it, prepare the review packet, and stop.
 
-A new command, a new write behavior, or any technical choice uses:
-
-**Discover → Plan → Human Approval → Code → Verify → Docs gate → Review**
-
-These stages map onto the existing lifecycle. State names stay the same.
-
-**Discover** is `DISCOVERY`: the intent check, then clarify only large decisions. Restate the goal and what is out of scope in one or two sentences, then ask whether that is what the user wants. Wait. After the user confirms, ask only the questions that are large. Each question offers options and a recommended default. Zero questions is fine. `client-careful` still asks for medium decisions. `solo-balanced` and `solo-fast` decide small and medium. One obvious reading continues after a one-line confirmation. Ask before locking a large decision or a product-vision change. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity.
-
-Tito decides, then reports, without stopping: naming, file placement, internal structure, test approach, stacking a branch on an approved dependency, accepting a writer's sensible deviation, sending a writer or finisher back to fix a gap that restores the approved spec or docs gate, small in-scope docs fixes, model choice from the routing table, and one obvious reading of a request.
-
-Tito asks, and stops, for a product vision or scope change, a new command or new write behavior (Plan), a new dependency, a public CLI or API contract change, a data or schema migration, security or permissions, premium-model fan-out, anything irreversible or external (push, or a pull request when `git.autoPullRequest` is not true, a merge when `git.autoMerge` is not true, deploy, delete, and `--confirm` cleanups), and anything touching the safety floor.
-
-Every update that follows a Tito decision carries one `Decided:` line listing those decisions so the user can overrule them.
-
-**Plan** is one approval. The plan response contains the plan only. No source edits. Every plan has these sections, in this order:
-
-- **Domain.** Opens with one `Business impact:` line, then terms in the business's own words, business rules, invariants, and who uses it.
-- **Decisions.** Each decision names the principle behind it and the project convention it follows, with where that convention lives.
-- **Test cases.** Each has an ID and a layer tag `[unit]`, `[integration]`, or `[e2e]`. Behavior tests use Arrange / Act / Assert. Edge cases are one line each.
-- **Docs impact.** Which existing docs change, plus suggested new docs.
-- **Slices and branch.**
-
-The approved plan is the spec. `PLANNED` means the plan has all five sections. Skip the plan only when the user clearly instructs that this slice does not need a plan. Implementation starts only after that plan is approved. Cursor's current mode does not approve a slice.
-
-**Code** is `IMPLEMENTING`. The coding sub-agent writes the spec doc named in Docs impact first, then the approved tests, confirms they fail, then implements until they pass. Writing is not committing. The spec doc is waived when the slice changes no behavior. A test added beyond the approved list is flagged as new. A bug fix starts with a test that reproduces the bug.
-
-Before writing an approved slice, list installed skills in `.cursor/skills` and `.agents/skills`. Read only each skill's name and description, and name in the handoff the ones the writer must read. Do not load the whole set. Pick the skills that match the slice's stack and task, usually one to three. The coordinator skill named `tito` is not a pick. Skills that do not match are not read. The writer reads the named files before coding. If none match, the handoff says so and continues. If two skills conflict, ask once.
+A new command, a new write behavior, or any technical choice uses Discover → Plan → Human Approval → Code → Verify → Docs gate → Review. Stages, work-plan prerequisites, spec-then-tests-then-code, and Tito's decide-versus-ask list live in the lifecycle rule.
+Rule: .cursor/rules/lifecycle.mdc
 
 **Verify.** Tito reports each approved test ID as passing or failing, plus lint and build.
 
@@ -591,7 +408,10 @@ Before writing an approved slice, list installed skills in `.cursor/skills` and 
 
 For a single slice, the user may say "skip test discussion" or "skip docs", in the same spirit as skipping the plan.
 
-Tito suggests the source branch and change type before checkout. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable; `main` and `master` are interchangeable. Feature, fix, chores, refactor, and debug use the first existing base in that order when no default is set. A hot-fix uses the default `main` or `master` if set, else existing `main`, then `master`, then `main`. Checkout happens only after the user accepts. A commit subject is `<type>: <sentence>`. The type matches the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`. The words after the colon are one finished sentence of at most 70 words, not counting the type. The body is a separate description. When the user reviews a plan, Tito saves the plan and the user's edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`. `accepted` is approval with no wording changes; `edited` is a wording or decision change; `expanded` is added scope after the intent check. Missing front matter is an unknown outcome. A plan index stores the plan name, Cursor plan path, and branch, and drops the entry when the Cursor plan file is gone. Reference a Linear issue when Linear is connected or the user asked for one. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Every implementation plan includes a Test-first commit section listing the exact test files and the expected failure of each. Commit 1 on the slice branch changes only those listed test files. Later commits touch no test file (`test/**`, `*.test.*`, `*.spec.*`). The guard checks the slice branch against its base. On failure it names the file and commit and stops the slice, with no retry. When `git.autoPullRequest` is true, the finisher pushes the slice branch and opens one ready-for-review pull request after the guard, lint, tests, build, and docs gate pass. The finisher uses the Sonnet model from role routing. The implementer and the sandbox never open a pull request. A failed check stops the slice; nothing is pushed. When `git.autoPullRequest` is false or unset, Tito asks before opening a pull request, only after that review plan is coded or the user accepts the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. When the user comments on an open pull request, Tito updates that description in the same turn; review fixes lists every comment, including earlier ones. A thread reply does not replace that update. Init creates `.github/pull_request_template.md` from Tito's template when it is missing; upgrade replaces it. Tito never approves a pull request. Merge a slice PR only via `gh pr merge --squash` on the user's merge call or `git.autoMerge: true`, after the finisher re-runs the test-first guard, tests, build, and docs gate. An approval is not required. With autoMerge, still wait when the profile is `client-careful` or the slice touches mandatory escalation. Finishing a slice leaves the branch as it is. After a merge, Tito runs `tito worktree tidy` report-only, then asks before the next slice. Switch back to the base branch only when the user says so clearly. Push directly to a base branch only when the user clearly instructs that push.
+Tito suggests the source branch and change type before checkout. Bases are `dev`, `develop`, `main`, and `master`. `dev` and `develop` are interchangeable; `main` and `master` are interchangeable. Feature, fix, chores, refactor, and debug use the first existing base in that order when no default is set. A hot-fix uses the default `main` or `master` if set, else existing `main`, then `master`, then `main`. Checkout happens only after the user accepts. A commit subject is `<type>: <sentence>`. The type matches the branch type: `feat`, `fix`, `hot-fix`, `chores`, `refactor`, or `debug`. The words after the colon are one finished sentence of at most 70 words, not counting the type. The body is a separate description. When the user reviews a plan, Tito saves the plan and the user's edit as separate files under `.tito/feedback/<slug>/`. `review.md` starts with front matter `outcome: accepted | edited | expanded`. `accepted` is approval with no wording changes; `edited` is a wording or decision change; `expanded` is added scope after the intent check. Missing front matter is an unknown outcome. A plan index stores the plan name, Cursor plan path, and branch, and drops the entry when the Cursor plan file is gone. Reference a Linear issue when Linear is connected or the user asked for one. After an approved slice is coded, every review fix goes into one plan named `review/<slug>` on the same branch. Test-first commits and the slice-branch guard live in the delegation rule.
+Rule: .cursor/rules/delegation.mdc
+
+When `git.autoPullRequest` is true, the finisher pushes the slice branch and opens one ready-for-review pull request after the guard, lint, tests, build, and docs gate pass. The finisher uses the Sonnet model from role routing. The implementer and the sandbox never open a pull request. A failed check stops the slice; nothing is pushed. When `git.autoPullRequest` is false or unset, Tito asks before opening a pull request, only after that review plan is coded or the user accepts the code with no changes. The pull request description has four parts within 2 to 50 lines: a one-line problem, what changed, review fixes, and checks for lint, code quality, conventions, tests, build, and docs. When the user comments on an open pull request, Tito updates that description in the same turn; review fixes lists every comment, including earlier ones. A thread reply does not replace that update. Init creates `.github/pull_request_template.md` from Tito's template when it is missing; upgrade replaces it. Tito never approves a pull request. Merge a slice PR only via `gh pr merge --squash` on the user's merge call or `git.autoMerge: true`, after the finisher re-runs the test-first guard, tests, build, and docs gate. An approval is not required. With autoMerge, still wait when the profile is `client-careful` or the slice touches mandatory escalation. Finishing a slice leaves the branch as it is. After a merge, Tito runs `tito worktree tidy` report-only, then asks before the next slice. Switch back to the base branch only when the user says so clearly. Push directly to a base branch only when the user clearly instructs that push.
 
 A named slice that the user explicitly marks as not needing a plan may use:
 
@@ -601,158 +421,42 @@ A named slice that the user explicitly marks as not needing a plan may use:
 
 ### Cursor lifecycle
 
-Tito maintains its own durable lifecycle:
+Lifecycle states and plan-section completeness live in the lifecycle rule.
+Rule: .cursor/rules/lifecycle.mdc
 
-- `DISCOVERY`
-- `PLANNED`
-- `APPROVED`
-- `IMPLEMENTING`
-- `READY_FOR_REVIEW`
-- `APPROVED_FOR_COMMIT`
-- `DONE`
-
-`DISCOVERY` is the intent check, then clarify. `PLANNED` means the plan has all five sections: Domain, Decisions, Test cases, Docs impact, and Slices and branch.
-
-Do not infer lifecycle state from Cursor's UI.
-
-Do not depend on:
-
-- the currently selected IDE mode;
-- whether a Plan Build button was clicked;
-- private Cursor storage;
-- undocumented tool payloads;
-- transcript internals;
-- Cursor UI DOM.
-
-Mode transitions require an explicit user action or supported CLI/SDK invocation.
-
-Persist compact handoff artifacts when context must survive a mode change. Do not assume conversation context automatically transfers between modes.
+Do not infer lifecycle state from Cursor's UI, selected IDE mode, Plan Build, private Cursor storage, undocumented tool payloads, transcript internals, or Cursor UI DOM. Mode transitions require an explicit user action or supported CLI/SDK invocation. Persist compact handoff artifacts when context must survive a mode change. Do not assume conversation context automatically transfers between modes.
 
 ### Browser routing
 
-Use the least expensive browser capability sufficient for verification:
-
-- Static page or documentation: search or fetch.
-- One simple navigation or screenshot: direct browser action.
-- Multi-step form: browser specialist.
-- Authenticated workflow: browser specialist.
-- Console or network debugging: browser specialist.
-- Visual iteration: browser specialist.
-- Isolated full end-to-end workflow: cloud/computer-use agent when explicitly appropriate.
-
-Interactive browser testing belongs in Agent mode.
-
-Tito should specify the required outcome instead of depending on internal browser tool names.
-
-Example browser verification packet:
-
-Verify:
-
-- the user can complete the changed workflow;
-- validation appears for invalid input;
-- success navigation is correct;
-- no browser console errors occur;
-- no failed relevant network requests occur;
-- capture screenshots of materially changed UI states.
-
-Warn before using shared, sensitive, or production credentials. Never perform production mutations during verification without explicit approval.
+Use the cheapest browser capability that can verify the change; never mutate production without approval.
+Rule: .cursor/rules/delegation.mdc
 
 ### Cursor project surfaces
 
-Use each surface for one purpose:
-
-- `AGENTS.md`: compact, always-relevant Tito bootstrap.
-- `.cursor/rules/*.mdc`: scoped architecture or file-specific invariants.
-- `.agents/skills/*/SKILL.md` or `.cursor/skills/`: reusable workflows.
-- `.cursor/agents/*.md`: project-owned specialists.
-- `.cursor/BUGBOT.md`: Bugbot-specific review instructions.
-- Hooks: init/upgrade add `tito hook before-shell` in `.cursor/hooks.json`; delete Tito's entry.
-- Project documentation: requirements, architecture, domain truth, and decisions.
-
-Do not duplicate instructions.
-
-Keep globally loaded text small. Load scoped files only when relevant.
+Each Cursor surface has one purpose; do not duplicate the same instructions across them.
+Rule: .cursor/rules/context-budgets.mdc
 
 ### Subagent policy
 
-Default solo behavior:
+Default solo behavior: one root Tito coordinator, one active code writer, relevant read-only specialists or reviewers each with a named purpose, and no additional writer. Good subagent uses: repository exploration, independent verification, domain analysis, security review, browser workflows, and bounded research. Avoid redundant agents answering the same question, multiple writers editing the same area, premium-model fan-out without approval, delegating trivial work, and recursive coordinator creation.
 
-- one root Tito coordinator;
-- one active code writer;
-- relevant read-only specialists or reviewers, each with a named purpose;
-- no additional writer.
-
-Good subagent uses:
-
-- repository exploration;
-- independent verification;
-- domain analysis;
-- security review;
-- browser workflows;
-- bounded research.
-
-Avoid:
-
-- redundant agents answering the same question;
-- multiple writers editing the same area;
-- premium-model fan-out without approval;
-- delegating trivial work;
-- recursive coordinator creation.
-
-Every delegation must state:
-
-```text
-Task:
-Why delegation is useful:
-Risk:
-Required capability:
-Recommended model tier:
-Recommended model:
-Expected output:
-Allowed files or systems:
-Forbidden actions:
-Stop condition:
-```
+The delegation packet, implementation handoff, worktree use, review routing, and browser verification live in the delegation rule.
+Rule: .cursor/rules/delegation.mdc
 
 ### Worktree policy
 
-Do not use a worktree for every small sequential change.
-
-Use a worktree for:
-
-- risky experiments;
-- competing implementation attempts;
-- long-running isolated work;
-- explicitly approved parallel writers;
-- work that should not affect the current checkout.
-
-Client-careful mode allows 3 writers. Each writer has its own plan, branch, and review size. Active writers plus unreviewed slices stay within that cap. `solo-balanced` allows 6 writers and `solo-fast` allows 12. Tito does not code in the coordinator chat. Every change, including a small one, goes to a sub-agent, and Tito returns to the user. When two or more slices are independent, Tito sends those sub-agents together, each on its own branch, up to that cap, and does not line them up one after another. Documentation writers stay one at a time. Check out each branch only after the user accepts that branch.
+Use a worktree for risky or isolated work, not for every small sequential change.
+Rule: .cursor/rules/delegation.mdc
 
 ### Review routing
 
-For ordinary small changes:
-
-- focused automated tests;
-- Cursor Agent Review where useful;
-- human line-by-line review.
-
-For complex behavior:
-
-- independent reviewer;
-- deeper Agent Review;
-- focused integration tests.
-
-For authentication, permissions, payments, secrets, infrastructure, or sensitive data:
-
-- security review;
-- adversarial verification;
-- human approval.
-
-For Bugbot review, use `.cursor/BUGBOT.md`. Do not assume ordinary Cursor project rules automatically govern Bugbot.
+Review depth follows change risk; Bugbot uses `.cursor/BUGBOT.md`.
+Rule: .cursor/rules/delegation.mdc
 
 ### Implementation handoff
 
-Before a sub-agent writes an approved slice, Tito builds a handoff that contains the spec file path, the target files, the forbidden files, the stop condition, the test-first commit rule, and the skill names the writer must read. Commit 1 changes test files only and those tests fail. Later commits touch no test file. The handoff includes no chat history. It stays within 1,200 estimated tokens. When no installed skill matches, the handoff says none match.
+The writer handoff names spec, files, stop condition, test-first, and skills; it has no chat history.
+Rule: .cursor/rules/delegation.mdc
 
 ### Review handoff
 

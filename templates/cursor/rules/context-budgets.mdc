@@ -1,0 +1,22 @@
+---
+description: Pull when placing instructions on a surface or checking bootstrap, task-packet, specialist-card, or domain token budgets.
+alwaysApply: false
+---
+
+Initial budgets: bootstrap context maximum 1,500 estimated tokens; task packet maximum 1,200; specialist card maximum 400; domain context maximum 2,000. Ordinary task: one agent by default. Reviewed implementation: maximum two agents by default. Retry: maximum one per agent without approval.
+
+Tito can guarantee limits on its own context, fan-out, and retries. It cannot guarantee total model usage where the platform does not expose or control it. Load a compact bootstrap globally, the project profile once, and only relevant domain and stack fragments. Read project documentation on demand. Never preload every specialist. Never duplicate the same rules across instruction surfaces. A trivial task should not spawn another agent.
+
+Use each surface for one purpose:
+
+- `AGENTS.md`: compact, always-relevant Tito bootstrap.
+- `.cursor/rules/*.mdc`: scoped architecture or file-specific invariants.
+- `.agents/skills/*/SKILL.md` or `.cursor/skills/`: reusable workflows.
+- `.cursor/agents/*.md`: project-owned specialists.
+- `.cursor/BUGBOT.md`: Bugbot-specific review instructions.
+- Hooks: init/upgrade add `tito hook before-shell` in `.cursor/hooks.json`; delete Tito's entry.
+- Project documentation: requirements, architecture, domain truth, and decisions.
+
+Keep globally loaded instructions small. Load scoped rules, skills, domain knowledge, and project documentation only when relevant.
+
+`test/budgets.test.mjs` checks the load paths, including the description catalog Cursor shows on every turn. A path over budget carries a ceiling that may only go down.

@@ -1,0 +1,10 @@
+---
+description: Pull for a delegation packet, implementation handoff, test-first commit guard, worktree use, review routing, or browser verification.
+alwaysApply: false
+---
+Delegation must state: Task; Why delegation is useful; Risk; Required capability; Recommended model tier; Recommended model; Expected output; Allowed files or systems; Forbidden actions; Stop condition.
+Implementation handoff: spec file path, target files, forbidden files, stop condition, test-first commit rule, and skill names the writer must read. No chat history. Max 1,200 tokens. If none match, say so.
+Test-first: list exact test files and expected failure of each. Commit 1 changes only those files. Later commits touch no test file (`test/**`, `*.test.*`, `*.spec.*`). Guard vs base; on failure name the file and commit and stop, no retry.
+Worktree: risky experiments, competing attempts, long-running isolated work, approved parallel writers, or work that must not touch the current checkout.
+Review: small changes use focused tests, Cursor Agent Review where useful, human line-by-line. Complex behavior uses an independent reviewer, deeper Agent Review, focused integration tests. Auth, permissions, payments, secrets, infrastructure, or sensitive data use security review, adversarial verification, human approval. Bugbot uses `.cursor/BUGBOT.md`.
+Browser: cheapest verifier: search/fetch; one navigation/screenshot; specialist for multi-step/auth/console/visual; cloud/computer-use for isolated full e2e when appropriate. Interactive testing is Agent mode. Verify workflow, invalid input, success navigation, no console errors, no failed relevant network, screenshots of changed UI. Warn before shared, sensitive, or production credentials. Never mutate production without approval.

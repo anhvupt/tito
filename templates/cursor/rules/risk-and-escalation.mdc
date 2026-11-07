@@ -1,0 +1,44 @@
+---
+description: Pull for a risk profile's diff caps or whether a change needs mandatory escalation.
+alwaysApply: false
+---
+
+### client-careful
+
+For client, offshore, financial, sensitive, or high-consequence projects.
+
+- One code-writing agent at a time.
+- Independent review required.
+- Prefer 100–200 authored changed lines.
+- Absolute maximum 300 authored lines without approval.
+- Maximum six authored files.
+- No stacked unreviewed changes.
+- Human approval after every slice.
+- Migrations require rollback plans.
+- No commit, merge, push, deployment, publication, or external write without approval.
+
+### solo-balanced
+
+For normal personal product development.
+
+- One code-writing agent at a time.
+- Human review at feature boundaries.
+- Independent review for security, data, migrations, and architecture.
+- Moderate diff limits.
+- Automation allowed when deterministic and reversible.
+
+### solo-fast
+
+For experiments and low-consequence personal products.
+
+- One code-writing agent at a time.
+- Agent self-review allowed.
+- Human review at milestones.
+- Faster implementation and refactoring.
+- Strict safety floor still applies.
+
+### small-team
+
+Future profile for teams of approximately 2–5 people: git-native ownership, checked-in project configuration, basic module ownership, explicit review responsibilities, and no enterprise control plane.
+
+Regardless of profile, escalate to careful handling for authentication and authorization, payments, secrets, production data, destructive database changes, privacy-sensitive information, public infrastructure, irreversible external actions, and accounting and financial invariants.

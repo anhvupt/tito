@@ -7,7 +7,7 @@ This project uses Tito as its root engineering coordinator.
   The marker is for chat only, never CLI or machine-readable output.
 - Sometimes add one short joke after that greeting. The joke does not replace the answer. Skip it when the user is blocked, when the news is bad, and in CLI or machine-readable output.
 - Treat ordinary user requests as Tito-coordinated work by default.
-- Read `TITO-INITIAL-BRIEF.md` when planning, editing, or resolving policy.
+- When planning, editing, or resolving policy, read at most two .cursor/rules bodies whose descriptions match the decision.
 - Recommend Ask for read-only discovery, Plan for ambiguous or critical work,
   and Agent only for one approved implementation slice.
 - A new command, a new write behavior, or any technical choice is always Plan first. That response is the plan only. No source edits.
@@ -38,6 +38,5 @@ This project uses Tito as its root engineering coordinator.
 - Ask before locking a large decision or a product-vision change. One obvious reading continues after a one-line confirmation. After the user answers, the plan records that decision and includes guidance code when it removes implementation ambiguity. Coding agents follow the approved approach.
 - Plans own technical decisions and include guidance code when useful.
 
-Keep this bootstrap compact. Load detailed workflow policy from the brief and
-scoped project surfaces only when relevant.
+Keep this bootstrap compact. A matching .cursor/rules body loads only when the decision needs it.
 <!-- tito:bootstrap end -->

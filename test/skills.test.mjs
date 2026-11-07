@@ -78,13 +78,22 @@ test("[unit] the installed tito skill uses small and medium decision authority",
     assert.equal(skill.includes("3 to 5 clarifying questions"), false);
     assert.equal(skill.includes("Decided:"), true);
     assert.equal(skill.includes("clarifying batch"), false);
+    assert.equal(skill.includes("TITO-INITIAL-BRIEF"), false);
   }
   const brief = readFileSync(
     fileURLToPath(new URL("../TITO-INITIAL-BRIEF.md", import.meta.url)),
     "utf8",
   );
   assert.equal(brief.includes("ask before locking a technical decision"), false);
-  assert.match(brief, /Plan mode should use the Reasoning tier by default when technical decisions/);
+  assert.equal(
+    brief.includes("Plan mode should use the Reasoning tier by default when technical decisions"),
+    false,
+  );
+  const routing = readFileSync(
+    fileURLToPath(new URL("../.cursor/rules/model-routing.mdc", import.meta.url)),
+    "utf8",
+  );
+  assert.match(routing, /Plan mode uses Reasoning by default when technical decisions/);
 });
 
 test("a missing skill directory returns no cards", () => {

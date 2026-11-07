@@ -219,7 +219,7 @@ test("[integration] E8 repo root stays within budgets or ceilings", (t) => {
   assert.deepEqual(budgetFailures(reports), []);
 });
 
-test("[integration] E9 the cursor template reports the missing brief", (t) => {
+test("[integration] E9 the cursor template stays within budgets without a brief reference", (t) => {
   // Arrange
   const root = join(repoRoot, "templates/cursor");
 
@@ -230,7 +230,8 @@ test("[integration] E9 the cursor template reports the missing brief", (t) => {
 
   // Assert
   assert.deepEqual(budgetFailures(reports), []);
-  assert.ok(planning.missing.includes("TITO-INITIAL-BRIEF.md"));
+  assert.equal(planning.missing.includes("TITO-INITIAL-BRIEF.md"), false);
+  assert.equal(planning.files.includes("TITO-INITIAL-BRIEF.md"), false);
 });
 
 test("[integration] E10 every specialist card stays within 400 tokens", () => {
