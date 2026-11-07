@@ -409,19 +409,16 @@ test("[unit] fresh init states small and medium decision authority", () => {
     assert.ok(Math.ceil(repoAgents.length / 4) <= 1500);
 
     const brief = readFileSync(join(repoRoot, "TITO-INITIAL-BRIEF.md"), "utf8");
-    const start = brief.indexOf("**Discover** is `DISCOVERY`");
-    const end = brief.indexOf("**Plan** is one approval");
-    assert.ok(start >= 0 && end > start);
-    const discover = brief.slice(start, end);
-    assert.match(discover, /Tito decides, then reports/);
-    assert.match(discover, /naming, file placement/);
-    assert.match(discover, /Tito asks, and stops/);
-    assert.match(discover, /safety floor/);
-    assert.match(discover, /`client-careful` still asks for medium decisions/);
-    assert.match(discover, /`solo-balanced` and `solo-fast` decide small and medium/);
-    assert.match(discover, /locking a large decision/);
-    assert.match(discover, /`Decided:`/);
-    assert.equal(discover.includes("3 to 5"), false);
+    assert.equal(brief.includes("Tito decides, then reports"), false);
+    assert.equal(brief.includes("naming, file placement"), false);
+    assert.match(brief, /Rule: \.cursor\/rules\/lifecycle\.mdc/);
+    const lifecycle = readFileSync(join(repoRoot, ".cursor/rules/lifecycle.mdc"), "utf8");
+    assert.match(lifecycle, /Tito decides, then reports/);
+    assert.match(lifecycle, /naming, file placement/);
+    assert.match(lifecycle, /Asks, and stops/);
+    assert.match(lifecycle, /safety floor/);
+    assert.match(lifecycle, /`Decided:`/);
+    assert.equal(lifecycle.includes("3 to 5"), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
