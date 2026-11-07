@@ -332,12 +332,10 @@ Planned commands:
 - `tito --help`
 - `tito init`
 - `tito inspect`
-- `tito worktree tidy`
-- `tito worktree tidy --confirm`
-- `/tito-worktree-tidy` (chat entry for the same operation)
+- `tito worktree tidy` [`--confirm`] (chat: `/tito-worktree-tidy`)
 - `tito adopt`
-- `tito apply`
-- `tito apply --dry-run`
+- `tito apply` `--dry-run`
+- `tito hook before-shell` (machine-only; no chat entry; fail-open)
 - `tito check`
 - `tito doctor`
 - `tito models list`
@@ -346,7 +344,7 @@ Planned commands:
 - `tito cost report`
 - `tito benchmark`
 
-Inspection must be read-only. Mutation commands must show a plan and handle conflicts safely.
+Inspection must be read-only. Mutations show a plan and handle conflicts safely.
 
 ## Technical architecture
 
@@ -668,11 +666,12 @@ Use each surface for one purpose:
 - `.agents/skills/*/SKILL.md` or `.cursor/skills/`: reusable workflows.
 - `.cursor/agents/*.md`: project-owned specialists.
 - `.cursor/BUGBOT.md`: Bugbot-specific review instructions.
+- Hooks: `tito hook before-shell` (machine-only, fail-open, no chat skill).
 - Project documentation: requirements, architecture, domain truth, and decisions.
 
-Do not duplicate the same instructions across these surfaces.
+Do not duplicate instructions.
 
-Keep globally loaded instructions small. Load scoped rules, skills, domain knowledge, and project documentation only when relevant.
+Keep globally loaded text small. Load scoped files only when relevant.
 
 ### Subagent policy
 
