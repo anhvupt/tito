@@ -56,6 +56,7 @@ import {
   guardTestFirst,
 } from "./core/test-first.js";
 import { WorktreeError, formatTidyReport, tidyWorktrees } from "./core/worktree.js";
+import { decideShell } from "./core/hooks.js";
 
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -75,6 +76,7 @@ Usage:
   tito admin refresh [--admin-root <path>]
   tito admin retro [--week <YYYY-Www>] [--timezone <IANA>] [--json] [--admin-root <path>]
   tito guard test-first --base <ref> --test <file> [--root <path>]
+  tito hook before-shell
   tito worktree tidy [--confirm] [--root <path>]
 
 Options:
@@ -88,6 +90,7 @@ Commands:
   upgrade        Install the latest Tito and replace Tito-owned files only.
   admin          Opt-in local repo index: add, list, remove, refresh, retro.
   guard          Check that commit 1 changes only the listed test files.
+  hook           Machine-only beforeShellExecution guard. Fail-open. No chat entry.
   worktree       Report stale worktrees. Confirm before removing merged clean ones.
 `;
 
@@ -541,6 +544,75 @@ function runGuard(args: string[]): void {
   }
 }
 
+function currentBranch(cwd: string): string | undefined {
+  const result = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+    cwd,
+    encoding: "utf8",
+  });
+  if (result.status !== 0) return undefined;
+  const name = (result.stdout ?? "").trim();
+  return name.length > 0 ? name : undefined;
+}
+
+function autoMergeFromCwd(cwd: string): boolean {
+  try {
+    return parseConfig(readFileSync(join(cwd, "tito.yaml"), "utf8")).git?.autoMerge === true;
+  } catch {
+    return false;
+  }
+}
+
+function allowOpen(reason: string): void {
+  process.stderr.write(`${reason}\n`);
+  process.stdout.write('{"permission":"allow"}\n');
+}
+
+function runHook(args: string[]): void {
+  if (args.includes("-h") || args.includes("--help") || args.length === 0) {
+    process.stdout.write(help);
+    return;
+  }
+  if (args[0] !== "before-shell") {
+    fail("Unknown hook. Use: tito hook before-shell");
+    return;
+  }
+  let raw: string;
+  try {
+    raw = readFileSync(0, "utf8");
+  } catch (error) {
+    allowOpen(error instanceof Error ? error.message : "Could not read stdin.");
+    return;
+  }
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) {
+    allowOpen("Empty hook input.");
+    return;
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    allowOpen("Hook stdin is not JSON.");
+    return;
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    allowOpen("Hook stdin is not a JSON object.");
+    return;
+  }
+  const body = parsed as { command?: unknown; cwd?: unknown };
+  if (typeof body.command !== "string") {
+    allowOpen("Hook stdin is missing a command string.");
+    return;
+  }
+  const cwd = typeof body.cwd === "string" && body.cwd.length > 0 ? body.cwd : process.cwd();
+  try {
+    const verdict = decideShell(body.command, currentBranch(cwd), autoMergeFromCwd(cwd));
+    process.stdout.write(`${JSON.stringify(verdict)}\n`);
+  } catch (error) {
+    allowOpen(error instanceof Error ? error.message : "Hook decision failed.");
+  }
+}
+
 function runWorktree(args: string[]): void {
   if (args.includes("-h") || args.includes("--help")) {
     process.stdout.write(help);
@@ -602,6 +674,10 @@ async function run(args: string[]): Promise<void> {
   }
   if (args[0] === "guard") {
     runGuard(args.slice(1));
+    return;
+  }
+  if (args[0] === "hook") {
+    runHook(args.slice(1));
     return;
   }
   if (args[0] === "worktree") {

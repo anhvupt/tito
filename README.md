@@ -191,6 +191,7 @@ node dist/cli.js admin refresh
 node dist/cli.js admin remove --root /path/to/repo
 node dist/cli.js admin retro --week 2026-W40
 node dist/cli.js guard test-first --base main --test test/example.test.mjs
+node dist/cli.js hook before-shell
 node dist/cli.js worktree tidy
 node dist/cli.js worktree tidy --confirm
 ```
@@ -220,6 +221,12 @@ merge duration say unavailable until GitHub data is added.
 `guard test-first` checks a slice branch against `--base`. Commit 1 may change
 only the repeated `--test` files. Later commits may not change `test/**`,
 `*.test.*`, or `*.spec.*` files. A failure names the file and the commit.
+
+`hook before-shell` is machine-only (no chat skill). It reads Cursor
+beforeShellExecution JSON on stdin and writes `{permission: allow|ask|deny}` to
+stdout, then exits 0. Invalid input fails open with allow. It asks before
+base-branch pushes and merges, force-pushes, `gh pr merge` (unless
+`git.autoMerge` is true), and `npm publish`. It denies `gh pr review --approve`.
 
 ## How work moves
 
