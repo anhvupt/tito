@@ -263,7 +263,7 @@ export const SPECIALISTS = Object.freeze({
       specialistMode("start", "write-infrastructure", phase.implementation, ["human-approval"]),
     ],
     stopCondition:
-      "Stop after missing local processes are started. Ask before applying pending migrations. Local only. Do not migrate remote or production databases. Do not docker compose down -v. Do not drop data.",
+      "Stop after missing local processes are started. Ask before applying pending migrations. Local only. Do not migrate remote or production databases. Do not docker compose down -v. Do not drop data. Do not checkout, pull, stash, or resolve a conflict unless the task packet records the user's answer.",
   }),
 } as const satisfies Record<SpecialistId, SpecialistManifest>);
 

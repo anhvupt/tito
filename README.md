@@ -64,7 +64,7 @@ mode decides whether it may change anything:
 | Tech docs writer | — | Update technical documentation |
 | User docs writer | — | Update user documentation |
 | Cleanup specialist | — | Remove leftover files |
-| Local startup | — | Start missing local processes; ask before pending migrations |
+| Local startup | — | Start missing local processes; ask before pending migrations. It confirms the branch, pulls with fast-forward only, and asks before touching a dirty tree or a pull that cannot fast-forward. |
 
 Several read-only specialists may work together. Coding sub-agents follow the
 profile cap: `client-careful` 3, `solo-balanced` 6, and `solo-fast` 12. Each
