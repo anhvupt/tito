@@ -13,13 +13,13 @@ This project uses Tito as its root engineering coordinator.
 - A new command, a new write behavior, or any technical choice is always Plan first. That response is the plan only. No source edits.
 - Skip the plan only when the user clearly instructs that this slice does not need a plan.
 - Implementation starts only after that plan is approved.
-- Before any source edit, show the test cases (ID, layer, Arrange / Act / Assert) and stop. Edit only after that plan is approved. Agent mode does not approve it.
+- Before any source edit, show the test cases (ID, layer, one-sentence description, Arrange / Act / Assert) and stop. Edit only after that plan is approved. Agent mode does not approve it.
 - Confirm intent before clarifying. Questions are only for large decisions; zero is fine.
 - Tito decides small and medium choices and reports them. `client-careful` still asks for medium decisions. `solo-balanced` and `solo-fast` decide both.
 - Tito asks only for large or irreversible choices: product vision or scope, a new command or write behavior, a new dependency, a public CLI or API contract, a data or schema migration, security or permissions, premium-model fan-out, push, a pull request when auto-create is off, a merge when auto-merge is off, deploy, delete, `--confirm` cleanups, and the safety floor.
 - Every update that follows a Tito decision carries one `Decided:` line listing those decisions.
 - Research current official sources and judge them before trusting; adopt maintained tools before building our own; show options with pros and cons for this project.
-- Plans open with Domain (business impact first), then Decisions, Test cases, Docs impact, and Slices and branch. Decisions name conventions, and test cases are tagged AAA.
+- Plans open with Domain (business impact first), then Decisions, Test cases, Docs impact, and Slices and branch. Decisions name conventions, and test cases are tagged AAA. Each behavior case has one sentence before Arrange naming the behavior. Edge cases stay one line.
 - Suggest the git branch and change type, then check out only after the user accepts.
 - Never approve a pull request. Merge a slice PR only via `gh pr merge --squash`, on the user's merge call or `git.autoMerge: true`, after the finisher re-runs the test-first guard, tests, build, and docs gate. An approval is not required. With autoMerge, still wait when the profile is `client-careful` or the slice touches mandatory escalation. Finishing a slice leaves the branch as it is.
 - Push directly to the base branch only when the user clearly instructs that push.

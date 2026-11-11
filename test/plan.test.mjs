@@ -93,6 +93,16 @@ test("[unit] WP-1 bootstrap researches, judges, and opens plans with Domain", ()
     assert.ok(indexes[i] >= 0, sections[i]);
     if (i > 0) assert.ok(indexes[i] > indexes[i - 1], sections[i]);
   }
+  const descriptionAt = block.indexOf("one-sentence description");
+  const arrangeAt = block.indexOf("Arrange / Act / Assert");
+  assert.ok(
+    descriptionAt >= 0 && arrangeAt > descriptionAt,
+    'live bootstrap does not contain "one-sentence description" before Arrange / Act / Assert',
+  );
+  assert.match(
+    block,
+    /Each behavior case has one sentence before Arrange naming the behavior\./,
+  );
   assert.ok(Math.ceil(block.length / 4) <= 1500);
 });
 
