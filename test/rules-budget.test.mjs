@@ -70,6 +70,19 @@ test("[unit] BT-2 both AGENTS.md files point at topic rules and stay within 1500
     assert.equal(text.includes(OLD_BRIEF_BULLET), false, `${rel} still has the old brief-read bullet`);
     assert.equal(text.includes(NEW_BRIEF_BULLET), true, `${rel} missing the topic-rule bullet`);
     assert.equal(text.includes("`TITO-INITIAL-BRIEF.md`"), false, `${rel} still backticks the brief`);
+    const descriptionAt = text.indexOf("one-sentence description");
+    const arrangeAt = text.indexOf("Arrange / Act / Assert");
+    assert.ok(
+      descriptionAt >= 0 && arrangeAt > descriptionAt,
+      `${rel} lacks the one-sentence description clause`,
+    );
+    assert.equal(
+      text.includes(
+        "Each behavior case has one sentence before Arrange naming the behavior. Edge cases stay one line.",
+      ),
+      true,
+      `${rel} lacks the behavior-case sentence`,
+    );
     assert.ok(
       Math.ceil(text.length / 4) <= 1500,
       `${rel} ${Math.ceil(text.length / 4)} tokens`,
@@ -97,6 +110,22 @@ test("[unit] BT-4 decide phrases live in lifecycle.mdc and the brief points at a
     const pointer = `Rule: .cursor/rules/${name}`;
     assert.equal(brief.includes(pointer), true, pointer);
   }
+});
+
+test("[unit] BT-4 ordinary chat names a one-sentence description before Arrange", () => {
+  // Arrange
+  const brief = readFileSync(join(repoRoot, "TITO-INITIAL-BRIEF.md"), "utf8");
+  const parenthetical = "(ID, layer, one-sentence description, Arrange / Act / Assert)";
+
+  // Act
+  const ordinary = brief.includes(`Ordinary chat shows the test cases ${parenthetical}`);
+
+  // Assert
+  assert.equal(
+    ordinary,
+    true,
+    "the brief's ordinary-chat parenthetical is not (ID, layer, one-sentence description, Arrange / Act / Assert)",
+  );
 });
 
 test("[unit] BT-5 each topic rule is byte-identical in .cursor/rules and templates/cursor/rules", () => {
