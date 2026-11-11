@@ -316,6 +316,8 @@ test("[unit] SU-1 SPECIALISTS.startup is Scout finisher, mode start write-infras
   assert.equal(cardModel(card), "composer-2.5");
   assert.match(card, /^name: tito-startup$/m);
   assert.ok(Math.ceil(card.length / 4) <= 400, `${card.length} chars`);
+  assert.match(card, /do not checkout, pull, stash/i);
+  assert.match(card, /task packet records the user's answer/i);
 });
 
 test("[unit] SU-2 shipped skill has name tito-local-startup, disable-model-invocation: true, and tells the agent to ask before migrate", () => {
@@ -337,4 +339,28 @@ test("[unit] SU-4 validateDelegation can activate startup:start in implementatio
   assert.equal(result.mutator?.specialistId, "startup");
   assert.equal(result.mutator?.modeId, "start");
   assert.equal(result.mutator?.capability, "write-infrastructure");
+});
+
+test("[unit] SU-5 both local-startup skill copies are byte-identical and mention the git check", () => {
+  // Arrange
+  const livePath = fileURLToPath(
+    new URL("../.cursor/skills/tito-local-startup/SKILL.md", import.meta.url),
+  );
+  const shippedPath = fileURLToPath(
+    new URL("../templates/cursor/skills/tito-local-startup/SKILL.md", import.meta.url),
+  );
+
+  // Act
+  const live = readFileSync(livePath);
+  const shipped = readFileSync(shippedPath);
+  const text = live.toString("utf8");
+
+  // Assert
+  assert.equal(Buffer.compare(live, shipped), 0);
+  assert.match(text, /git status/);
+  assert.match(text, /stay on the current branch or switch to the base/);
+  assert.match(text, /git pull --ff-only/);
+  assert.match(text, /dirty tree is solved only after the user says yes/);
+  assert.match(text, /pull that cannot fast-forward is solved only after the user says yes/);
+  assert.match(text, /ask before applying them/);
 });
