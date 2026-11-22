@@ -138,6 +138,7 @@ export type PullRequestDescriptionInput = {
   readonly done: readonly string[];
   readonly reviewFixes: readonly string[];
   readonly checks: readonly string[];
+  readonly happyPath: readonly string[];
 };
 
 export const PULL_REQUEST_TEMPLATE_PATH = ".github/pull_request_template.md";
@@ -147,6 +148,7 @@ const PULL_REQUEST_HEADINGS = {
   done: "## What changed",
   review: "## Review fixes",
   checks: "## Checks",
+  happyPath: "## Reproduce the happy path",
 } as const;
 
 const MAX_PULL_REQUEST_LINES = 50;
@@ -172,6 +174,10 @@ export function pullRequestTemplate(): string {
     "- Build:",
     "- Docs:",
     "",
+    PULL_REQUEST_HEADINGS.happyPath,
+    "",
+    "1.",
+    "",
   ].join("\n");
 }
 
@@ -187,6 +193,19 @@ function bullets(items: readonly string[]): string[] | null {
     const line = bullet(item);
     if (line === null) return null;
     lines.push(line);
+  }
+  return lines;
+}
+
+function happyPathLines(steps: readonly string[] | undefined): string[] | null {
+  if (steps === undefined || steps.length < 2) return null;
+  const lines: string[] = [];
+  for (let index = 0; index < steps.length; index += 1) {
+    const step = steps[index];
+    if (step === undefined || step.includes("\n")) return null;
+    const text = step.trim();
+    if (text.length === 0) return null;
+    lines.push(`${index + 1}. ${text}`);
   }
   return lines;
 }
@@ -213,7 +232,9 @@ export function pullRequestDescription(input: PullRequestDescriptionInput): stri
     ...checks,
   ];
   if (lines.length < 2 || lines.length > MAX_PULL_REQUEST_LINES) return null;
-  return lines.join("\n");
+  const steps = happyPathLines(input.happyPath);
+  if (steps === null) return null;
+  return [...lines, "", PULL_REQUEST_HEADINGS.happyPath, ...steps].join("\n");
 }
 
 export function mergeDecision(input: {

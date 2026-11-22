@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   canApprovePullRequest,
   checkoutCommands,
@@ -10,6 +13,8 @@ import {
   pullRequestTemplate,
   suggestBranch,
 } from "../dist/core/git-flow.js";
+
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
 test("Tito suggests the branch and waits for acceptance", () => {
   const feature = suggestBranch({
@@ -138,6 +143,7 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
     done: ["Suggest a branch before checkout."],
     reviewFixes: ["Accept dev, develop, main, and master."],
     checks: ["npm test passed."],
+    happyPath: ["Suggest the branch.", "Check out after acceptance."],
   });
   assert.equal(
     description,
@@ -153,6 +159,10 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
       "",
       "## Checks",
       "- npm test passed.",
+      "",
+      "## Reproduce the happy path",
+      "1. Suggest the branch.",
+      "2. Check out after acceptance.",
     ].join("\n"),
   );
   assert.match(description, /## Problem/);
@@ -160,12 +170,15 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
   assert.equal(pullRequestTemplate().includes("## What changed"), true);
   assert.equal(pullRequestTemplate().includes("## Review fixes"), true);
   assert.equal(pullRequestTemplate().includes("## Checks"), true);
+  assert.equal(pullRequestTemplate().includes("## Reproduce the happy path"), true);
+  assert.equal(pullRequestTemplate().includes("1."), true);
   assert.match(
     pullRequestDescription({
       problem: "A short problem.",
       done: ["One change."],
       reviewFixes: [],
       checks: ["Build passed."],
+      happyPath: ["Open the pull request.", "Follow the numbered steps."],
     }),
     /No review fixes\./,
   );
@@ -175,6 +188,7 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
       done: ["One change."],
       reviewFixes: [],
       checks: ["Build passed."],
+      happyPath: ["Open the pull request.", "Follow the numbered steps."],
     }),
     null,
   );
@@ -184,6 +198,7 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
       done: [],
       reviewFixes: [],
       checks: ["Build passed."],
+      happyPath: ["Open the pull request.", "Follow the numbered steps."],
     }),
     null,
   );
@@ -193,10 +208,107 @@ test("plan index, Linear, pull requests, and merge stay gated", () => {
       done: Array.from({ length: 41 }, () => "Change."),
       reviewFixes: [],
       checks: ["Build passed."],
+      happyPath: ["Open the pull request.", "Follow the numbered steps."],
     }),
     null,
   );
   assert.equal(canApprovePullRequest(), false);
+});
+
+test("[unit] PR-1 a valid description includes a happy path outside the 50-line cap", () => {
+  // A compact four-section body plus three steps is accepted, and those steps do not consume the 50-line cap.
+  // Arrange
+  const compactInput = {
+    problem: "Reviewers had no happy path.",
+    done: ["One change."],
+    reviewFixes: [],
+    checks: ["Build passed."],
+    happyPath: ["Open the pull request.", "Follow step two.", "See the result."],
+  };
+  const atCapInput = {
+    problem: "A short problem.",
+    done: Array.from({ length: 40 }, () => "Change."),
+    reviewFixes: [],
+    checks: ["Build passed."],
+    happyPath: ["Open the pull request.", "Follow step two.", "See the result."],
+  };
+
+  // Act
+  const compact = pullRequestDescription(compactInput);
+  const atCap = pullRequestDescription(atCapInput);
+
+  // Assert
+  assert.equal(typeof compact, "string");
+  assert.match(compact, /## Reproduce the happy path/);
+  assert.match(compact, /1\. Open the pull request\./);
+  assert.match(compact, /2\. Follow step two\./);
+  assert.match(compact, /3\. See the result\./);
+  const before = compact.slice(0, compact.indexOf("## Reproduce the happy path")).replace(/\n$/, "");
+  const beforeCount = before.split("\n").length;
+  assert.ok(beforeCount >= 2 && beforeCount <= 50, `before ${beforeCount}`);
+  assert.equal(typeof atCap, "string");
+  assert.match(atCap, /## Reproduce the happy path/);
+  const capBefore = atCap
+    .slice(0, atCap.indexOf("## Reproduce the happy path"))
+    .replace(/\n+$/, "");
+  assert.equal(capBefore.split("\n").length, 50);
+});
+
+test("[unit] PR-2 an unusable happy path is rejected", () => {
+  // Arrange
+  const base = {
+    problem: "A short problem.",
+    done: ["One change."],
+    reviewFixes: [],
+    checks: ["Build passed."],
+  };
+
+  // Act
+  const missing = pullRequestDescription(base);
+  const zero = pullRequestDescription({ ...base, happyPath: [] });
+  const one = pullRequestDescription({ ...base, happyPath: ["Only one step."] });
+  const empty = pullRequestDescription({ ...base, happyPath: ["Open it.", ""] });
+  const newline = pullRequestDescription({
+    ...base,
+    happyPath: ["Open it.", "Line one\nline two"],
+  });
+
+  // Assert
+  assert.equal(missing, null);
+  assert.equal(zero, null);
+  assert.equal(one, null);
+  assert.equal(empty, null);
+  assert.equal(newline, null);
+});
+
+test("[unit] PR-3 the template, rule, and bootstrap name the happy path and one pull request", () => {
+  // Arrange
+  const template = pullRequestTemplate();
+  const rulePaths = [
+    ".cursor/rules/pull-request.mdc",
+    "templates/cursor/rules/pull-request.mdc",
+  ];
+  const agentPaths = ["AGENTS.md", "templates/cursor/AGENTS.md"];
+  const rules = rulePaths.map((rel) => readFileSync(join(repoRoot, rel), "utf8"));
+  const agents = agentPaths.map((rel) => readFileSync(join(repoRoot, rel), "utf8"));
+  const bootstrap =
+    "One approved plan uses one branch and one pull request. Later slices land on that open pull request. Wait between slices only for `client-careful` or mandatory escalation. The pull request description includes numbered steps to reproduce the happy path.";
+
+  // Act
+  const tokens = agents.map((text) => Math.ceil(text.length / 4));
+
+  // Assert
+  assert.equal(template.includes("## Reproduce the happy path"), true);
+  assert.equal(template.includes("1."), true);
+  assert.equal(rules[0], rules[1]);
+  for (const rule of rules) {
+    assert.match(rule, /Later slices of one approved plan land on that open pull request/);
+    assert.equal(rule.includes("A pull request description has four parts"), false);
+  }
+  for (const [index, text] of agents.entries()) {
+    assert.equal(text.includes(bootstrap), true, agentPaths[index]);
+    assert.ok(tokens[index] <= 1500, `${tokens[index]} tokens`);
+  }
 });
 
 test("[unit] M9 user merge call is allowed without an approval", () => {
@@ -273,6 +385,7 @@ function sliceDescription(reviewFixes = ["Name the offending file."]) {
       "Build passed.",
       "Docs passed.",
     ],
+    happyPath: ["Commit a non-test file first.", "See the guard refuse it."],
   };
 }
 

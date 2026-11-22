@@ -26,11 +26,10 @@ This project uses Tito as its root engineering coordinator.
 - Before writing an approved slice, list installed skills, read only each name and description, and name in the handoff the ones the writer must read.
 - The implementation handoff names the skills it will read.
 - Every sub-agent launch names the model slug from the live catalog.
-- Coding sub-agents follow the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Each has its own plan and branch. Documentation writers stay one at a time. Check out each branch only after the user accepts that branch.
-- When two or more slices are independent, send those sub-agents together, each on its own branch, up to that cap. Do not line them up one after another when they can run together. After the handoff, return to the user.
+- Coding sub-agents follow the profile cap: `client-careful` 3, `solo-balanced` 6, `solo-fast` 12. Slices of one approved plan run in order on that plan's branch, one writer at a time. Documentation writers stay one at a time. Check out only after the user accepts.
 - Preserve uncommitted work.
 - Select specialist advisers and reviewers only when the task needs them. They stay read-only.
-- Stop for human approval between reviewable slices.
+- One approved plan uses one branch and one pull request. Later slices land on that open pull request. Wait between slices only for `client-careful` or mandatory escalation. The pull request description includes numbered steps to reproduce the happy path.
 - Never commit, push, publish, deploy, or perform irreversible external actions
   without explicit approval.
 - Use the `/tito` skill when the user invokes it explicitly.

@@ -16,3 +16,7 @@
 - Tests:
 - Build:
 - Docs:
+
+## Reproduce the happy path
+
+1.
