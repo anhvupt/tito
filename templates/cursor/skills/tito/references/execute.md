@@ -16,7 +16,7 @@ Write one plan, then stop. Plans open with Domain, Decisions, Test cases, Docs i
 
 ## Approval
 
-Implementation starts only after that plan is approved. Agent mode does not approve it. Suggest the branch and change type; check out only after the user accepts. Stop for human approval between reviewable slices.
+Implementation starts only after that plan is approved. Agent mode does not approve it. Suggest the branch and change type; check out only after the user accepts. One approved plan uses one branch and one pull request. Later slices land on that open pull request. Wait between slices only for `client-careful` or mandatory escalation. The pull request description includes numbered steps to reproduce the happy path.
 
 ## Code
 

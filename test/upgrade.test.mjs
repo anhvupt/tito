@@ -58,7 +58,12 @@ test("upgrade replaces Tito files and leaves consumer rules", () => {
   assert.match(pullRequestRule, /globs:/);
   assert.match(pullRequestRule, /alwaysApply:\s*false/);
   assert.match(pullRequestRule, /Review fixes lists every comment/);
-  assert.match(pullRequestRule, /A pull request description has four parts/);
+  assert.equal(pullRequestRule.includes("A pull request description has four parts"), false);
+  assert.match(pullRequestRule, /## Reproduce the happy path/);
+  assert.match(
+    pullRequestRule,
+    /Later slices of one approved plan land on that open pull request/,
+  );
   for (const name of ["screen-language.mdc", "init-upgrade-admin.mdc", "commit-branch.mdc"]) {
     const body = readFileSync(join(root, ".cursor/rules", name), "utf8");
     assert.match(body, /^---\n/);
